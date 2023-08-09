@@ -1,0 +1,6 @@
+xlrd
+xlwt
+xlutils
+openpyxl
+numpy
+pandas

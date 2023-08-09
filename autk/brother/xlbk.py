@@ -1,0 +1,500 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import re
+import os
+from xlrd import open_workbook
+from openpyxl import load_workbook
+from numpy import array,zeros
+from pandas import read_excel,DataFrame
+
+from autk.parser.funcs import regex_filter,start_thread_list
+
+class XlBook:
+    '''
+    Basic Structure of XlBook on default:
+        file_path,
+        file_name,
+        suffix:xls/xlsx/xlsm,
+        shtli,
+        data,
+    '''
+    def __init__(self,file_path):
+        self.file_path=file_path
+        self.file_name=''
+        self.pure_file_name=''
+        self.suffix=''
+        self.__parse_file_type()
+        pass
+    def __parse_file_type(self):
+        self.file_name=self.file_path.split(os.sep)[-1]
+        self.pure_file_name=re.sub(
+            re.compile(r'\.xls[xm]?$'),
+            '',
+            self.file_name
+        )
+        self.suffix=re.sub(
+            re.compile(r'^.*\.'),
+            '',
+            self.file_name
+        )
+        pass
+    @property
+    def shtli(self):
+        if self.suffix=='xls':
+            return [sht.name for sht in open_workbook(self.file_path).sheets()]
+        elif self.suffix=='xlsx':
+            return load_workbook(self.file_path).sheetnames
+        elif self.suffix=='xlsm':
+            return load_workbook(self.file_path,keep_vba=True).sheetnames
+        pass
+    @property
+    def shape(self):
+        '''
+        sheet_name | shape
+        -----------|-------
+        sheet_1    | (n_1,m_1)
+        sheet_2    | (n_2,m_2)
+        .......
+        '''
+        if self.suffix=='xls':
+            shape=array(
+                [
+                    [open_workbook(self.file_path).sheet_by_name(sht).nrows,
+                     open_workbook(self.file_path).sheet_by_name(sht).ncols]
+                    for sht in self.shtli
+                ]
+            )
+            pass
+        elif self.suffix=='xlsx' or 'xlsm':
+            shape=array(
+                [
+                    [load_workbook(self.file_path)[sht].max_row,
+                     load_workbook(self.file_path)[sht].max_column]
+                    for sht in self.shtli
+                ]
+            )
+            pass
+        return shape
+    @property
+    def shape_df(self):
+        return DataFrame(
+            data=self.shape,
+            columns=['rows','cols'],
+            index=self.shtli
+        )
+    def test_map(self,xlmap,common_title=0):
+        '''
+        To test each sheet to check if they are fit to the input `xlmap`;
+        If error appears, there may be some hidden sheets, within that Excel,
+        whose columns conflict with that of the unhidden ones.
+        '''
+        print('start testing map......\n','If error appears, there may be some hidden sheets, within that Excel,whose columns conflict with that of the unhidden ones.')
+        resu_df=DataFrame([],index=self.shape_df.index,columns=xlmap.columns)
+        map_cols=xlmap.columns
+        map_dict=xlmap.show
+        for sht in resu_df.index:
+            max_cols=self.shape_df.at[sht,'cols']
+            sht_cols=self.get_row(sht,common_title+1)
+            for col in resu_df.columns:
+                col_index=map_dict[col]
+                if col_index is not None:
+                    resu_df.at[sht,col]=sht_cols[col_index]
+                continue
+            continue
+        return resu_df
+    def get_bk(self):
+        if self.suffix=='xlsx':
+            bk=load_workbook(self.file_path)
+        elif self.suffix=='xlsm':
+            bk=open_workbook(self.file_path,keep_vba=True)
+        elif self.suffix=='xls':
+            bk=open_workbook(self.file_path)
+        else:
+            bk=open_workbook(self.file_path)
+        return bk
+    def find_sheet(self,regex_str):
+        possible_names=regex_filter(regex_str,self.shtli,match_mode=False)
+        return possible_names
+    def get_sht(self,sheet_name):
+        if self.suffix=='xlsx' or 'xlsm':
+            sht=self.get_bk()[sheet_name]
+        elif self.suffix=='xls':
+            sht=self.get_bk().sheet_by_name(sheet_name)
+        else:
+            sht=None
+        return sht
+    def get_value(self,sheet_name,cell_index):
+        if self.suffix=='xlsx' or 'xlsm':
+            value=self.get_sht(sheet_name).cell(
+                row=cell_index[0],
+                column=cell_index[1]
+            ).value
+        elif self.suffix=='xls':
+            value=self.get_sht(sheet_name).cell(
+                cell_index[0],
+                cell_index[1]
+            ).value
+            pass
+        else:
+            value=0
+        return value
+    def get_matrix(
+            self,
+            sheet_name,
+            start_cell_index,
+            n_rows_range,
+            n_cols_range,
+            type_df=False,
+            has_title=False
+    ):
+        '''
+        start_cell_index is a tuple like 'R1C1' ref-style in Excel: (row,column);
+        For xlrd.open_workbook().sheet_by_name(), index starts from 0;
+        While for openpyxl.load_workbook().get_sheet_by_name(), index starts from 1;
+        That's all right, just start from 1 when passing argument 'start_cell_index' as tuple like (n,m).
+        For numbers, different file type results in different data type:
+            xls:str(float)
+            xlsx/xlsm:str(int)
+        '''
+        if self.suffix=='xls':
+            sht=open_workbook(self.file_path).sheet_by_name(sheet_name)
+            matrix=array(
+                [
+                    sht.row_values(
+                        row,
+                        start_cell_index[1]-1,
+                        start_cell_index[1]-1+n_cols_range
+                    ) for row in range(
+                        start_cell_index[0]-1,
+                        start_cell_index[0]-1+n_rows_range
+                    )
+                ]
+            )
+        elif self.suffix=='xlsx':
+            #  sht=load_workbook(self.file_path).get_sheet_by_name(sheet_name) # same as:
+            sht=load_workbook(self.file_path)[sheet_name]
+            matrix=array(
+                list(
+                    sht.iter_rows(
+                        min_row=start_cell_index[0],
+                        max_row=start_cell_index[0]+n_rows_range-1,
+                        min_col=start_cell_index[1],
+                        max_col=start_cell_index[1]+n_cols_range-1,
+                        values_only=True
+                    )
+                )
+            )
+        elif self.suffix=='xlsm':
+            #  sht=load_workbook(self.file_path).get_sheet_by_name(sheet_name) # same as:
+            sht=load_workbook(self.file_path,keep_vba=True)[sheet_name]
+            matrix=array(
+                list(
+                    sht.iter_rows(
+                        min_row=start_cell_index[0],
+                        max_row=start_cell_index[0]+n_rows_range-1,
+                        min_col=start_cell_index[1],
+                        max_col=start_cell_index[1]+n_cols_range-1,
+                        values_only=True
+                    )
+                )
+            )
+        else:
+            matrix=zeros((n_rows_range,n_cols_range))
+        if type_df==True:
+            if has_title==False:
+                matrix=DataFrame(
+                    data=matrix
+                )
+            else:
+                matrix=DataFrame(
+                    data=matrix[1:],
+                    columns=matrix[0]
+                )
+        else:
+            pass
+        return matrix
+    def select_matrix(
+        self,
+        sheet_name,
+        from_cell_index,
+        to_cell_index,
+        type_df=False,
+        has_title=False
+    ):
+        '''
+        from_cell_index and to_cell_index are tuples like 'R1C1' ref-style in Excel: (row,column);
+        '''
+        return self.get_matrix(
+            sheet_name,
+            from_cell_index,
+            to_cell_index[0]-from_cell_index[0]+1,
+            to_cell_index[1]-from_cell_index[1]+1,
+            type_df=type_df,
+            has_title=has_title
+        )
+    def select_all(self,sheet_name,type_df=False):
+        return self.select_matrix(
+            sheet_name,
+            (1,1),
+            (self.shape_df.at[sheet_name,'rows'],self.shape_df.at[sheet_name,'cols']),
+            type_df=type_df,
+            has_title=False if type_df==False else True
+        )
+    def select_columns(
+        self,
+        columns=[],
+        row_range=None,
+        type_df=False
+        ):
+        pass
+    def get_row(self,sheet_name,row):
+        max_col=self.shape_df.at[sheet_name,'cols']
+        return list(
+            self.select_matrix(
+                sheet_name,
+                (row,1),
+                (row,max_col),
+                type_df=False,
+                has_title=False
+            )[0]
+        )
+    def get_col(self,sheet_name,col):
+        max_row=self.shape_df.at[sheet_name,'rows']
+        return list(
+            self.select_matrix(
+                sheet_name,
+                (1,col),
+                (max_row,col),
+                type_df=False,
+                has_title=False
+            ).T[0]
+        )
+    def save_bk(self,bk):
+        if self.suffix=='xlsx' or 'xlsm':
+            bk.save(self.file_path)
+        else:
+            bk.save(self.file_path)
+        pass
+    def __xls_fill(self,sheet_name,cell_index,value,save=False):
+        import xlutils
+        b=open_workbook(self.file_path)
+        b=xlutils.copy(b)
+        #  b.sheet_by_name(sheet_name).cell(cell_index[0],cell_index[1]).value=value
+        b.write(cell_index[0],cell_index[1],value,save=False)
+        if save==True:
+            self.save_bk(b)
+            #  b.save(self.file_path)
+        pass
+    def __xlsx_fill(self,sheet_name,cell_index,value,save=False):
+        b=load_workbook(self.file_path)
+        b[sheet_name].cell(row=cell_index[0],column=cell_index[1]).value=value
+        if save==True:
+            self.save_bk(b)
+            #  b.save(self.file_path)
+        pass
+    def __xlsm_fill(self,sheet_name,cell_index,value,save=False):
+        b=load_workbook(self.file_path,keep_vba=True)
+        b[sheet_name].cell(row=cell_index[0],column=cell_index[1]).value=value
+        if save==True:
+            self.save_bk(b)
+            #  b.save(self.file_path)
+        pass
+    def get_fill_func(self,save=False):
+        '''
+        save=False by default;
+        '''
+        if self.suffix=='xlsx':
+            def fill_func(sheet_name,row_num,col_num,value):
+                self.__xlsx_fill(sheet_name,(row_num,col_num),value,save=save)
+                pass
+            pass
+        elif self.suffix=='xlsm':
+            def fill_func(sheet_name,row_num,col_num,value):
+                self.__xlsm_fill(sheet_name,(row_num,col_num),value,save=save)
+                pass
+            pass
+        elif self.suffix=='xls':
+            def fill_func(sheet_name,row_num,col_num,value):
+                self.__xls_fill(sheet_name,(row_num,col_num),value,save=save)
+                pass
+            pass
+        else:
+            def fill_func(sheet_name,row_num,col_num,value):
+                self.__xlsx_fill(sheet_name,(row_num,col_num),value,save=save)
+                pass
+        return fill_func
+    def fill_value(self,sheet_name,cell_index,value):
+        '''
+        fill a single value and then save;
+        '''
+        self.get_fill_func(save=True)(sheet_name,cell_index[0],cell_index[1],value)
+        pass
+    def paste_matrix(self,matrix,start_index,sheet_name):
+        '''
+        matrix:
+            must be nd.array or pandas.DataFrame;
+        start_index:
+            from which cell of the `sheet_name` to start;
+        '''
+        r=start_index[0]
+        c=start_index[1]
+        from numpy import ndarray,nditer
+        if isinstance(matrix,ndarray):
+            for row in matrix:
+                for value in row:
+                    self.fill_value(sheet_name,(r,c),value)
+                    c+=1
+                    continue
+                c=start_index[1]
+                r+=1
+                continue
+            pass
+        elif isinstance(matrix,DataFrame):
+            matrix=matrix.values
+            self.paste_matrix(matrix,start_index,sheet_name)
+            pass
+        else:
+            print('You may check argument: ',matrix)
+            matrix=array(matrix)
+            self.paste_matrix(matrix,start_index,sheet_name)
+            pass
+        pass
+    def paste_list(self,value_list,start_index,sheet_name,vertical=True):
+        value_list=array([value_list])
+        if vertical==False:
+            pass
+        else:
+            value_list=value_list.T
+        self.paste_matrix(value_list,start_index,sheet_name)
+        pass
+    def clear_sheet(self,sheet_name):
+        '''
+        Be carefull! clear all data in the sheet.
+        '''
+        from numpy import full
+        z=full(self.shape[0],'')
+        self.paste_matrix(z,(1,1),sheet_name)
+        pass
+    def fill_bydf(self,sheet_name,matrix):
+        '''
+        matrix could be: DataFrame,array, or 2-dimension list,like:
+        _________________________________________
+        |sheet_name|row_index|column_index|value|
+        -----------------------------------------
+        |__________|_________|____________|_____|
+        The DataFrame above indicates the location and the value to
+        fill of each sheet.
+        '''
+        from threading import Thread
+        thread_list=[]
+        if isinstance(matrix,DataFrame):
+            cols=matrix.columns
+            for row in matrix.iterrows():
+                row_data=row[1]
+                sht=row_data[cols[0]]
+                r_index=row_data[cols[1]]
+                c_index=row_data[cols[2]]
+                v=row_data[cols[3]]
+                thread_list.append(
+                    Thread(
+                        target=self.get_fill_func(save=True),
+                        args=(sht,r_index,c_index,v)
+                    )
+                )
+            pass
+        elif isinstance(matrix,list):
+            for row in matrix:
+                sht=row[0]
+                r_index=row[1]
+                c_index=row[2]
+                v=row[3]
+                thread_list.append(
+                    Thread(
+                        target=self.get_fill_func(save=True),
+                        args=(sht,r_index,c_index,v)
+                    )
+                )
+            pass
+        elif isinstance(matrix,array):
+            pass
+        else:
+            pass
+        pass
+    def to_mtb(self,common_title=0,auto_load=False):
+        '''
+        Transform self into ImmortalTable.
+        '''
+        from autk.reader.base.table import ImmortalTable
+        xlmeta={}
+        xlmeta.update(
+            {self.file_path:[[sht,common_title] for sht in
+                             self.shtli]}
+        )
+        return ImmortalTable(
+            xlmeta=xlmeta,
+            common_title=common_title,
+            xlmap=None,
+            use_map=False,
+            auto_load=auto_load,
+            keep_meta_info=True,
+            #  key_index=[],
+            #  key_name='key_id'
+        )
+        pass
+## the following functions needs to be improved.
+    def to_mgl(
+        self,
+        common_title=0,
+        xlmap=None,
+        auto_load=False
+    ):
+        from autk.reader.mortal.mortalgl import MGL
+        xlmeta={}
+        xlmeta.update(
+            {self.file_path:[[sht,common_title] for sht in
+                             self.shtli]}
+        )
+        return MGL(
+            xlmeta=xlmeta,
+            common_title=common_title,
+            xlmap=xlmap,
+            auto_load=auto_load,
+            nick_name='mgl_frbk'
+        )
+    def to_chart(
+        self,
+        common_title=0,
+        xlmap=None,
+        auto_load=False
+    ):
+        from autk.reader.mortal.chart import MCA
+        xlmeta={}
+        xlmeta.update(
+            {self.file_path:[[sht,common_title] for sht in 
+                             self.shtli]}
+        )
+        return MCA(
+            xlmeta=xlmeta,
+            common_title=common_title,
+            xlmap=xlmap,
+            auto_load=auto_load,
+            key_cols=[],
+            nick_name='mca_frbk'
+        )
+        pass
+    def to_inventory(
+        self,
+    ):
+        pass
+    def sheet_to_mtb(self,sheet_name,xlmap=None):
+        pass
+    def sheet_to_mgl(self,sheet_name,xlmap=None):
+        pass
+    def sheet_to_chart(self,sheet_name,xlmap=None):
+        pass
+    def sheet_to_inventory(self,sheet_name,xlmap=None):
+        pass
+    pass
+if __name__=='__main__':
+    pass
