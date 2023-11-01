@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-from autk.parser.funcs import f2list,save_df,relative_path
-from autk.handf.findfile import find_regex
+from autk.gentk.funcs import f2list,save_df,relative_path
+from autk.meta.handf.findfile import find_regex
 
 def locate_by_func(
     by_func, # to transform `target string` into regex_item; one parameter;

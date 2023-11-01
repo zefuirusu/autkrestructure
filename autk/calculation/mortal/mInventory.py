@@ -3,8 +3,8 @@
 from autk.parser.funcs import transType,get_time_str
 from autk.mapper.map import InvGlMap,XlMap
 
-from autk.reader.base.xlsht import XlSheet
-from autk.reader.base.table import ImmortalTable
+from autk.calculation.base.xlsht import XlSheet
+from autk.calculation.base.table import ImmortalTable
 
 #  fake_cal_map=XlMap()
 class CalUnit(XlSheet):

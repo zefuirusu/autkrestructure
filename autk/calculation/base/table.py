@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # encoding = 'utf-8'
+'''
+Table
+'''
 
 from copy import deepcopy
 from os.path import isfile,isdir
@@ -8,8 +11,8 @@ from openpyxl import load_workbook
 from xlrd import open_workbook
 from pandas import concat,DataFrame
 
-from autk.parser.funcs import start_thread_list
-from autk.reader.base.xlsht import XlSheet
+from autk.gentk.funcs import start_thread_list
+from autk.calculation.base.xlsht import XlSheet
 
 class ImmortalTable:
     '''

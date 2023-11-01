@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''
+Seems useless, due to the autk.brother.xlsht;
+'''
 
 import re
 import os
@@ -7,7 +10,9 @@ from openpyxl import load_workbook
 from xlrd import open_workbook
 from pandas import DataFrame
 from threading import Thread
-from autk.parser.funcs import start_thread_list
+
+from autk.gentk.funcs import start_thread_list
+
 def get_xl_value(fpath,sheet_name,row_index,col_index):
     xl_type=re.sub(
         re.compile(r'^.*\.'),

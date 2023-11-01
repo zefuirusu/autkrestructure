@@ -18,7 +18,7 @@ PRJ_JSON={
                     {"name":"300-生成待盖章","subdirs":[]},
                     {"name":"400-回函及解释","subdirs":[]}
                 ]},
-                {"name":"5000-拍凭证","subdirs":[]},
+                {"name":"5000-凭证附件","subdirs":[]},
                 {"name":"7000-报告和附注","subdirs":[
                     {"name":"关联往来及交易","subdirs":[]}
                 ]},

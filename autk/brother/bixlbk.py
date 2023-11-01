@@ -6,8 +6,8 @@ from openpyxl import load_workbook
 from pandas import DataFrame
 from threading import Thread
 
-from autk.parser.funcs import start_thread_list
-from autk.reader.base.xlbk import XlBook
+from autk.gentk.funcs import start_thread_list
+from autk.brother.xlbk import XlBook
 
 def map_copy(matrix):
     '''

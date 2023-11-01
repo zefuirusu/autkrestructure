@@ -7,7 +7,7 @@ from copy import deepcopy
 from threading import Thread
 
 from autk.mapper.map import ChartMap,ApArMap
-from autk.reader.base.xlsht import XlSheet
+from autk.calculation.base.xlsht import XlSheet
 
 class CalChart(XlSheet):
     '''

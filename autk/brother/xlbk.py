@@ -3,16 +3,18 @@
 
 import re
 import os
+from threading import Thread
 from xlrd import open_workbook
 from openpyxl import load_workbook
 from numpy import array,zeros
 from pandas import read_excel,DataFrame
 
-from autk.parser.funcs import regex_filter,start_thread_list
+from autk.gentk.funcs import regex_filter,start_thread_list
 
 class XlBook:
     '''
     Basic Structure of XlBook on default:
+    `xls` starts from 0, while `xlsx` starts from 1;
         file_path,
         file_name,
         suffix:xls/xlsx/xlsm,
@@ -124,11 +126,69 @@ class XlBook:
         else:
             sht=None
         return sht
+    def search(self,cell_content):
+        '''
+        Search cells by its content and return index of the result.
+        parameters:
+            cell_content:regex string;
+        returns:
+            `xls` starts from 0, while `xlsx` starts from 1;
+            {
+                "sheet_name A":[(row1,column1),(row2,column2),...],
+                "sheet_name B":[(row3,column3),...],
+                ...
+            }
+        '''
+        resu={}
+        def __sheet_search_xlsx(cell_content,shtna):
+            cell_content=re.compile(cell_content)
+            sht=self.get_sht(shtna)
+            sht_resu=[]
+            for r in range(sht.max_row):
+                for c in range(sht.max_column):
+                    mt=re.search(cell_content,str(sht.cell(r+1,c+1).value))
+                    if mt is not None:
+                        sht_resu.append((r+1,c+1))
+                    else:
+                        pass
+            if len(sht_resu)>0:
+                resu.update({shtna:sht_resu})
+            else:
+                pass
+        def __sheet_search_xls(cell_content,shtna):
+            cell_content=re.compile(cell_content)
+            sht=self.get_sht(shtna)
+            sht_resu=[]
+            for r in range(sht.nrows):
+                for c in range(sht.ncols):
+                    mt=re.search(cell_content,str(sht.cell(r,c).value))
+                    if mt is not None:
+                        sht_resu.append((r,c))
+                    else:
+                        pass
+            if len(sht_resu)>0:
+                resu.update({shtna:sht_resu})
+            else:
+                pass
+        thli=[]
+        for shtna in self.shtli:
+            thli.append(
+                Thread(
+                    target=__sheet_search_xls if self.suffix=='xls' else __sheet_search_xlsx,
+                    args=(cell_content,shtna)
+                )
+            )
+            continue
+        start_thread_list(thli)
+        return resu
     def get_value(self,sheet_name,cell_index):
+        '''
+        `xls` starts from 0, while `xlsx` starts from 1;
+        '''
         if self.suffix=='xlsx' or 'xlsm':
             value=self.get_sht(sheet_name).cell(
-                row=cell_index[0],
-                column=cell_index[1]
+                cell_index[0],
+                cell_index[1]
             ).value
         elif self.suffix=='xls':
             value=self.get_sht(sheet_name).cell(
@@ -241,13 +301,6 @@ class XlBook:
             type_df=type_df,
             has_title=False if type_df==False else True
         )
-    def select_columns(
-        self,
-        columns=[],
-        row_range=None,
-        type_df=False
-        ):
-        pass
     def get_row(self,sheet_name,row):
         max_col=self.shape_df.at[sheet_name,'cols']
         return list(
@@ -369,22 +422,17 @@ class XlBook:
         self.paste_matrix(value_list,start_index,sheet_name)
         pass
     def clear_sheet(self,sheet_name):
-        '''
-        Be carefull! clear all data in the sheet.
-        '''
         from numpy import full
         z=full(self.shape[0],'')
         self.paste_matrix(z,(1,1),sheet_name)
         pass
     def fill_bydf(self,sheet_name,matrix):
         '''
-        matrix could be: DataFrame,array, or 2-dimension list,like:
+        matrix could be: DataFrame,array, or 2-dimension list;
         _________________________________________
         |sheet_name|row_index|column_index|value|
         -----------------------------------------
         |__________|_________|____________|_____|
-        The DataFrame above indicates the location and the value to
-        fill of each sheet.
         '''
         from threading import Thread
         thread_list=[]
@@ -442,7 +490,6 @@ class XlBook:
             #  key_name='key_id'
         )
         pass
-## the following functions needs to be improved.
     def to_mgl(
         self,
         common_title=0,
@@ -486,14 +533,6 @@ class XlBook:
     def to_inventory(
         self,
     ):
-        pass
-    def sheet_to_mtb(self,sheet_name,xlmap=None):
-        pass
-    def sheet_to_mgl(self,sheet_name,xlmap=None):
-        pass
-    def sheet_to_chart(self,sheet_name,xlmap=None):
-        pass
-    def sheet_to_inventory(self,sheet_name,xlmap=None):
         pass
     pass
 if __name__=='__main__':

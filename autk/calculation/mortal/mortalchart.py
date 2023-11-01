@@ -3,13 +3,12 @@
 import datetime
 from threading import Thread
 
-from autk.parser.funcs import transType,get_time_str
-from autk.parser.entry import Acct
 
+#  from autk.parser.entry import Acct
+from autk.gentk.funcs import transType,get_time_str
 from autk.mapper.map import ChartMap,ApArMap
-
-from autk.reader.base.table import ImmortalTable
-from autk.reader.unit.calca import CalChart
+from autk.calculation.base.table import ImmortalTable
+from autk.calculation.mortal.calca import CalChart
 
 class MCA(ImmortalTable):
     '''

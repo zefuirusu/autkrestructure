@@ -7,8 +7,8 @@ import shutil
 from pandas import DataFrame
 from threading import Thread
 
-from autk.handf.findfile import find_regex
-from autk.parser.funcs import f2list,save_df,start_thread_list, get_time_str
+from autk.gentk.funcs import f2list,save_df,start_thread_list, get_time_str
+from autk.meta.handf.findfile import find_regex
 
 def scanxl(xl_dir=os.path.abspath(os.curdir)):
     from openpyxl import load_workbook

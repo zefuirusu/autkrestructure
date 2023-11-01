@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 '''
-头一次遇到被审计单位将所有会计主体的余额表都放在一张sheet上的情况，没关系，按主体分开并不难。
+头一次遇到被审计单位将所有会计主体
+的余额表都放在一张sheet上的情况，
+没关系，按主体分开并不难。
 '''
 from pandas import read_excel
 from openpyxl import load_workbook
+
 def separate_tb(tb_df,key_col,savedir='./separate_tb.xlsx'):
     entity_list=list(tb_df[key_col].drop_duplicates())
     def get_entity_tb():

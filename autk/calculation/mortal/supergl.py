@@ -4,8 +4,8 @@ from copy import deepcopy
 from pandas import concat
 from threading import Thread
 
-from autk.reader.mortal.mortalgl import MGL
-from autk.parser.funcs import f2dict,get_time_str,start_thread_list,save_df
+from autk.gentk.funcs import f2dict,get_time_str,start_thread_list,save_df
+from autk.calculation.mortal.mortalgl import MGL
 
 class SGL:
     def __init__(

@@ -3,10 +3,10 @@
 
 from autk.mapper.map import SampleEglMap,EglMap
 
-from autk.reader.base.xlsht import XlSheet
-from autk.reader.base.table import ImmortalTable
-from autk.reader.mortal.mortalgl import MGL
-from autk.reader.mortal.chart import MCA
+from autk.calculation.base.xlsht import XlSheet
+from autk.calculation.base.table import ImmortalTable
+from autk.calculation.mortal.mortalgl import MGL
+from autk.calculation.mortal.mortalchart import MCA
 
 def calxl(df=None):
     '''

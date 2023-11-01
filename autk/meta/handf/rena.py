@@ -5,6 +5,7 @@ import os
 import shutil
 from pandas import read_excel
 # from autk.parser.funcs import f2list
+
 def add_suffix(suffix_str,filedir):
     path_list=[]
     for filename in os.listdir(filedir):

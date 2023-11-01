@@ -2,6 +2,7 @@
 # encoding = 'utf-8'
 from autk.gentk.start import startprj,start_by_conf
 from autk.meta.handf.pdfsplit import multi_split
+
 def start_thread_list(thread_list):
     for t in thread_list:
         t.start()

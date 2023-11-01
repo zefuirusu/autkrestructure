@@ -6,12 +6,20 @@
             "subdirs":[
                 {"name":"100-控制测试,"subdirs":[]},
                 {"name":"150-盘点","subdirs":[]},
-                {"name":"800-拍凭证","subdirs":[]},
+                {"name":"800-凭证附件","subdirs":[]},
                 {"name":"900-询证函","subdirs":[]},
                 {"name":"6000-附注","subdirs":[]},
                 {"name":"7000-报告","subdirs":[]},
                 {"name":"8000-归档","subdirs":[]},
-                {"name":"9000-其他","subdirs":[]}
+                {"name":"9000-其他","subdirs":[]},
+                {"name":"script",
+                    "subdirs":[
+                        {"name":"src","subdirs":[]},
+                        {"name":"data","subdirs":[]},
+                        {"name":"output","subdirs":[]},
+                        {"name":"tarAccts","subdirs":[]},
+                        {"name":"logfiles","subdirs":[]}
+                ]}
             ]
         },
         {
@@ -22,15 +30,7 @@
                 {"name":"glandtb","subdirs":[]},
                 {"name":"账套数据","subdirs":[]},
                 {"name":"余额明细","subdirs":[]},
-                {"name":"未审报表","subdirs":[]},
-                {"name":"script",
-                    "subdirs":[
-                        {"name":"src","subdirs":[]},
-                        {"name":"data","subdirs":[]},
-                        {"name":"output","subdirs":[]},
-                        {"name":"tarAccts","subdirs":[]},
-                        {"name":"logfiles","subdirs":[]}
-                ]}
+                {"name":"未审报表","subdirs":[]}
             ]
         },
         {"name":"400-historical","subdirs":[]},

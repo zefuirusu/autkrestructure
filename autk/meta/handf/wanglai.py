@@ -9,8 +9,9 @@ import os
 import re
 import threading
 from openpyxl import load_workbook,Workbook
-from autk import find_regex
-# from autk.core.table import ImmortalTable
+
+from autk.meta.handf.findfile import find_regex
+
 # datadir='./data'
 datadir='./fin沈阳美德因底稿'
 outputdir='./output'

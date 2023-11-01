@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # encoding = 'utf-8'
+'''
+Excel Sheet
+'''
+
 import re
 import os
 from copy import deepcopy
@@ -8,7 +12,7 @@ from xlrd import open_workbook
 from openpyxl import load_workbook
 from pandas import concat,DataFrame,read_excel
 
-from autk.parser.funcs import transType,get_time_str
+from autk.gentk.funcs import transType,get_time_str
 
 class XlSheet:
     '''
