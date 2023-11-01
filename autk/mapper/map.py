@@ -7,13 +7,14 @@ class XlMap:
     XlMap is mapping column name to column index.
     If you need a new column which does not exist, set its value to None.
     col_name_in_xlmap(col_name=name of attribute) ---> col_index_in_xlmap(col_index=value of attribute) ---> col_name_in_actual_file (col_name=column_of_file[col_index])
-    属性的排列顺序就是读取后表格的列顺序;
+    columns of GL is right in the same order of attributes of map object.
     '''
     def _overwt_dict(self):
         self.__dict__={}
     def accept_json(self,json_str,over_write=False):
         '''
-        The passed argument 'json_str' indicates the location in the parsing xlsx file, of the column by its value of each key (representing the column name);
+        The passed argument 'json_str' indicates the location of the column
+        in the parsing xlsx file, by its value of each key (representing the column name);
         {
             "column_name_1":location_number_1,
             "column_name_2":location_number_2,
@@ -32,6 +33,30 @@ class XlMap:
             setattr(self,k,json_str[k])
             continue
         pass
+    @property
+    def name(self):
+        return 'XlMap'
+    @property
+    def show(self):
+        return self.__dict__
+    @property
+    def columns(self):
+        return list(
+            self.show.keys()
+        )
+    @property
+    def key_index(self):
+        return []
+    @property
+    def key_name(self):
+        return 'keyid'
+    def append_col_name(self,col_name):
+        setattr(self,col_name,len(self.show.keys()))
+    def append_col_list(self,col_list):
+        for attr_name in col_list:
+            self.append_col_name(attr_name)
+            continue
+        pass
     @classmethod
     def from_list(cls,columns):
         print('create map from list: ',columns)
@@ -47,30 +72,6 @@ class XlMap:
         #  xlmap._overwt_dict()
         xlmap.accept_json(columns,over_write=True)
         return xlmap
-    @property
-    def mapname(self):
-        return 'XlMap'
-    @property
-    def show(self):
-        return self.__dict__
-    @property
-    def columns(self):
-        return list(
-            self.show.keys()
-        )
-    @property
-    def key_index(self):
-        return []
-    @property
-    def key_name(self):
-        return 'key_id'
-    def append_col_name(self,col_name):
-        setattr(self,col_name,len(self.show.keys()))
-    def append_col_list(self,col_list):
-        for attr_name in col_list:
-            self.append_col_name(attr_name)
-            continue
-        pass
     pass
 class MglMap(XlMap):
     '''
