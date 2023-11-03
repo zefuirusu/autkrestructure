@@ -23,6 +23,10 @@ class XlMap:
         '''
         if over_write==True:
             self._overwt_dict()
+        from os.path import isfile
+        if isfile(json_str):
+            from autk.gentk.funcs import f2dict
+            json_str=f2dict(json_str)
         for k in self.__dict__.keys():
             if k not in json_str.keys():
                 # those attributes not in json_str must be set to None;

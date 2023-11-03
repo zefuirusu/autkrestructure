@@ -17,7 +17,7 @@ json config file is in the format of:
 }
 '''
 
-from os.path import ispath,isdir
+from os.path import isfile,isdir
 
 from autk.gentk.funcs import f2dict
 
@@ -28,7 +28,7 @@ class JsonMeta:
         self.data={}
         if isinstance(json_str,dict):
             self.data=json_str
-        elif ispath(json_str):
+        elif isfile(json_str):
             self.path=json_str
             self.data=f2dict(json_str)
         else:
@@ -53,11 +53,11 @@ class PathMeta(JsonMeta):
             bk=XlBook(self.path)
             if shtli==[]:
                 for sht in bk.shtli:
-                    self.data.update({bk.file_path:sht})
+                    self.data.update({bk.file_path:[[sht,common_title]]})
                     continue
             else:
                 for sht in shtli:
-                    self.data.update({bk.file_path:sht})
+                    self.data.update({bk.file_path:[[sht,common_title]]})
                     continue
             pass
         elif isdir(xlpath):

@@ -469,6 +469,34 @@ class XlBook:
         else:
             pass
         pass
+    def get_df(self,sheet_name,title=0):
+        if self.suffix==r'xls':
+            return read_excel(
+                self.file_path,
+                sheet_name=sheet_name,
+                header=titile,
+                engine='xlrd'
+            )
+        elif self.suffix==r'xlsx':
+            return read_excel(
+                self.file_path,
+                sheet_name=sheet_name,
+                header=title,
+                engine='openpyxl'
+            )
+        elif self.suffix==r'xlsm':
+            return read_excel(
+                self.file_path,
+                sheet_name=sheet_name,
+                header=titile,
+                engine='openpyxl'
+            )
+        else:
+            print(
+                "[Error:]check the input file:\n",
+                self.file_path
+            )
+            return None
     def to_mtb(self,common_title=0,auto_load=False):
         '''
         Transform self into ImmortalTable.

@@ -13,6 +13,9 @@ from openpyxl import load_workbook
 from pandas import concat,DataFrame,read_excel
 
 from autk.gentk.funcs import transType,get_time_str
+from autk.mapper.map import XlMap
+from autk.meta.pmeta import PathMeta
+from autk.brother.xlbk import XlBook
 
 class XlSheet:
     '''
@@ -20,14 +23,10 @@ class XlSheet:
     '''
     def __init__(
         self,
-        shmeta=[None,'sheet0',0],
-        xlmap=None,
-        use_map=False,
+        shmeta:PathMeta=None,
+        xlmap:XlMap=None,
         # structure of the table is less important than meta information, yet simply make keep_meta_info default to True.
-        keep_meta_info=True,
         # key_index is not so important for class XlSheet, so simply make key_index and key_name as defalt.
-        key_index=[],
-        key_name='keyid'
     ):
         '''
         XlSheet fills all blanks with float zero.
@@ -62,17 +61,21 @@ class XlSheet:
         }
         '''
         self.__row_temp=[]
-        self.data=None
+        #  self.data=None
         self.shmeta=shmeta # [None,'sheet0',0] as default
-        self.colmap_info=[]
+        #  self.colmap_info=[]
         self.xlmap=xlmap
-        self.use_map=use_map # use_map determines whether to use self.xlmap.
-        self.keep_meta_info=keep_meta_info
-        self.suffix=''
-        self.__parse_meta(shmeta)
+        #  self.use_map=use_map # use_map determines whether to use self.xlmap.
+        self.data=XlBook(self.shmeta.path).get_df(
+            self.shmeta.data[self.shmeta.path][0][0],
+            title=self.shmeta.data[self.shmeta.path][0][1]
+        )
+        #  self.keep_meta_info=keep_meta_info
+        #  self.suffix=''
+        #  self.__parse_meta(shmeta)
         #  self.__parse_file_name(self.file_path)
-        self.load_raw_data()
-        self.set_key_index(key_index,key_name) # this method make the argument passed count and set the key_index,key_name.
+        #  self.load_raw_data()
+        #  self.set_key_index(key_index,key_name) # this method make the argument passed count and set the key_index,key_name.
         pass
     def __parse_meta(self,shmeta):
         '''
