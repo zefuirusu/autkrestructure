@@ -10,6 +10,7 @@ from numpy import array,zeros
 from pandas import read_excel,DataFrame
 
 from autk.gentk.funcs import regex_filter,start_thread_list
+from autk.mapper.map import XlMap
 
 class XlBook:
     '''
@@ -497,6 +498,32 @@ class XlBook:
                 self.file_path
             )
             return None
+    def get_mapdf(self,sheet_name:str,xlmap:XlMap,title=0):
+        from copy import deepcopy
+        data=DataFrame(
+            [],
+            columns=xlmap.columns
+        )
+        source_data=self.get_df(sheet_name,title=title)
+        for col in xlmap.columns:
+            col_index=xlmap.show[col]
+            col_from_source=source_data.columns.to_numpy()[col_index]
+            if isinstance(col_index,int):
+                data[col]=deepcopy(
+                    source_data[col_from_source]
+                )
+            elif isinstance(col_index,list):
+                data[col]=0
+                for sub_col_index in col_index:
+                    sub_col_from_source=source_data.columns[sub_col_index]
+                    data[col]=deepcopy(
+                        data[col]+source_data[sub_col_from_source]
+                    )
+                    continue
+            else:
+                pass
+            continue
+        return data
     def to_mtb(self,common_title=0,auto_load=False):
         '''
         Transform self into ImmortalTable.
@@ -524,7 +551,7 @@ class XlBook:
         xlmap=None,
         auto_load=False
     ):
-        from autk.reader.mortal.mortalgl import MGL
+        from autk.calculation.mortal.mortalgl import MGL
         xlmeta={}
         xlmeta.update(
             {self.file_path:[[sht,common_title] for sht in

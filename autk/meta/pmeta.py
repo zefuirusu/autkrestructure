@@ -24,12 +24,11 @@ from autk.gentk.funcs import f2dict
 class JsonMeta:
     def __init__(self,json_str):
         self.keep_additional=True
-        self.path=''
+        self.path='json'
         self.data={}
         if isinstance(json_str,dict):
             self.data=json_str
         elif isfile(json_str):
-            self.path=json_str
             self.data=f2dict(json_str)
         else:
             pass

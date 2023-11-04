@@ -14,7 +14,7 @@ from pandas import concat,DataFrame,read_excel
 
 from autk.gentk.funcs import transType,get_time_str
 from autk.mapper.map import XlMap
-from autk.meta.pmeta import PathMeta
+from autk.meta.pmeta import PathMeta,JsonMeta
 from autk.brother.xlbk import XlBook
 
 class XlSheet:
@@ -23,8 +23,8 @@ class XlSheet:
     '''
     def __init__(
         self,
-        shmeta:PathMeta=None,
         xlmap:XlMap=None,
+        shmeta:PathMeta=None,
         # structure of the table is less important than meta information, yet simply make keep_meta_info default to True.
         # key_index is not so important for class XlSheet, so simply make key_index and key_name as defalt.
     ):
@@ -42,179 +42,149 @@ class XlSheet:
         keep_meta_info: bool,default True
             If False, columns of 'from_book' and 'from_sheet' will be dropped; else will be kept.
         Basic Structure of XlSheet on default:
-        {
-            "__row_temp":[],
-            "shmeta":[None,"sheet0",0],
-            "data":None,
-            "colmap_info":[],
-            "xlmap":None,
-            "use_map":False,
-            "keep_meta_info":False,
-            "file_path":"None",
-            "sheet_name":"sheet0",
-            "title":0,
-            "pure_file_name":"None",
-            "suffix":"None",
-            "name":"None-sheet0-0",
-            "key_index":[],
-            "key_name":"keyid"
-        }
         '''
         self.__row_temp=[]
-        #  self.data=None
         self.shmeta=shmeta # [None,'sheet0',0] as default
-        #  self.colmap_info=[]
         self.xlmap=xlmap
-        #  self.use_map=use_map # use_map determines whether to use self.xlmap.
-        self.data=XlBook(self.shmeta.path).get_df(
-            self.shmeta.data[self.shmeta.path][0][0],
-            title=self.shmeta.data[self.shmeta.path][0][1]
-        )
-        #  self.keep_meta_info=keep_meta_info
-        #  self.suffix=''
-        #  self.__parse_meta(shmeta)
-        #  self.__parse_file_name(self.file_path)
-        #  self.load_raw_data()
-        #  self.set_key_index(key_index,key_name) # this method make the argument passed count and set the key_index,key_name.
-        pass
-    def __parse_meta(self,shmeta):
-        '''
-        doing nothing except setting attributes;
-        '''
-        if isinstance(shmeta,list):
-            self.file_path=shmeta[0]
-            self.sheet_name=shmeta[1]
-            self.title=shmeta[2]
-            self.__parse_file_name(self.file_path)
-        elif isinstance(shmeta,DataFrame):
-            self.file_path='no_file'
-            self.sheet_name='df'
-            self.title=0
-            self.__parse_file_name(shmeta)
-            pass
+        self.load_raw_data()
+        # key index not set up till now.
+        if self.data is not None:
+            self.data.fillna(0.0,inplace=True)
         else:
-            self.file_path=None
-            self.sheet_name=None
-            self.title=0
-            self.__parse_file_name(self.file_path)
             pass
-        pass
-    def __parse_file_name(self,file_path):
-        '''
-        must be called after self.__parse_meta;
-        '''
-        if file_path is None:
-            self.file_name='None'
-            self.pure_file_name=self.file_name
-            self.sheet_name='sheet0'
-            self.title=0
-            self.suffix='None'
-            pass
-        elif isfile(file_path):
-            self.file_name=str(file_path.split(os.sep)[-1])
-            self.pure_file_name=re.sub(
-                re.compile(r'\.xls[xm]?$'),
-                '',
-                self.file_name
-            )
-            self.suffix=re.sub(
-                self.pure_file_name+r'.',
-                '',
-                self.file_name
-            )
-            #  print('suffix:',self.suffix)
-        elif isinstance(file_path,DataFrame):
-            self.file_name='DataFrame'
-            self.pure_file_name=self.file_name
-            self.sheet_name='sheet0'
-            self.title=0
-            self.suffix='df'
-            pass
-        else:
-            print(
-                '[Warning:XlSheet] unknown file_path:\n',
-                file_path
-            )
-            self.file_name='woc'
-            self.pure_file_name='woc'
-            self.sheet_name='woc'
-            self.title=0
-            self.suffix='woc'
-            pass
-        self.name=''.join(
-            [self.pure_file_name,
-            '-',
-            self.sheet_name,
-            '-',
-            str(self.title)]
-        )
         pass
     def __str__(self):
-        # 'data sheet:'+str([self.pure_file_name,str(self.sheet_name),self.title])
-        return self.name
-    def load_raw_data(self):
-        self.read(self.shmeta)
-        #  self.fresh_columns()
-        #  print(self.colmap_info)
-    def read(self,shmeta):
-        def create_blank():
-            print('[Note:] Blank sheet created.')
-            self.accept_df(None)
-        if isinstance(shmeta,DataFrame):
-            self.accept_df(shmeta[0])
-        elif shmeta[0] is None:
-            print(shmeta)
-            create_blank()
-        elif isfile(shmeta[0]):
-            if self.suffix == r'xls':
-                data_fake=read_excel(
-                    shmeta[0],
-                    sheet_name=shmeta[1],
-                    header=shmeta[2],
-                    engine='xlrd'
-                )
-                pass
-            elif self.suffix == r'xlsx':
-                data_fake=read_excel(
-                    shmeta[0],
-                    sheet_name=shmeta[1],
-                    header=shmeta[2],
-                    engine='openpyxl'
-                )
-                pass
-            elif self.suffix == r'xlsm':
-                data_fake=read_excel(
-                    shmeta[0],
-                    sheet_name=shmeta[1],
-                    header=shmeta[2],
-                    engine='openpyxl'
-                )
-                pass
-            else:
-                pass
-            data_fake.fillna(0.0,inplace=True)
-            if self.use_map==True:
-                self.load_df_by_map(data_fake,self.xlmap)
-            else:
-                self.accept_df(data_fake)
-            pass
-        else:
-            print(shmeta)
-            create_blank()
-        if (
-            self.data is not None 
-            and self.keep_meta_info==True
-        ):
-            def __set_file_name(row_series):
-                return self.pure_file_name
-            def __set_sheet_name(row_series):
-                return self.sheet_name
-            self.apply_df_func(__set_sheet_name,0,'from_sheet')
-            self.apply_df_func(__set_file_name,0,'from_book')
-        else:
-            print('[Waining] meta_info not kept in self.data.')
-            print(self.xlmap)
-        pass
+        return ''
+    #  def __parse_meta(self,shmeta):
+        #  '''
+        #  doing nothing except setting attributes;
+        #  '''
+        #  if isinstance(shmeta,list):
+            #  self.file_path=shmeta[0]
+            #  self.sheet_name=shmeta[1]
+            #  self.title=shmeta[2]
+            #  self.__parse_file_name(self.file_path)
+        #  elif isinstance(shmeta,DataFrame):
+            #  self.file_path='no_file'
+            #  self.sheet_name='df'
+            #  self.title=0
+            #  self.__parse_file_name(shmeta)
+            #  pass
+        #  else:
+            #  self.file_path=None
+            #  self.sheet_name=None
+            #  self.title=0
+            #  self.__parse_file_name(self.file_path)
+            #  pass
+        #  pass
+    #  def __parse_file_name(self,file_path):
+        #  '''
+        #  must be called after self.__parse_meta;
+        #  '''
+        #  if file_path is None:
+            #  self.file_name='None'
+            #  self.pure_file_name=self.file_name
+            #  self.sheet_name='sheet0'
+            #  self.title=0
+            #  self.suffix='None'
+            #  pass
+        #  elif isfile(file_path):
+            #  self.file_name=str(file_path.split(os.sep)[-1])
+            #  self.pure_file_name=re.sub(
+                #  re.compile(r'\.xls[xm]?$'),
+                #  '',
+                #  self.file_name
+            #  )
+            #  self.suffix=re.sub(
+                #  self.pure_file_name+r'.',
+                #  '',
+                #  self.file_name
+            #  )
+        #  elif isinstance(file_path,DataFrame):
+            #  self.file_name='DataFrame'
+            #  self.pure_file_name=self.file_name
+            #  self.sheet_name='sheet0'
+            #  self.title=0
+            #  self.suffix='df'
+            #  pass
+        #  else:
+            #  print(
+                #  '[Warning:XlSheet] unknown file_path:\n',
+                #  file_path
+            #  )
+            #  self.file_name='woc'
+            #  self.pure_file_name='woc'
+            #  self.sheet_name='woc'
+            #  self.title=0
+            #  self.suffix='woc'
+            #  pass
+        #  self.name=''.join(
+            #  [self.pure_file_name,
+            #  '-',
+            #  self.sheet_name,
+            #  '-',
+            #  str(self.title)]
+        #  )
+        #  pass
+    #  def read(self,shmeta):
+        #  def create_blank():
+            #  print('[Note:] Blank sheet created.')
+            #  self.accept_df(None)
+        #  if isinstance(shmeta,DataFrame):
+            #  self.accept_df(shmeta[0])
+        #  elif shmeta[0] is None:
+            #  print(shmeta)
+            #  create_blank()
+        #  elif isfile(shmeta[0]):
+            #  if self.suffix == r'xls':
+                #  data_fake=read_excel(
+                    #  shmeta[0],
+                    #  sheet_name=shmeta[1],
+                    #  header=shmeta[2],
+                    #  engine='xlrd'
+                #  )
+                #  pass
+            #  elif self.suffix == r'xlsx':
+                #  data_fake=read_excel(
+                    #  shmeta[0],
+                    #  sheet_name=shmeta[1],
+                    #  header=shmeta[2],
+                    #  engine='openpyxl'
+                #  )
+                #  pass
+            #  elif self.suffix == r'xlsm':
+                #  data_fake=read_excel(
+                    #  shmeta[0],
+                    #  sheet_name=shmeta[1],
+                    #  header=shmeta[2],
+                    #  engine='openpyxl'
+                #  )
+                #  pass
+            #  else:
+                #  pass
+            #  data_fake.fillna(0.0,inplace=True)
+            #  if self.use_map==True:
+                #  self.load_df_by_map(data_fake,self.xlmap)
+            #  else:
+                #  self.accept_df(data_fake)
+            #  pass
+        #  else:
+            #  print(shmeta)
+            #  create_blank()
+        #  if (
+            #  self.data is not None
+            #  and self.keep_meta_info==True
+        #  ):
+            #  def __set_file_name(row_series):
+                #  return self.pure_file_name
+            #  def __set_sheet_name(row_series):
+                #  return self.sheet_name
+            #  self.apply_df_func(__set_sheet_name,0,'from_sheet')
+            #  self.apply_df_func(__set_file_name,0,'from_book')
+        #  else:
+            #  print('[Waining] meta_info not kept in self.data.')
+            #  print(self.xlmap)
+        #  pass
     #  @property
     #  def columns(self):
         #  '''
@@ -249,7 +219,49 @@ class XlSheet:
                 new_cols
             )
         )
-    def load_df_by_map(self,df,xlmap):
+    def load_raw_data(self):
+        '''
+        arguments  |shmeta=JsonMeta  |shmeta=None
+        -----------|-----------------|-----------
+        xlmap=XlMap|load normally    |load blank DataFrame
+        xlmap=None |get xlmap from df|self.data=None
+        '''
+        if isinstance(self.shmeta,JsonMeta):
+            path=str(list(self.shmeta.data.keys())[0])
+            if isinstance(self.xlmap,XlMap):
+                ## load normally
+                print('[Note]:XlSheet loads data from XlMap.')
+                self.data=XlBook(path).get_mapdf(
+                    self.shmeta.data[path][0][0],
+                    self.xlmap,
+                    title=self.shmeta.data[path][0][1]
+                )
+            else:
+                print('[Note]:XlSheet created without XlMap.')
+                self.data=XlBook(path).get_df(
+                    self.shmeta.data[path][0][0],
+                    None,
+                    title=self.shmeta.data[path][0][1]
+                )
+                self.xlmap=XlMap.from_list(list(self.data.columns))
+        else:
+            if isinstance(self.xlmap,XlMap):
+                print('[Note]:Blank sheet created.')
+                self.data=DataFrame(
+                    data=[],
+                    columns=self.xlmap.columns,
+                )
+                self.data.fillna(0.0,inplace=True)
+                pass
+            else:
+                print('[Warning]:No data loaded.')
+                self.data=None
+        pass
+    def load_df_by_map(self,df,xlmap=None):
+        '''
+        If xlmap is None, load by self.xlmap.
+        # FutureWarning: Support for multi-dimensional indexing (e.g. `obj[:, None]`) is deprecated and will be removed in a future version.  Convert to a numpy array before indexing instead:
+        '''
         print('XlSheet loads data ','with shape',df.shape,'by map:',xlmap)
         col_names_in_xlmap=list(self.xlmap.show.keys())
         self.data=DataFrame([],columns=col_names_in_xlmap)
@@ -260,9 +272,6 @@ class XlSheet:
                 break
             else:
                 pass
-            #  print(col_name,col_index)
-            #  print('check:',col_name_in_file,col_index)
-            # FutureWarning: Support for multi-dimensional indexing (e.g. `obj[:, None]`) is deprecated and will be removed in a future version.  Convert to a numpy array before indexing instead:
             col_name_in_file=df.columns.to_numpy()[col_index]
             self.colmap_info.append({
                 'col_name(xlmap)':col_name,
@@ -272,6 +281,8 @@ class XlSheet:
             if isinstance(col_index,int):
                 self.data[col_name]=deepcopy(df[col_name_in_file])
             elif isinstance(col_index,list):
+                ## col_index is list, indicating that this column in
+                ## map equals sum of a series of columns from df.
                 self.data[col_name]=0
                 for sub_col_index in col_index:
                     sub_col_name_in_file=df.columns[sub_col_index]

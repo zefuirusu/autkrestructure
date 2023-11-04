@@ -8,6 +8,7 @@ class XlMap:
     If you need a new column which does not exist, set its value to None.
     col_name_in_xlmap(col_name=name of attribute) ---> col_index_in_xlmap(col_index=value of attribute) ---> col_name_in_actual_file (col_name=column_of_file[col_index])
     columns of GL is right in the same order of attributes of map object.
+    Remember:index starts from 0.
     '''
     def _overwt_dict(self):
         self.__dict__={}
@@ -24,9 +25,13 @@ class XlMap:
         if over_write==True:
             self._overwt_dict()
         from os.path import isfile
-        if isfile(json_str):
+        if isinstance(json_str,dict):
+            pass
+        elif isfile(json_str):
             from autk.gentk.funcs import f2dict
             json_str=f2dict(json_str)
+        else:
+            pass
         for k in self.__dict__.keys():
             if k not in json_str.keys():
                 # those attributes not in json_str must be set to None;
@@ -36,7 +41,6 @@ class XlMap:
             # then set correct attributes according to json_str;
             setattr(self,k,json_str[k])
             continue
-        pass
     @property
     def name(self):
         return 'XlMap'

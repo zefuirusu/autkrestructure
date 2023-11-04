@@ -13,6 +13,8 @@ from pandas import concat,DataFrame
 
 from autk.gentk.funcs import start_thread_list
 from autk.calculation.base.xlsht import XlSheet
+from autk.mapper.map import XlMap
+from autk.meta.pmeta import JsonMeta
 
 class ImmortalTable:
     '''
@@ -30,23 +32,26 @@ class ImmortalTable:
     '''
     def __init__(
         self,
-        xlmeta=None,
-        common_title=0,
-        xlmap=None,
-        use_map=False,
-        auto_load=False,
-        keep_meta_info=True,
-        key_index=[],
-        key_name='key_id'
+        xlmap:XlMap=None,
+        xlmeta:JsonMeta=None,
+        #  common_title=0,
+        #  use_map=False,
+        #  auto_load=False,
+        #  keep_meta_info=True,
+        #  key_index=[],
+        #  key_name='key_id'
     ):
-        self.xlset=[]
+        self.xlmap=xlmap
+        self.xlmeta=xlmeta
+        ### 
         self.__df_temp=[]
+        self.xlset=[]
         self.data=None
         self.load_count=0
-        self.xlmap=xlmap
-        self.use_map=use_map
-        self.keep_meta_info=keep_meta_info
-        self.__set_key(key_index,key_name)
+        ###
+        #  self.use_map=use_map
+        #  self.keep_meta_info=keep_meta_info
+        #  self.__set_key(key_index,key_name)
         self.__parse_meta(xlmeta,common_title)
         self.check_xl_cols()
         if auto_load==True:
