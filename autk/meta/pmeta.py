@@ -18,8 +18,9 @@ json config file is in the format of:
 '''
 
 from os.path import isfile,isdir
+from threading import Thread
 
-from autk.gentk.funcs import f2dict
+from autk.gentk.funcs import f2dict,start_thread_list
 
 class JsonMeta:
     def __init__(self,json_str):
@@ -67,6 +68,8 @@ class PathMeta(JsonMeta):
             from os.path import join as pjoin
             from autk.brother.xlbk import XlBook
             if len(shtli)==1:
+                # laod all sheets with the same name
+                # from all books in the directory.
                 for p in listdir(xlpath):
                     fp=pjoin(xlpath,p)
                     bk=XlBook(fp)
@@ -76,18 +79,46 @@ class PathMeta(JsonMeta):
                         ]
                     })
                     continue
+            elif len(shtli)==0:
+                # load all sheets
+                # from all books in the directory.
+                collect={}
+                def __get_shtli(bk):
+                    collect.update({
+                        bk.file_path:[
+                            [sht,common_title] for sht in bk.shtli
+                        ]
+                    })
+                    pass
+                thli=[]
+                for p in listdir(xlpath):
+                    fp=pjoin(xlpath,p)
+                    bk=XlBook(fp)
+                    thli.append(
+                        Thread(
+                            target=__get_shtli,
+                            args=(bk,)
+                        )
+                    )
+                    continue
+                start_thread_list(thli)
+                self.data.update(collect)
+                pass
             else:
+                # load specific sheets
+                # from all books in the directory.
                 for p in listdir(xlpath):
                     fp=pjoin(xlpath,p)
                     bk=XlBook(fp)
                     self.data.update({
                         bk.file_path:[
-                            [shtli,common_title] for sht in shtli
+                            [sht,common_title] for sht in shtli
                         ]
                     })
                     continue
             pass
-        else: ## xlpath is neither a path nor a directory;
+        else: 
+            ## xlpath is neither a path nor a directory;
             print("[Error:] `xlpath` is neither a path nor a directory!")
         pass
     pass
