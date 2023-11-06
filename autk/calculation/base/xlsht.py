@@ -47,12 +47,6 @@ class XlSheet:
         self.shmeta=shmeta # [None,'sheet0',0] as default
         self.xlmap=xlmap
         self.load_raw_data()
-        # key index not set up till now.
-        self.__set_key_from_map()
-        if self.data is not None:
-            self.data.fillna(0.0,inplace=True)
-        else:
-            pass
         pass
     def __str__(self):
         return ''
@@ -92,170 +86,36 @@ class XlSheet:
                     "xlmap's key:",self.xlmap.key_name,self.xlmap.key_index
                 )
         pass
-    #  def __parse_meta(self,shmeta):
-        #  '''
-        #  doing nothing except setting attributes;
-        #  '''
-        #  if isinstance(shmeta,list):
-            #  self.file_path=shmeta[0]
-            #  self.sheet_name=shmeta[1]
-            #  self.title=shmeta[2]
-            #  self.__parse_file_name(self.file_path)
-        #  elif isinstance(shmeta,DataFrame):
-            #  self.file_path='no_file'
-            #  self.sheet_name='df'
-            #  self.title=0
-            #  self.__parse_file_name(shmeta)
-            #  pass
-        #  else:
-            #  self.file_path=None
-            #  self.sheet_name=None
-            #  self.title=0
-            #  self.__parse_file_name(self.file_path)
-            #  pass
-        #  pass
-    #  def __parse_file_name(self,file_path):
-        #  '''
-        #  must be called after self.__parse_meta;
-        #  '''
-        #  if file_path is None:
-            #  self.file_name='None'
-            #  self.pure_file_name=self.file_name
-            #  self.sheet_name='sheet0'
-            #  self.title=0
-            #  self.suffix='None'
-            #  pass
-        #  elif isfile(file_path):
-            #  self.file_name=str(file_path.split(os.sep)[-1])
-            #  self.pure_file_name=re.sub(
-                #  re.compile(r'\.xls[xm]?$'),
-                #  '',
-                #  self.file_name
-            #  )
-            #  self.suffix=re.sub(
-                #  self.pure_file_name+r'.',
-                #  '',
-                #  self.file_name
-            #  )
-        #  elif isinstance(file_path,DataFrame):
-            #  self.file_name='DataFrame'
-            #  self.pure_file_name=self.file_name
-            #  self.sheet_name='sheet0'
-            #  self.title=0
-            #  self.suffix='df'
-            #  pass
-        #  else:
-            #  print(
-                #  '[Warning:XlSheet] unknown file_path:\n',
-                #  file_path
-            #  )
-            #  self.file_name='woc'
-            #  self.pure_file_name='woc'
-            #  self.sheet_name='woc'
-            #  self.title=0
-            #  self.suffix='woc'
-            #  pass
-        #  self.name=''.join(
-            #  [self.pure_file_name,
-            #  '-',
-            #  self.sheet_name,
-            #  '-',
-            #  str(self.title)]
-        #  )
-        #  pass
-    #  def read(self,shmeta):
-        #  def create_blank():
-            #  print('[Note:] Blank sheet created.')
-            #  self.accept_df(None)
-        #  if isinstance(shmeta,DataFrame):
-            #  self.accept_df(shmeta[0])
-        #  elif shmeta[0] is None:
-            #  print(shmeta)
-            #  create_blank()
-        #  elif isfile(shmeta[0]):
-            #  if self.suffix == r'xls':
-                #  data_fake=read_excel(
-                    #  shmeta[0],
-                    #  sheet_name=shmeta[1],
-                    #  header=shmeta[2],
-                    #  engine='xlrd'
-                #  )
-                #  pass
-            #  elif self.suffix == r'xlsx':
-                #  data_fake=read_excel(
-                    #  shmeta[0],
-                    #  sheet_name=shmeta[1],
-                    #  header=shmeta[2],
-                    #  engine='openpyxl'
-                #  )
-                #  pass
-            #  elif self.suffix == r'xlsm':
-                #  data_fake=read_excel(
-                    #  shmeta[0],
-                    #  sheet_name=shmeta[1],
-                    #  header=shmeta[2],
-                    #  engine='openpyxl'
-                #  )
-                #  pass
-            #  else:
-                #  pass
-            #  data_fake.fillna(0.0,inplace=True)
-            #  if self.use_map==True:
-                #  self.load_df_by_map(data_fake,self.xlmap)
-            #  else:
-                #  self.accept_df(data_fake)
-            #  pass
-        #  else:
-            #  print(shmeta)
-            #  create_blank()
-        #  if (
-            #  self.data is not None
-            #  and self.keep_meta_info==True
-        #  ):
-            #  def __set_file_name(row_series):
-                #  return self.pure_file_name
-            #  def __set_sheet_name(row_series):
-                #  return self.sheet_name
-            #  self.apply_df_func(__set_sheet_name,0,'from_sheet')
-            #  self.apply_df_func(__set_file_name,0,'from_book')
-        #  else:
-            #  print('[Waining] meta_info not kept in self.data.')
-            #  print(self.xlmap)
-        #  pass
-    #  @property
-    #  def columns(self):
-        #  '''
-        #  self.xlmap must not be None.
-        #  this function cannot display the instant columns of self.data;
-        #  '''
-        #  if self.xlmap is not None:
-            #  columns=deepcopy(
-                #  list(
-                    #  self.xlmap.columns
-                #  )
-            #  )
-        #  else:
-            #  columns=[]
-        #  return columns
-    def fresh_columns(self):
-        '''
-        self.data must not be None.
-        '''
-        self.columns=deepcopy(
-            list(
-                self.data.columns
-            )
-        )
+    def __clear_row_temp(self):
+        self.__row_temp=[]
         pass
-    def update_columns(self,new_cols):
+    def clear(self):
+        self.__clear_row_temp()
+        self.data=None
+        pass
+    @property
+    def rawdf(self):
         '''
-        self.data must not be None.
+        It seems useless, because self.data may be updated when using XlSheet.
+        (self.data is dynamic.)
+        Thus the original data loaded from self.shmeta may not be what you need.
         '''
-        self.columns=deepcopy(
-            list(
-                new_cols
+        if isinstance(self.shmeta,JsonMeta):
+            path=str(list(self.shmeta.data.keys())[0])
+            return XlBook(path).get_df(
+                self.shmeta.data[path][0][0],
+                title=self.shmeta.data[path][0][1]
             )
-        )
+        else:
+            if isinstance(self.xlmap,XlMap):
+                d=DataFrame(
+                    data=[],
+                    columns=self.xlmap.columns,
+                )
+                d.fillna(0.0,inplace=True)
+                return d
+            else:
+                return None
     def load_raw_data(self):
         '''
         arguments  |shmeta=JsonMeta  |shmeta=None
@@ -266,7 +126,6 @@ class XlSheet:
         if isinstance(self.shmeta,JsonMeta):
             path=str(list(self.shmeta.data.keys())[0])
             if isinstance(self.xlmap,XlMap):
-                ## load normally
                 print('[Note]:XlSheet loads data from XlMap.')
                 self.data=XlBook(path).get_mapdf(
                     self.shmeta.data[path][0][0],
@@ -277,7 +136,6 @@ class XlSheet:
                 print('[Note]:XlSheet created without XlMap.')
                 self.data=XlBook(path).get_df(
                     self.shmeta.data[path][0][0],
-                    None,
                     title=self.shmeta.data[path][0][1]
                 )
                 self.xlmap=XlMap.from_list(list(self.data.columns))
@@ -293,11 +151,18 @@ class XlSheet:
             else:
                 print('[Warning]:No data loaded.')
                 self.data=None
+        self.__set_key_from_map()
+        if self.data is not None:
+            self.data.fillna(0.0,inplace=True)
+        else:
+            pass
         pass
-    def load_df_by_map(self,df,xlmap=None):
+    def load_df_by_map(self,df,xlmap=None): # TODO
         '''
         If xlmap is None, load by self.xlmap.
-        # FutureWarning: Support for multi-dimensional indexing (e.g. `obj[:, None]`) is deprecated and will be removed in a future version.  Convert to a numpy array before indexing instead:
+        # FutureWarning: Support for multi-dimensional indexing (e.g. `obj[:, None]`) 
+        # is deprecated and will be removed in a future version.  
+        # Convert to a numpy array before indexing instead:
         '''
         print('XlSheet loads data ','with shape',df.shape,'by map:',xlmap)
         col_names_in_xlmap=list(self.xlmap.show.keys())
@@ -334,104 +199,59 @@ class XlSheet:
         self.colmap_info=DataFrame(self.colmap_info)
         self.fresh_columns()
         pass
-    def accept_df(self,in_df):
-        '''
-        if you code 'self.data=in_df',
-        index/columns of them may differs,
-        yet inner data will be the same;
-        '''
-        from copy import deepcopy
-        self.data=deepcopy(in_df)
-        if self.data is not None:
-            self.data.fillna(0.0,inplace=True)
-            self.fresh_columns()
-        else:
-            self.columns=[]
-            pass
-    def set_key_index(self,key_index,key_name):
-        '''
-        # always process with argument passed whether using xlmap or not;
-        # so you must know which columns in xlmap,
-        # to be set as key_index 
-        # before you decide to use xlmap;
-        '''
-        self.key_index=key_index
-        self.key_name=key_name
-        if isinstance(self.data,DataFrame):
-            if self.key_index != []:
-                self.accept_key_index(self.key_index,self.key_name)
-                self.data.fillna(0.0,inplace=True)
-            else:
-                print('invalid key_index:',self.key_index)
-                print('key_name:',self.key_name)
-                print('[Warning:XlSheet] key is not set.')
-                pass
-        else:
-            print('[Warning:XlSheet] Data is None so key cannot be set.')
-            pass
-    def accept_key_index(self,key_index,key_name):
-        def __join_key_id(row_series):
-            resu=[]
-            for k in key_index:
-                if self.use_map==False:
-                    resu.append(transType(row_series[k]))
-                else:
-                    if self.xlmap.show[k] is not None:
-                        resu.append(transType(row_series[k]))
-                    else:
-                        pass
-                continue
-            return '-'.join(resu)
-        if isinstance(self.data,DataFrame):
-            self.apply_df_func(__join_key_id,0,key_name)
-        else:
-            print('[Warning:XlSheet] Data is None!')
-            pass
-    @property
-    def rawdf(self):
-        '''
-        It seems useless, because self.data may be updated when using XlSheet.
-        Thus the original data loaded from self.shmeta may not be what you need.
-        '''
-        if self.shmeta is None:
-            df=deepcopy(self.data)
-        elif isfile(self.shmeta[0]):
-            if self.suffix=='xls':
-                df=read_excel(
-                    self.shmeta[0],
-                    sheet_name=self.shmeta[1],
-                    header=self.shmeta[2],
-                    engine='xlrd'
-                )
-            elif self.suffix=='xlsx' or self.suffix=='xlsm':
-                df=read_excel(
-                    self.shmeta[0],
-                    sheet_name=self.shmeta[1],
-                    header=self.shmeta[2],
-                    engine='openpyxl'
-                )
-            else:
-                print('[Warning] Not an Excel file!')
-                df=None
-        else:
-            df=None
-        return df
-    @property
-    def shtli(self):
-        if self.suffix=='xls':
-            shtli=list(open_workbook(self.file_path).sheet_names())
-        elif self.suffix=='xlsx':
-            shtli=list(load_workbook(self.file_path).sheetnames)
-        else:
-            shtli=[]
-        return shtli
-    def __clear_row_temp(self):
-        self.__row_temp=[]
-        pass
-    def clear(self):
-        self.__clear_row_temp()
-        self.data=None
-        pass
+    #  def accept_df(self,in_df):
+        #  '''
+        #  if you code 'self.data=in_df',
+        #  index/columns of them may differs,
+        #  yet inner data will be the same;
+        #  '''
+        #  from copy import deepcopy
+        #  self.data=deepcopy(in_df)
+        #  if self.data is not None:
+            #  self.data.fillna(0.0,inplace=True)
+            #  self.fresh_columns()
+        #  else:
+            #  self.columns=[]
+            #  pass
+    #  def set_key_index(self,key_index,key_name):
+        #  '''
+        #  always process with argument passed whether using xlmap or not;
+        #  so you must know which columns in xlmap,
+        #  to be set as key_index
+        #  before you decide to use xlmap;
+        #  '''
+        #  self.key_index=key_index
+        #  self.key_name=key_name
+        #  if isinstance(self.data,DataFrame):
+            #  if self.key_index != []:
+                #  self.accept_key_index(self.key_index,self.key_name)
+                #  self.data.fillna(0.0,inplace=True)
+            #  else:
+                #  print('invalid key_index:',self.key_index)
+                #  print('key_name:',self.key_name)
+                #  print('[Warning:XlSheet] key is not set.')
+                #  pass
+        #  else:
+            #  print('[Warning:XlSheet] Data is None so key cannot be set.')
+            #  pass
+    #  def accept_key_index(self,key_index,key_name):
+        #  def __join_key_id(row_series):
+            #  resu=[]
+            #  for k in key_index:
+                #  if self.use_map==False:
+                    #  resu.append(transType(row_series[k]))
+                #  else:
+                    #  if self.xlmap.show[k] is not None:
+                        #  resu.append(transType(row_series[k]))
+                    #  else:
+                        #  pass
+                #  continue
+            #  return '-'.join(resu)
+        #  if isinstance(self.data,DataFrame):
+            #  self.apply_df_func(__join_key_id,0,key_name)
+        #  else:
+            #  print('[Warning:XlSheet] Data is None!')
+            #  pass
     def get_row_temp_data(self,over_write=False,type_xl=False):
         '''
         Get current concatenated data of self.__row_temp, then clear it;
@@ -453,41 +273,6 @@ class XlSheet:
             resu=temp_data
         self.__clear_row_temp()
         return resu
-    def duplicate(self,use_meta=False):
-        cal=deepcopy(self)
-        if use_meta==False:
-            cal.clear()
-        return cal
-    def calxl(self):
-        '''
-        This method will generate a blank XlSheet.
-        Do not call method load_raw_data();
-        '''
-        cal=XlSheet(
-            shmeta=[None,'sheet0',0],
-            #  file_path=None,
-            #  sheet_name='sheet0',
-            #  title=0,
-            keep_meta_info=self.keep_meta_info,
-            xlmap=deepcopy(self.xlmap),
-            use_map=self.use_map,
-            key_index=deepcopy(self.key_index),
-            key_name=deepcopy(self.key_name)
-        )
-        return cal
-    def xl2df(self,xl):
-        '''
-        Transfer XlSheet into it's data;
-        '''
-        df=deepcopy(xl.data)
-        return df
-    def df2xl(self,df):
-        '''
-        This method calls self.calxl();
-        '''
-        xl=self.calxl()
-        xl.accept_df(deepcopy(df))
-        return xl
     def apply_df_func(
         self,
         df_apply_func,
@@ -515,11 +300,7 @@ class XlSheet:
                 ),
                 allow_duplicates=False
             )
-        self.fresh_columns()
-        # print(self.data[col_name].drop_duplicates())
         pass
-    def get_data(self):
-        return self.data
     def change_dtype(self,col_name,target_type=str):
         self.data[col_name]=self.data[col_name].astype(target_type)
         pass
@@ -853,6 +634,7 @@ class XlSheet:
             type_xl=False
         )[sum_col]
         return sum(values_to_sum)
+    ## select_matrix and get_matrix are implemented in XlBook.
     def select_matrix(
         self,
         from_cell_index,
@@ -946,46 +728,12 @@ class XlSheet:
         else:
             pass
         return matrix
+    ## select_matrix and get_matrix are implemented in XlBook.
+    ### below are not perfect ???
     def percentage(self):
         '''
         to calculate percentage for each item in a column;
         '''
-        pass
-    ### below are not perfect ???
-    def save(self,save_path):
-        def __save_to_path(save_path): # save to known path, not existing file.
-            print('save to known path, not existing file.')
-            self.data.to_excel(save_path,sheet_name='-'.join([self.sheet_name,self.pure_file_name]))
-            pass
-        def __save_to_file(save_path): # save to existing Excel file.
-            print('save to an existing file.')
-            from pandas import ExcelWriter
-            wb=load_workbook(save_path)
-            wter=ExcelWriter(save_path)
-            wter.book=wb
-            self.data.to_excel(wter,sheet_name='-'.join([self.sheet_name,self.pure_file_name]))
-            wter.save()
-            pass
-        def __save_to_dir(save_path): # create file in the directory and save.
-            print('create file in the directory and save.')
-            from os.path import join as osjoin
-            save_path=osjoin(save_path,''.join([get_time_str(),r'.xlsx']))
-            if isfile(save_path):
-                self.__save_to_file(save_path)
-            else:
-                self.__save_to_path(save_path)
-            pass
-        if self.data is None:
-            return
-        else:
-            pass
-        if isfile(save_path):
-            __save_to_file(save_path)
-        elif isdir(save_path):
-            __save_to_dir(save_path)
-        else:
-            # creating Excel file at save_path.
-            __save_to_path(save_path)  
         pass
     def filter_key_record(self,condition_matrix):
         '''
@@ -995,6 +743,41 @@ class XlSheet:
         '''
         resu_keys=list(self.filter_str(condition_matrix)[self.key_name].drop_duplicates())
         return self.filter_list(resu_keys, self.key_name)
+    def duplicate(self,use_meta=False):
+        cal=deepcopy(self)
+        if use_meta==False:
+            cal.clear()
+        return cal
+    def calxl(self):
+        '''
+        This method will generate a blank XlSheet.
+        Do not call method load_raw_data();
+        '''
+        cal=XlSheet(
+            shmeta=[None,'sheet0',0],
+            #  file_path=None,
+            #  sheet_name='sheet0',
+            #  title=0,
+            keep_meta_info=self.keep_meta_info,
+            xlmap=deepcopy(self.xlmap),
+            use_map=self.use_map,
+            key_index=deepcopy(self.key_index),
+            key_name=deepcopy(self.key_name)
+        )
+        return cal
+    def xl2df(self,xl):
+        '''
+        Transfer XlSheet into it's data;
+        '''
+        df=deepcopy(xl.data)
+        return df
+    def df2xl(self,df):
+        '''
+        This method calls self.calxl();
+        '''
+        xl=self.calxl()
+        xl.accept_df(deepcopy(df))
+        return xl
     ### above are not perfect.
     pass
 if __name__=='__main__':
