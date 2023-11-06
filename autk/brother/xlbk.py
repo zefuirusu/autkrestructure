@@ -497,7 +497,7 @@ class XlBook:
                 "[Error:]check the input file:\n",
                 self.file_path
             )
-            return None
+            return DataFrame([])
     def get_mapdf(self,sheet_name:str,xlmap:XlMap,title=0):
         from copy import deepcopy
         source_data=self.get_df(sheet_name,title=title)

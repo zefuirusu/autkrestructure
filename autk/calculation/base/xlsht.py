@@ -23,8 +23,8 @@ class XlSheet:
     '''
     def __init__(
         self,
-        xlmap:XlMap=None,
-        shmeta:PathMeta=None,
+        xlmap:XlMap=XlMap(),
+        shmeta:PathMeta=JsonMeta({'BLANK_PATH':[['sheet',0]]}),
         # structure of the table is less important than meta information, yet simply make keep_meta_info default to True.
         # key_index is not so important for class XlSheet, so simply make key_index and key_name as defalt.
     ):
