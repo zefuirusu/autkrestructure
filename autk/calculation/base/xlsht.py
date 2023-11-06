@@ -96,16 +96,20 @@ class XlSheet:
     @property
     def rawdf(self):
         '''
-        It seems useless, because self.data may be updated when using XlSheet.
-        (self.data is dynamic.)
-        Thus the original data loaded from self.shmeta may not be what you need.
+        returns:
+        arguments  |shmeta=JsonMeta  |shmeta=None
+        -----------|-----------------|-----------
+        xlmap=XlMap|Raw DataFrame    |blank-DataFrame
+        xlmap=None |Raw DataFrame    |None
         '''
         if isinstance(self.shmeta,JsonMeta):
             path=str(list(self.shmeta.data.keys())[0])
-            return XlBook(path).get_df(
+            d=XlBook(path).get_df(
                 self.shmeta.data[path][0][0],
                 title=self.shmeta.data[path][0][1]
             )
+            d.fillna(0.0,inplace=True)
+            return d
         else:
             if isinstance(self.xlmap,XlMap):
                 d=DataFrame(
@@ -157,13 +161,89 @@ class XlSheet:
         else:
             pass
         pass
-    def load_df_by_map(self,df,xlmap=None): # TODO
+    def transform_df(self,df):
+        '''
+        used when isinstance(self.xlmap,XlMap);
+        self.xlmap must be an instance of XlMap;
+        this function is quite simillar to XlBook.get_mapdf();
+        '''
+        from copy import deepcopy
+        if isinstance(self.xlmap,XlMap):
+            data=DataFrame(
+                [],
+                columns=self.xlmap.columns
+            )
+            for col in self.xlmap.columns:
+                col_index=xlmap.show[col]
+                col_from_source=df.columns.to_numpy()[col_index]
+                if isinstance(col_index,int):
+                    data[col]=deepcopy(
+                        df[col_from_source]
+                    )
+                elif isinstance(col_index,list):
+                    data[col]=0
+                    for sub_col_index in col_index:
+                        sub_col_from_source=df.columns[sub_col_index]
+                        data[col]=deepcopy(
+                            data[col]+df[sub_col_from_source]
+                        )
+                        continue
+                else:
+                    pass
+                continue
+            return data
+        else:
+            print('[Warning]:check self.xlmap, ',self.xlmap)
+            return None
+    def load_df_by_map(self,df,xlmap:XlMap=None): # TODO
         '''
         If xlmap is None, load by self.xlmap.
         # FutureWarning: Support for multi-dimensional indexing (e.g. `obj[:, None]`) 
         # is deprecated and will be removed in a future version.  
         # Convert to a numpy array before indexing instead:
         '''
+        # TODO this function needs big fix.
+        if isinstance(self.shmeta,JsonMeta):
+            self.xlmap.accept_json(
+                xlmap.show,
+                over_write=False
+            )
+            self.data=self.transform_df(df)
+            self.data.fillna(0.0,inplace=True)
+            if isinstance(self.xlmap,XlMap):
+                # self.data has been loaded normally;
+                # join xlmap into self.xlmap;
+                # then load df by self.xlmap;
+                pass
+            else:
+                # self.data and self.xlmap have been load from XlBook.
+                # join xlmap into self.xlmap;
+                # then load df by self.xlmap;
+                pass
+            pass
+        else:
+            if isinstance(self.xlmap,XlMap):
+                # self.data=DataFrame([],columns=self.xlmap.columns)
+                if isinstance(xlmap,XlMap):
+                    # join xlmap into self.xlmap;
+                    # then load df by self.xlmap;
+                    self.xlmap.accept_json(
+                        xlmap.show,
+                        over_write=False
+                    )
+                    pass
+                else:
+                    # load df by self.xlmap;
+                    pass
+            else:
+                # self.data=None
+                # load df directly then generate self.xlmap by
+                # DataFrame.columns;
+                self.data=df
+                self.xlmap=XlMap.from_list(
+                    list(df.columns)
+                )
+                pass
         print('XlSheet loads data ','with shape',df.shape,'by map:',xlmap)
         col_names_in_xlmap=list(self.xlmap.show.keys())
         self.data=DataFrame([],columns=col_names_in_xlmap)

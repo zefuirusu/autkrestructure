@@ -12,6 +12,12 @@ class XlMap:
     '''
     def _overwt_dict(self):
         self.__dict__={}
+    def check_all_in(self,col_list):
+        checkli=[]
+        for col in col_list:
+            checkli.append(col in self.columns)
+            continue
+        return [True]*len(self.key_index)==checkli
     def accept_json(self,json_str,over_write=False):
         '''
         The passed argument 'json_str' indicates the location of the column
@@ -25,11 +31,11 @@ class XlMap:
         if over_write==True:
             self._overwt_dict()
         from os.path import isfile
-        if isinstance(json_str,dict):
-            pass
-        elif isfile(json_str):
+        if isfile(json_str):
             from autk.gentk.funcs import f2dict
             json_str=f2dict(json_str)
+        elif isinstance(json_str,dict):
+            pass
         else:
             pass
         for k in self.__dict__.keys():
@@ -41,6 +47,13 @@ class XlMap:
             # then set correct attributes according to json_str;
             setattr(self,k,json_str[k])
             continue
+    def append_col_name(self,col_name):
+        setattr(self,col_name,len(self.show.keys()))
+    def extend_col_list(self,col_list):
+        for attr_name in col_list:
+            self.append_col_name(attr_name)
+            continue
+        pass
     @property
     def name(self):
         return 'XlMap'
@@ -53,24 +66,11 @@ class XlMap:
             self.show.keys()
         )
     @property
-    def key_index(self):
-        return []
-    @property
     def key_name(self):
         return 'keyid'
-    def check_all_in(self,col_list):
-        checkli=[]
-        for col in col_list:
-            checkli.append(col in self.columns)
-            continue
-        return [True]*len(self.key_index)==checkli
-    def append_col_name(self,col_name):
-        setattr(self,col_name,len(self.show.keys()))
-    def append_col_list(self,col_list):
-        for attr_name in col_list:
-            self.append_col_name(attr_name)
-            continue
-        pass
+    @property
+    def key_index(self):
+        return []
     @classmethod
     def from_list(cls,columns):
         print('create map from list: ',columns)

@@ -500,11 +500,11 @@ class XlBook:
             return None
     def get_mapdf(self,sheet_name:str,xlmap:XlMap,title=0):
         from copy import deepcopy
+        source_data=self.get_df(sheet_name,title=title)
         data=DataFrame(
             [],
             columns=xlmap.columns
         )
-        source_data=self.get_df(sheet_name,title=title)
         for col in xlmap.columns:
             col_index=xlmap.show[col]
             col_from_source=source_data.columns.to_numpy()[col_index]
