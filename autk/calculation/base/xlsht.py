@@ -48,6 +48,7 @@ class XlSheet:
         self.xlmap=xlmap
         self.load_raw_data()
         # key index not set up till now.
+        self.__set_key_from_map()
         if self.data is not None:
             self.data.fillna(0.0,inplace=True)
         else:
@@ -55,6 +56,42 @@ class XlSheet:
         pass
     def __str__(self):
         return ''
+    def __set_key_from_map(self):
+        if len(getattr(self.xlmap,'key_index'))==0:
+            print('[Warning]:key_index is not set.')
+        else:
+            print(
+                '[Note]:setting `key_name` ',
+                getattr(self.xlmap,'key_name'),
+                'from `key_index` ',
+                getattr(self.xlmap,'key_index')
+            )
+            if getattr(
+                self.xlmap,
+                'key_name'
+            ) in self.xlmap.columns and (
+                self.xlmap.check_all_in(
+                    getattr(self.xlmap,'key_index')
+                )
+            ):
+                print('[Note]:key_name in columns.ok.')
+                def __join_key(row_series):
+                    return '-'.join(
+                        str(row_series[sub_index]) 
+                        for sub_index in getattr(self.xlmap,'key_index')
+                    )
+                self.apply_df_func(
+                    __join_key,
+                    0,
+                    getattr(self.xlmap,'key_name')
+                )
+            else:
+                print('[Warning]:check if `key_name` and `key_index` in columns')
+                print(
+                    'xlmap.columns:',self.xlmap.columns,
+                    "xlmap's key:",self.xlmap.key_name,self.xlmap.key_index
+                )
+        pass
     #  def __parse_meta(self,shmeta):
         #  '''
         #  doing nothing except setting attributes;

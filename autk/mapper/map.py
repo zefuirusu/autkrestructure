@@ -58,6 +58,12 @@ class XlMap:
     @property
     def key_name(self):
         return 'keyid'
+    def check_all_in(self,col_list):
+        checkli=[]
+        for col in col_list:
+            checkli.append(col in self.columns)
+            continue
+        return [True]*len(self.key_index)==checkli
     def append_col_name(self,col_name):
         setattr(self,col_name,len(self.show.keys()))
     def append_col_list(self,col_list):
