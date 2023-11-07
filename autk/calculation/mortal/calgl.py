@@ -33,12 +33,29 @@ class CalSheet(XlSheet):
         self.__set_date()
         pass
     def __set_drcr(self):
-        print('check dr/cr:',self.xlmap.check_cols(self.xlmap.drcrdesc))
-        print('check drcr:',self.xlmap.check_cols(['drcr']))
+        print('[Note] check dr/cr:',self.xlmap.check_cols(self.xlmap.drcrdesc))
+        print('[Note] check drcr:',self.xlmap.check_cols(['drcr']))
+        self.change_dtype(
+            self.xlmap.drcrdesc[0],
+            target_type=float
+        )
+        self.change_dtype(
+            self.xlmap.drcrdesc[1],
+            target_type=float
+        )
         def __cal_drcr(row_series):
             dr_col=self.xlmap.drcrdesc[0]
             cr_col=self.xlmap.drcrdesc[1]
-            return row_series[dr_col]-row_series[cr_col]
+            dr_amt=row_series[dr_col]
+            cr_amt=row_series[cr_col]
+            if (
+                isinstance(dr_amt,float) 
+                and 
+                isinstance(cr_amt,float)
+            ):
+                return dr_amt-cr_amt
+            else:
+                return 0.0
         self.apply_df_func(
             __cal_drcr,
             'drcr',
@@ -47,7 +64,7 @@ class CalSheet(XlSheet):
     def __set_acctmap(self):
         '''
         '''
-        print('check accid/accna:',self.xlmap.check_cols([
+        print('[Note] check accid/accna:',self.xlmap.check_cols([
             self.xlmap.accid_col,
             self.xlmap.accna_col,
         ]))
@@ -67,13 +84,18 @@ class CalSheet(XlSheet):
             pass
         pass
     def __set_top(self):
+        self.change_dtype(
+            self.xlmap.accid_col,
+            str
+        )
         if (
                 hasattr(self.xlmap,'top_accid_len')
             and self.xlmap.check_cols([
-                getattr(self.xlmap,'accid_col')
+                getattr(self.xlmap,'accid_col'),
+                getattr(self.xlmap,'top_accid_col')
             ])
         ):
-            print('check accid:ok')
+            print('[Note] check accid:ok')
             def __set_top_accid(row_series):
                 accid=row_series[self.xlmap.accid_col]
                 top_accid=accid[0:self.xlmap.top_accid_len]
@@ -87,10 +109,11 @@ class CalSheet(XlSheet):
         if (
                 hasattr(self.xlmap,'accna_split_by')
             and self.xlmap.check_cols([
-                getattr(self.xlmap,'accna_col')
+                getattr(self.xlmap,'accna_col'),
+                getattr(self.xlmap,'top_accna_col')
             ])
         ):
-            print('check accna:ok')
+            print('[Note] check accna:ok')
             def __set_top_accna(row_series):
                 accna=row_series[self.xlmap.accna_col]
                 top_accna=accna.split(
@@ -99,7 +122,7 @@ class CalSheet(XlSheet):
                 return top_accna
             self.apply_df_func(
                 __set_top_accna,
-                self.xlmap.top_accid_col
+                self.xlmap.top_accna_col
             )
         else:
             print('[Warning]:check your xlmap.')
@@ -109,7 +132,7 @@ class CalSheet(XlSheet):
         and self.xlmap.check_cols([
             getattr(self.xlmap,'date_col'),
         ])):
-            print('check date column:ok')
+            print('[Note] check date column:ok')
         pass
     def set_top_acct(
         self,

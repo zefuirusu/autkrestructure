@@ -34,6 +34,23 @@ class JsonMeta:
         else:
             pass
         pass
+    def save(self,savepath):
+        from json import dumps
+        with open(savepath,'w',encoding='utf-8') as f:
+            f.write(
+                dumps(
+                    self.data,
+                    ensure_ascii=False,
+                    indent=4
+                )
+            )
+        print(
+            '[Note]{} data saved to: {}'.format(
+                self.__class__.__name__,
+                savepath
+            )
+        )
+        pass
     pass
 class PathMeta(JsonMeta):
     def __init__(

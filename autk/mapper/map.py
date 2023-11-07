@@ -62,6 +62,23 @@ class XlMap:
             self.append_col_name(attr_name)
             continue
         pass
+    def save(self,savepath):
+        from json import dumps
+        with open(savepath,'w',encoding='utf-8') as f:
+            f.write(
+                dumps(
+                    self.show,
+                    ensure_ascii=False,
+                    indent=4
+                )
+            )
+        print(
+            '[Note]{} data saved to:{}'.format(
+                self.__class__.__name__,
+                savepath
+            )
+        )
+        pass
     @property
     def mapname(self):
         return str(self.__class__.__name__)
