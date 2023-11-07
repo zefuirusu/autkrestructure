@@ -12,12 +12,13 @@ class XlMap:
     '''
     def _overwt_dict(self):
         self.__dict__={}
-    def check_all_in(self,col_list):
+    def check_cols(self,col_list):
         checkli=[]
         for col in col_list:
             checkli.append(col in self.columns)
             continue
-        return [True]*len(self.key_index)==checkli
+        #  print(col_list,checkli)
+        return [True]*len(col_list)==checkli
     def accept_json(self,json_str,over_write=False):
         '''
         The passed argument 'json_str' indicates the location of the column
@@ -47,16 +48,23 @@ class XlMap:
             # then set correct attributes according to json_str;
             setattr(self,k,json_str[k])
             continue
+    def insert_col_name(self,col_name,col_index):
+        # TODO
+        pass
     def append_col_name(self,col_name):
-        setattr(self,col_name,len(self.show.keys()))
+        if col_name in self.columns:
+            print('[Warning]:append column to map. {} already exists.'.format(col_name))
+            pass
+        else:
+            setattr(self,col_name,len(self.show.keys()))
     def extend_col_list(self,col_list):
         for attr_name in col_list:
             self.append_col_name(attr_name)
             continue
         pass
     @property
-    def name(self):
-        return 'XlMap'
+    def mapname(self):
+        return str(self.__class__.__name__)
     @property
     def show(self):
         return self.__dict__
@@ -95,32 +103,35 @@ class MglMap(XlMap):
     def __init__(self):
         pass
     @property
-    def mapname(self):
-        return 'MglMap'
-    @property
     def key_name(self):
         return 'glid'
     @property
     def key_index(self):
         return ['date','mark','jrid']
     @property
+    def drcrdesc(self):
+        return ['dr','cr']
+    @property
     def accid_col(self):
         return 'accid'
-    @property
-    def top_accid_len(self):
-        return 4
     @property
     def accna_col(self):
         return 'accna'
     @property
-    def accna_split_by(self):
-        return r'/',
+    def top_accid_col(self):
+        return 'top_accid'
     @property
-    def drcrdesc(self):
-        return ['dr_amount','cr_amount']
+    def top_accna_col(self):
+        return 'top_accna'
     @property
     def date_col(self):
         return 'date'
+    @property
+    def top_accid_len(self):
+        return 4
+    @property
+    def accna_split_by(self):
+        return r'/',
     @property
     def date_split_by(self):
         return r'-'
@@ -167,9 +178,6 @@ class EglMap(MglMap):
             'mark':None,
             'jrid':None
         }
-    @property
-    def mapname(self):
-        return 'MglMap'
     @property
     def key_index(self):
         return ['date','mark','jrid']
@@ -221,9 +229,6 @@ class SampleEglMap(EglMap):
         self.exchange_name=11 # 外币名称
         self.drcr=None # 一个数字表示金额，正数为借方，负数为贷方
         pass
-    @property
-    def mapname(self):
-        return 'SampleMglMap'
     pass
 class InvGlMap(XlMap):
     '''
@@ -259,9 +264,6 @@ class InvGlMap(XlMap):
         self.recal_amount_allocated=26
         pass
     @property
-    def mapname(self):
-        return 'InvGlMap'
-    @property
     def item_json(self):
         resu={}
         for k in self.__dict__:
@@ -286,9 +288,6 @@ class GenChartMap(XlMap):
         self.end_bal_type=4 #期末余额方向
         self.end_amount=8
         pass
-    @property
-    def mapname(self):
-        return 'GenChartMap'
     @property
     def accid_col(self):
         return 'accid'
@@ -339,9 +338,6 @@ class ChartMap(GenChartMap):
         # self.month=None
         pass
     @property
-    def mapname(self):
-        return 'ChartMap'
-    @property
     def accid_col(self):
         return 'accid'
     @property
@@ -383,9 +379,6 @@ class ApArMap(ChartMap):
         # self.month=None
         pass
     @property
-    def mapname(self):
-        return 'ApArMap'
-    @property
     def aging_items(self):
         #  return ['0-1','1-2','2-3','3-4','4-5','5-inf'] # 账龄项目的划分,inf代表"无穷"。"inf" represents "infinite"；
         return ['age0','age1','age2','age3','age4','age5'] # 账龄项目的划分,inf代表"无穷"。"inf" represents "infinite"；
@@ -403,9 +396,6 @@ class InvChartMap(XlMap):
         self.set_age_cols(ages_count)
         #  self.append_col_list(self.get_age_cols(ages_count))
         pass
-    @property
-    def mapname(self):
-        return 'InvChartMap'
     @property
     def num_cols(self):
         return ['num_start','num_in','num_out','num_bal']
@@ -443,10 +433,8 @@ def InvMonthMap(InvChartMap):
     def __init__(self,ages_count):
         self.month=0
         pass
-    @property
-    def mapname(self):
-        return 'InvMonthMap'
     pass
+## the following 2 functions may be useless.
 def get_glmap(columns,key_index=['date','mark','jrid'],drcrdesc=['dr_amount','cr_amount']):
     '''
     columns must be included:

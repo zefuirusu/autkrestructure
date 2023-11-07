@@ -494,7 +494,7 @@ class XlBook:
             )
         else:
             print(
-                "[Error:]check the input file:\n",
+                "[Error]:check the input file:",
                 self.file_path
             )
             return DataFrame([])

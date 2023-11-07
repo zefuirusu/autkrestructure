@@ -5,118 +5,52 @@ from copy import deepcopy
 from threading import Thread
 from pandas import DataFrame
 
-from autk.mapper.map import MglMap,get_glmap
 from autk.gentk.funcs import transType,regex_filter,save_df
+from autk.mapper.map import MglMap
+from autk.meta.pmeta import JsonMeta,PathMeta
 from autk.calculation.base.xlsht import XlSheet
 
 class CalSheet(XlSheet):
     '''
-    CalSheet must have a map to indicate its column-structure;
     If xlmap is passed None,then columns will be:
         ['glid','date','mark','jrid','accid','accna','dr_amount','cr_amount','drcr','item_name','note']
     '''
     def __init__(
         self,
-        shmeta=[None,'sheet0',0],
-        #  file_path=None,
-        #  sheet_name='sheet0',
-        #  title=0,
-        # structure of the table is less important than meta information.
-        #  key_index=['date','mark','jrid'], #['凭证日期','字','号'],
-        #  key_name='glid',
-        #  drcrdesc=['dr_amount','cr_amount'],#['借方发生金额','贷方发生金额'],
-        #  accid_col='accid',#科目编号',
-        #  accna_col='accna',#科目全路径',
-        #  date_col='date',#凭证日期',
-        #  date_split_by=r'-',
-        #  top_accid_len=4,
-        #  accna_split_by=r'/',
-        xlmap=None,
-        #  use_map=False,
-        keep_meta_info=False,
+        xlmap:MglMap=MglMap(),
+        shmeta:PathMeta=JsonMeta({'BLANK_PATH':[['sheet',0]]})
     ):
-        if xlmap is None:
-            #  xlmap=get_glmap([
-                #  'glid','date','mark','jrid','accid','accna','dr_amount','cr_amount','drcr','item_name','note'
-            #  ])()
-            xlmap=MglMap.from_list([
-                'glid','date','mark','jrid','accid','accna','dr_amount','cr_amount','drcr','item_name','note'
-            ])
-        else:
-            pass
-        XlSheet.__init__(
-            self,
-            shmeta=shmeta,
-            xlmap=xlmap,
-            use_map=True,
-            keep_meta_info=keep_meta_info,
-            key_index=xlmap.key_index,
-            key_name=xlmap.key_name
-        )
-        #  self.set_key_cols(
-            #  drcrdesc=drcrdesc,
-            #  accid_col=accid_col,
-            #  accna_col=accna_col )
-        #  self.set_top_acct(
-            #  top_accid_len,
-            #  accna_split_by
-        #  )
-        #  self.set_date(
-            #  date_col=date_col,
-            #  date_split_by=date_split_by
-        #  )
-        self.__parse_acctmap()
-        self.fake=False
-        pass
-    def set_key_cols(
-        self,
-        #  drcrdesc=['借方发生金额','贷方发生金额'],
-        #  accid_col='科目编号',
-        #  accna_col='科目全路径'
-    ):
-        if self.use_map==True:
-            setattr(self,'drcrdesc',self.xlmap.drcrdesc)
-            setattr(self,'accid_col',self.xlmap.accid_col)
-            setattr(self,'accna_col',self.xlmap.accna_col)
-        else:
-            setattr(self,'drcrdesc',drcrdesc)
-            setattr(self,'accid_col',accid_col)
-            setattr(self,'accna_col',accna_col)
-        key_cols=[
-            self.key_name,
-            self.accid_col,
-            self.drcrdesc[0],
-            self.drcrdesc[1],
-            self.accna_col
-        ]
-        setattr(self,'key_cols',key_cols)
-        def cal_drcr_apply_func(row_series):
-            dr_amount=row_series[self.drcrdesc[0]]
-            cr_amount=row_series[self.drcrdesc[1]]
-            if (
-                isinstance(dr_amount,(int,float)) 
-                and isinstance(cr_amount,(int,float))
-            ):
-                drcr=dr_amount-cr_amount
-            else:
-                drcr=0.0
-            return drcr
-        if self.shmeta[0] is not None:
-            self.apply_df_func(cal_drcr_apply_func,1,'drcr')
-    def __parse_acctmap(self):
-        '''
-        self.set_key_cols() must be called before this.
-        '''
         self.acctmap={}
-        #  if self.use_map==False:
-            #  accid_col='科目编号'
-            #  accna_col='科目全路径'
-        #  elif isinstance(self.xlmap,MglMap):
-            #  accid_col='accid'
-            #  accna_col='accna'
-        #  else:
-            #  pass
-        print('see the cols:',self.xlmap.columns)
+        self.acctmap_invert={}
+        super().__init__(
+            xlmap=xlmap,
+            shmeta=shmeta,
+        )
+        self.__set_drcr()
+        self.__set_acctmap()
+        ## set_top and set_date are optional.
+        self.__set_top()
+        self.__set_date()
+        pass
+    def __set_drcr(self):
+        print('check dr/cr:',self.xlmap.check_cols(self.xlmap.drcrdesc))
+        print('check drcr:',self.xlmap.check_cols(['drcr']))
+        def __cal_drcr(row_series):
+            dr_col=self.xlmap.drcrdesc[0]
+            cr_col=self.xlmap.drcrdesc[1]
+            return row_series[dr_col]-row_series[cr_col]
+        self.apply_df_func(
+            __cal_drcr,
+            'drcr',
+        )
+        pass
+    def __set_acctmap(self):
+        '''
+        '''
+        print('check accid/accna:',self.xlmap.check_cols([
+            self.xlmap.accid_col,
+            self.xlmap.accna_col,
+        ]))
         if isinstance(self.data,DataFrame):
             map_df=self.data[[self.xlmap.accid_col,self.xlmap.accna_col]]
             map_dict=zip(
@@ -130,6 +64,53 @@ class CalSheet(XlSheet):
                    self.acctmap.keys()
                )
             )
+            pass
+        pass
+    def __set_top(self):
+        if (
+                hasattr(self.xlmap,'top_accid_len')
+            and self.xlmap.check_cols([
+                getattr(self.xlmap,'accid_col')
+            ])
+        ):
+            print('check accid:ok')
+            def __set_top_accid(row_series):
+                accid=row_series[self.xlmap.accid_col]
+                top_accid=accid[0:self.xlmap.top_accid_len]
+                return top_accid
+            self.apply_df_func(
+                __set_top_accid,
+                self.xlmap.top_accid_col
+            )
+        else:
+            print('[Warning]:check your xlmap.')
+        if (
+                hasattr(self.xlmap,'accna_split_by')
+            and self.xlmap.check_cols([
+                getattr(self.xlmap,'accna_col')
+            ])
+        ):
+            print('check accna:ok')
+            def __set_top_accna(row_series):
+                accna=row_series[self.xlmap.accna_col]
+                top_accna=accna.split(
+                    self.xlmap.accna_split_by
+                )[0]
+                return top_accna
+            self.apply_df_func(
+                __set_top_accna,
+                self.xlmap.top_accid_col
+            )
+        else:
+            print('[Warning]:check your xlmap.')
+        pass
+    def __set_date(self):
+        if (hasattr(self.xlmap,'date_split_by')
+        and self.xlmap.check_cols([
+            getattr(self.xlmap,'date_col'),
+        ])):
+            print('check date column:ok')
+        pass
     def set_top_acct(
         self,
         top_accid_len=4,
