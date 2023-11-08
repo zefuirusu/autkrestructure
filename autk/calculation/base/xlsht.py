@@ -3,6 +3,7 @@
 '''
 Excel Sheet
 '''
+import pysnooper
 
 import re
 import os
@@ -35,10 +36,18 @@ class XlSheet:
         self.load_raw_data()
         pass
     @property
+    def name(self):
+        name_str='#'.join([
+            str(list(self.shmeta.data.keys())[0]).split(os.sep)[-1],
+            self.shmeta.data[list(self.shmeta.data.keys())[0]][0][0],
+            str(self.shmeta.data[list(self.shmeta.data.keys())[0]][0][1]),
+        ])
+        return name_str
+    @property
     def show(self):
         show={}
         show.update({
-            "ojb":self.__class__.__name__,
+            "calculator":self.__class__.__name__,
             "xlmap":{
                 #  self.xlmap.__class__.__name__:
                 str(type(self.xlmap)):
@@ -54,7 +63,7 @@ class XlSheet:
     def __str__(self):
         return str(self.show)
     def __set_key_from_map(self):
-        if self.xlmap.check_cols(
+        if self.xlmap.has_cols(
                 [self.xlmap.key_name]+self.xlmap.key_index
         ):
             print(
@@ -175,9 +184,11 @@ class XlSheet:
         pass
     def transform_df(self,df):
         '''
-        used when isinstance(self.xlmap,XlMap);
+        Transform the input df so that 
+        it fits with self.xlmap;
+        This function is quite simillar to XlBook.get_mapdf();
+        Used when isinstance(self.xlmap,XlMap);
         self.xlmap must be an instance of XlMap;
-        this function is quite simillar to XlBook.get_mapdf();
         '''
         from copy import deepcopy
         if isinstance(self.xlmap,XlMap):
@@ -267,7 +278,7 @@ class XlSheet:
         new data will overwrite this column.
         Whatever you passed to `col_index` it is ignored currently.
         '''
-        if self.xlmap.check_cols([col_name]):
+        if self.xlmap.has_cols([col_name]):
             self.data[col_name]=deepcopy(
                 self.data.apply(
                     df_apply_func,
@@ -433,8 +444,6 @@ class XlSheet:
             criteria=condition_row[2]
         '''
         self.__clear_row_temp()
-        #  if self.data is None:
-            #  self.set_key()
         if isinstance(condition_matrix, list) and len(condition_matrix)==3:
             condition_matrix=[condition_matrix]
         else:
@@ -448,12 +457,15 @@ class XlSheet:
                 )
                 continue
             if condition_set==[True]*len(condition_set):
-            # if condition_set==[True]*len(condition_matrix):
                 self.__row_temp.append(row_data)
             else:
                 pass
             continue
-        resu=self.get_row_temp_data(over_write=over_write,type_xl=type_xl)
+        resu=self.get_row_temp_data(
+            over_write=over_write,
+            type_xl=type_xl
+        )
+        self.__clear_row_temp()
         return resu
     def filter_str(
         self,
@@ -585,11 +597,11 @@ class XlSheet:
         return resu
     def vlookups(
         self,
-        resu_col,
+        resu_col:str,
         condition_matrix,
-        filter_type='adv',
-        unique=False
-    ):
+        filter_type:str='adv',
+        unique:bool=False
+    )->list:
         '''
         parameters:
             resu_col,

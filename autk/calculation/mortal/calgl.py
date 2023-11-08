@@ -33,8 +33,8 @@ class CalSheet(XlSheet):
         self.__set_date()
         pass
     def __set_drcr(self):
-        print('[Note] check dr/cr:',self.xlmap.check_cols(self.xlmap.drcrdesc))
-        print('[Note] check drcr:',self.xlmap.check_cols(['drcr']))
+        print('[Note] check dr/cr:',self.xlmap.has_cols(self.xlmap.drcrdesc))
+        print('[Note] check drcr:',self.xlmap.has_cols(['drcr']))
         self.change_dtype(
             self.xlmap.drcrdesc[0],
             target_type=float
@@ -64,7 +64,7 @@ class CalSheet(XlSheet):
     def __set_acctmap(self):
         '''
         '''
-        print('[Note] check accid/accna:',self.xlmap.check_cols([
+        print('[Note] check accid/accna:',self.xlmap.has_cols([
             self.xlmap.accid_col,
             self.xlmap.accna_col,
         ]))
@@ -90,7 +90,7 @@ class CalSheet(XlSheet):
         )
         if (
                 hasattr(self.xlmap,'top_accid_len')
-            and self.xlmap.check_cols([
+            and self.xlmap.has_cols([
                 getattr(self.xlmap,'accid_col'),
                 getattr(self.xlmap,'top_accid_col')
             ])
@@ -108,14 +108,15 @@ class CalSheet(XlSheet):
             print('[Warning]:check your xlmap.')
         if (
                 hasattr(self.xlmap,'accna_split_by')
-            and self.xlmap.check_cols([
+            and self.xlmap.has_cols([
                 getattr(self.xlmap,'accna_col'),
                 getattr(self.xlmap,'top_accna_col')
             ])
         ):
             print('[Note] check accna:ok')
             def __set_top_accna(row_series):
-                accna=row_series[self.xlmap.accna_col]
+                accna=str(
+                    row_series[self.xlmap.accna_col])
                 top_accna=accna.split(
                     self.xlmap.accna_split_by
                 )[0]
@@ -129,7 +130,7 @@ class CalSheet(XlSheet):
         pass
     def __set_date(self):
         if (hasattr(self.xlmap,'date_split_by')
-        and self.xlmap.check_cols([
+        and self.xlmap.has_cols([
             getattr(self.xlmap,'date_col'),
         ])):
             print('[Note] check date column:ok')

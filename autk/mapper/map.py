@@ -12,7 +12,7 @@ class XlMap:
     '''
     def _overwt_dict(self):
         self.__dict__={}
-    def check_cols(self,col_list):
+    def has_cols(self,col_list):
         checkli=[]
         for col in col_list:
             checkli.append(col in self.columns)
@@ -148,7 +148,7 @@ class MglMap(XlMap):
         return 4
     @property
     def accna_split_by(self):
-        return r'/',
+        return r'/'
     @property
     def date_split_by(self):
         return r'-'

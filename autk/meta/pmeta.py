@@ -23,6 +23,19 @@ from threading import Thread
 from autk.gentk.funcs import f2dict,start_thread_list
 
 class JsonMeta:
+    '''
+    JsonMeta.data is like:
+    {
+        "path 1":[
+            ["sheet 1",0],
+            ["sheet 2",3]
+        ],
+        "path 2":[
+            ["sheet 1",0],
+            ["sheet 3",4]
+        ]
+    }
+    '''
     def __init__(self,json_str):
         self.keep_additional=True
         self.path='json'
@@ -34,6 +47,28 @@ class JsonMeta:
         else:
             pass
         pass
+    def split_to_shmeta(self):
+        metali=[]
+        for path in self.data.keys():
+            sht_info_li=self.data[path]
+            for sht_info in sht_info_li:
+                metali.append(
+                    JsonMeta({
+                        path:[
+                            [sht_info[0],sht_info[1]]
+                        ]
+                    })
+                )
+        return metali
+    def check_split(self)->bool:
+        metali=self.split_to_shmeta()
+        sheet_count=0
+        for path in self.data.keys():
+            sheet_count+=len(
+                self.data[path]
+            )
+            continue
+        return len(metali)==sheet_count
     def save(self,savepath):
         from json import dumps
         with open(savepath,'w',encoding='utf-8') as f:
