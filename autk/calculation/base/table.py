@@ -78,9 +78,19 @@ class ImmortalTable:
         print('[Note]check cols:',self.check_cols())
     def collect_xl(self):
         self.__clear_data()
+        thli=[]
         for shmeta in self.xlmeta.split_to_shmeta():
-            self.append_xl_by_meta(shmeta)
+            thli.append(
+                Thread(
+                    target=self.append_xl_by_meta,
+                    args=(shmeta,),
+                    name='~'.join([
+                        'table-load-xlsheet',
+                    ])
+                )
+            )
             continue
+        start_thread_list(thli)
         pass
     def append_xl_by_meta(self,shmeta):
         '''
@@ -147,6 +157,7 @@ class ImmortalTable:
         self.check_xl_cols()
         df_meta=[]
         for xl in self.xlset:
+            #TODO
             bs=[xl.pure_file_name,xl.sheet_name] # book-sheet as bs
             col=xl.columns
             bs.extend(col)
@@ -162,7 +173,7 @@ class ImmortalTable:
             if xl.xlmap is not None:
                 scan_xl_df.append(
                     [
-                        xl.pure_file_name,
+                        xl.pure_file_name,#TODO
                         xl.sheet_name,
                         xl.title,
                         xl.data.shape,
@@ -172,7 +183,7 @@ class ImmortalTable:
             else:
                 scan_xl_df.append(
                     [
-                        xl.pure_file_name,
+                        xl.pure_file_name,#TODO
                         xl.sheet_name,
                         xl.title,
                         xl.data.shape,
@@ -278,7 +289,7 @@ class ImmortalTable:
                 over_write=True,
                 type_xl=True
             )
-            setattr(single_xl,'pure_file_name',str(single_value))
+            setattr(single_xl,'pure_file_name',str(single_value))#TODO
             setattr(single_xl,'sheet_name',str(single_value))
             cal.xlset.append(single_xl)
             pass
@@ -358,8 +369,7 @@ class ImmortalTable:
                         r'__start_filter->',
                         getattr(afunc,'__name__'),
                         r':',
-                        xl.pure_file_name,
-                        xl.sheet_name
+                        xl.name
                     ]
                 )
             )
@@ -457,8 +467,7 @@ class ImmortalTable:
                 name=''.join(
                     [
                         r'filter_list->',
-                        xl.pure_file_name,
-                        xl.sheet_name
+                        xl.name,
                     ]
                 )
             )
@@ -786,8 +795,7 @@ class ImmortalTable:
                 name=''.join(
                     [
                         r'change_dtype->',
-                        xl.pure_file_name,
-                        xl.sheet_name
+                        xl.name,
                     ]
                 )
             )
@@ -805,8 +813,7 @@ class ImmortalTable:
                 name=''.join(
                     [
                         r'change_float_to_str->',
-                        xl.pure_file_name,
-                        xl.sheet_name
+                        xl.name,
                     ]
                 )
             )

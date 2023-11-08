@@ -67,10 +67,12 @@ class XlSheet:
                 [self.xlmap.key_name]+self.xlmap.key_index
         ):
             print(
-                '[Note]:setting `key_name` ',
-                getattr(self.xlmap,'key_name'),
-                'from `key_index` ',
-                getattr(self.xlmap,'key_index')
+                '[Note] {} `{}` sets `{}` as key_name from key_index:{}'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    self.xlmap.key_name,
+                    self.xlmap.key_index
+                )
             )
             def __join_key(row_series):
                 return '-'.join(
@@ -83,13 +85,13 @@ class XlSheet:
                 col_index=None,
             )
         else:
-            print('[Warning]:key_index is not set properly:')
             print(
-                "xlmap's key:",
-                {self.xlmap.key_name:
-                self.xlmap.key_index},
-                'xlmap.columns:',
-                self.xlmap.columns,
+                '[Warning] check key_index of {}:'.format(self.name),
+                'key in xlmap:{}/{}'.format(
+                    self.xlmap.key_name,
+                    self.xlmap.key_index
+                ),
+                'columns in xlmap:{}'.format(self.xlmap.columns)
             )
         pass
     def __clear_row_temp(self):
@@ -138,8 +140,9 @@ class XlSheet:
             path=str(list(self.shmeta.data.keys())[0])
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[Note]:{} loads data from {}.'.format(
+                    '[Note] {} `{}` loads data from {}.'.format(
                         self.__class__.__name__,
+                        self.name,
                         self.xlmap.__class__.__name__
                     )
                 )
@@ -150,8 +153,9 @@ class XlSheet:
                 )
             else:
                 print(
-                    '[Note]:{} created without XlMap.'.format(
-                        self.__class__.__name__
+                    '[Note] {} `{}` created without XlMap.'.format(
+                        self.__class__.__name__,
+                        self.name
                     )
                 )
                 self.data=XlBook(path).get_df(
@@ -162,8 +166,10 @@ class XlSheet:
         else:
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[Note]:{} created blank sheet.'.format(
-                        self.__class__.__name__)
+                    '[Note] {} `{}` created blank sheet.'.format(
+                        self.__class__.__name__,
+                        self.name
+                    )
                 )
                 self.data=DataFrame(
                     data=[],
@@ -172,8 +178,9 @@ class XlSheet:
                 self.data.fillna(0.0,inplace=True)
                 pass
             else:
-                print('[Warning]:{} loaded no data.'.format(
-                    self.__class__.__name__
+                print('[Warning] {} `{}` loaded no data.'.format(
+                    self.__class__.__name__,
+                    self.name
                 ))
                 self.data=None
         self.__set_key_from_map()
@@ -216,7 +223,7 @@ class XlSheet:
                 continue
             return data
         else:
-            print('[Warning]:check self.xlmap, ',self.xlmap)
+            print('[Warning] check self.xlmap, ',self.xlmap)
             return None
     def load_df_by_map(self,df,xlmap:XlMap=None):
         '''

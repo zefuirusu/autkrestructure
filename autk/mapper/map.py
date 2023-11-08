@@ -17,7 +17,6 @@ class XlMap:
         for col in col_list:
             checkli.append(col in self.columns)
             continue
-        #  print(col_list,checkli)
         return [True]*len(col_list)==checkli
     def accept_json(self,json_str,over_write=False):
         '''
@@ -73,7 +72,7 @@ class XlMap:
                 )
             )
         print(
-            '[Note]{} data saved to:{}'.format(
+            '[Note] {} data saved to:{}'.format(
                 self.__class__.__name__,
                 savepath
             )
@@ -98,15 +97,15 @@ class XlMap:
         return []
     @classmethod
     def from_list(cls,columns):
-        print('create map from list: ',columns)
+        print('[Note] create map from list: ',columns)
         xlmap=cls()
         xlmap._overwt_dict()
         xlmap.append_col_list(columns)
-        print('new map created:\n',xlmap.show)
+        print('[Note] new map created:\n',xlmap.show)
         return xlmap
     @classmethod
     def from_dict(cls,columns):
-        print('create map from dict: ',columns)
+        print('[Note] create map from dict: ',columns)
         xlmap=cls()
         #  xlmap._overwt_dict()
         xlmap.accept_json(columns,over_write=True)
@@ -457,7 +456,7 @@ def get_glmap(columns,key_index=['date','mark','jrid'],drcrdesc=['dr_amount','cr
     columns must be included:
         glid,date,mark,jrid,accid,accna,dr_amount,cr_amount,item_name,note;
     '''
-    print('columns of glmap:\n',columns)
+    print('[Note] columns of glmap:\n',columns)
     class InstantMap(MglMap):
         def __init__(self):
             if isinstance(columns,list):
@@ -468,7 +467,7 @@ def get_glmap(columns,key_index=['date','mark','jrid'],drcrdesc=['dr_amount','cr
                 for k in columns.keys():
                     setattr(self,k,columns[k])
             else:
-                print('invalid columns:',columns)
+                print('[Warning] invalid columns:',columns)
                 pass
             pass
         @property
@@ -487,7 +486,7 @@ def get_chmap(columns,drcrdesc=['dr_amount','cr_amount'],accna_split_by=r'/',top
         accid,accna,dr_amount,cr_amount;
         glid,date,mark,jrid,accid,accna,dr_amount,cr_amount,item_name,note;
     '''
-    print('columns of chmap:\n',columns)
+    print('[Note] columns of chmap:\n',columns)
     class InstantMap(GenChartMap):
         def __init__(self):
             if isinstance(columns,list):
@@ -498,7 +497,7 @@ def get_chmap(columns,drcrdesc=['dr_amount','cr_amount'],accna_split_by=r'/',top
                 for k in columns.keys():
                     setattr(self,k,columns[k])
             else:
-                print('invalid columns:',columns)
+                print('[Warning] invalid columns:',columns)
                 pass
             pass
         pass
