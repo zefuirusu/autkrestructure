@@ -17,8 +17,8 @@ class CalSheet(XlSheet):
     '''
     def __init__(
         self,
-        xlmap:MglMap=MglMap(),
-        shmeta:PathMeta=JsonMeta({'BLANK_PATH':[['sheet',0]]})
+        xlmap:MglMap=None,#MglMap(),
+        shmeta:PathMeta=None,#JsonMeta({'BLANK_PATH':[['sheet',0]]})
     ):
         self.acctmap={}
         self.acctmap_invert={}
@@ -26,11 +26,15 @@ class CalSheet(XlSheet):
             xlmap=xlmap,
             shmeta=shmeta,
         )
-        self.__set_drcr()
-        self.__set_acctmap()
-        ## set_top and set_date are optional.
-        self.__set_top()
-        self.__set_date()
+        if (
+            isinstance(self.xlmap,MglMap)
+            and isinstance(self.shmeta,JsonMeta)
+        ):
+            self.__set_drcr()
+            self.__set_acctmap()
+            ## set_top and set_date are optional.
+            self.__set_top()
+            self.__set_date()
         pass
     def __set_drcr(self):
         print('[Note] check dr/cr:',self.xlmap.has_cols(self.xlmap.drcrdesc))

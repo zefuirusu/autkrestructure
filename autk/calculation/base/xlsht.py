@@ -20,24 +20,30 @@ from autk.brother.xlbk import XlBook
 
 class XlSheet:
     '''
-    Map is not so important to XlSheet.
+    self.data is determined by self.xlmap and
+    self.shmeta;
+        arguments  |shmeta=JsonMeta  |shmeta=None
+        -----------|-----------------|-----------
+        xlmap=XlMap|load normally    |load blank DataFrame
+        xlmap=None |get xlmap from df|self.data=None
     '''
     def __init__(
         self,
-        xlmap:XlMap=XlMap(),
-        shmeta:PathMeta=JsonMeta({'BLANK_PATH':[['sheet',0]]}),
+        xlmap:XlMap=None,#XlMap(),
+        shmeta:PathMeta=None#JsonMeta({'BLANK_PATH':[['sheet',0]]}),
     ):
         '''
         XlSheet fills all blanks with float zero.
         '''
         self.__row_temp=[]
+        self.data=None
         self.shmeta=shmeta
         self.xlmap=xlmap
         self.load_raw_data()
         pass
     @property
     def name(self):
-        name_str='#'.join([
+        name_str='None#None#0' if self.shmeta is None else '#'.join([
             str(list(self.shmeta.data.keys())[0]).split(os.sep)[-1],
             self.shmeta.data[list(self.shmeta.data.keys())[0]][0][0],
             str(self.shmeta.data[list(self.shmeta.data.keys())[0]][0][1]),
@@ -45,20 +51,26 @@ class XlSheet:
         return name_str
     @property
     def show(self):
-        show={}
-        show.update({
-            "calculator":self.__class__.__name__,
+        show={
+            "calculator":{
+                self.__class__.__name__:
+                self.name
+            },
+            "data_size":(
+                self.data.shape 
+                if isinstance(self.data,DataFrame) else None
+            ),
             "xlmap":{
                 #  self.xlmap.__class__.__name__:
                 str(type(self.xlmap)):
-                self.xlmap.show
+                None if self.xlmap is None else self.xlmap.show
             },
             "shmeta":{
                 self.shmeta.__class__.__name__:
                 #  str(type(self.shmeta)):
-                self.shmeta.data
+                None if self.shmeta is None else self.shmeta.data
             }
-        })
+        }
         return show
     def __str__(self):
         return str(self.show)
@@ -136,11 +148,11 @@ class XlSheet:
         xlmap=XlMap|load normally    |load blank DataFrame
         xlmap=None |get xlmap from df|self.data=None
         '''
-        if isinstance(self.shmeta,JsonMeta):
+        if isinstance(self.shmeta,JsonMeta):# and path != 'BLANK_PATH':
             path=str(list(self.shmeta.data.keys())[0])
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[Note] {} `{}` loads data from {}.'.format(
+                    '[Note] {} `{}` loads data by {}.'.format(
                         self.__class__.__name__,
                         self.name,
                         self.xlmap.__class__.__name__
@@ -151,9 +163,10 @@ class XlSheet:
                     self.xlmap,
                     title=self.shmeta.data[path][0][1]
                 )
+                self.__set_key_from_map()
             else:
                 print(
-                    '[Note] {} `{}` created without XlMap.'.format(
+                    '[Note] {} `{}` loads data without XlMap.'.format(
                         self.__class__.__name__,
                         self.name
                     )
@@ -166,9 +179,10 @@ class XlSheet:
         else:
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[Note] {} `{}` created blank sheet.'.format(
+                    '[Note] {} `{}` created blank sheet by {}.'.format(
                         self.__class__.__name__,
-                        self.name
+                        self.name,
+                        self.xlmap.__class__.__name__
                     )
                 )
                 self.data=DataFrame(
@@ -178,48 +192,47 @@ class XlSheet:
                 self.data.fillna(0.0,inplace=True)
                 pass
             else:
-                print('[Warning] {} `{}` loaded no data.'.format(
+                print('[Warning] {} `{}` loaded `None` data.'.format(
                     self.__class__.__name__,
                     self.name
                 ))
                 self.data=None
-        self.__set_key_from_map()
         if self.data is not None:
             self.data.fillna(0.0,inplace=True)
-        else:
-            pass
         pass
+    def blank_copy(self):
+        '''
+        self.data is blank-DataFrame if 
+        self.xlmap is not None;
+        else self.data=None;
+        '''
+        return self.__class__(
+            xlmap=deepcopy(self.xlmap),
+            shmeta=None
+        )
     def transform_df(self,df):
         '''
         Transform the input df so that 
         it fits with self.xlmap;
-        This function is quite simillar to XlBook.get_mapdf();
         Used when isinstance(self.xlmap,XlMap);
         self.xlmap must be an instance of XlMap;
+        This method does not change self.xlmap.
         '''
-        from copy import deepcopy
+        source_cols=list(df.columns.to_numpy())
+        if self.xlmap.has_cols(source_cols):
+            print('[Note] columns fits with xlmap.')
+        else:
+            print('[Note] input cols of df:',source_cols)
         if isinstance(self.xlmap,XlMap):
             data=DataFrame(
                 [],
                 columns=self.xlmap.columns
             )
             for col in self.xlmap.columns:
-                col_index=xlmap.show[col]
-                col_from_source=df.columns.to_numpy()[col_index]
-                if isinstance(col_index,int):
+                if col in source_cols:
                     data[col]=deepcopy(
-                        df[col_from_source]
+                        df[col]
                     )
-                elif isinstance(col_index,list):
-                    data[col]=0
-                    for sub_col_index in col_index:
-                        sub_col_from_source=df.columns[sub_col_index]
-                        data[col]=deepcopy(
-                            data[col]+df[sub_col_from_source]
-                        )
-                        continue
-                else:
-                    pass
                 continue
             return data
         else:
@@ -234,10 +247,14 @@ class XlSheet:
         '''
         if isinstance(self.xlmap,XlMap):
             if isinstance(xlmap,XlMap):
-                self.xlmap.accept_json(
-                    xlmap.show,
-                    over_write=False
-                )
+                if xlmap.columns==self.xlmap.columns:
+                    #self.transform_df(df)
+                    pass
+                else:
+                    self.xlmap.accept_json(
+                        xlmap.show,
+                        over_write=False
+                    )
             else:
                 self.xlmap.extend_col_list(list(
                     df.columns
@@ -253,23 +270,27 @@ class XlSheet:
                 ))
                 self.data=df
         self.data.fillna(0.0,inplace=True)
-    def get_row_temp_data(self,over_write=False,type_xl=False):
+    def get_row_temp_data(
+        self,
+        over_write=False,
+        type_xl=False
+    ):
         '''
         Get current concatenated data of self.__row_temp, then clear it;
         '''
         if len(self.__row_temp)==0:
-            temp_data=DataFrame([],columns=self.data.columns)
+            temp_data=DataFrame([],columns=self.xlmap.columns)
         else:
             temp_data=concat(
                 self.__row_temp,
                 axis=1
             ).T
         if over_write==True:
-            self.accept_df(temp_data)
+            self.data=temp_data
         if type_xl==True:
-            cal=self.duplicate(use_meta=False)
-            cal.accept_df(temp_data)
-            resu=cal
+            temp_xl=self.blank_copy()
+            temp_xl.load_df_by_map(temp_data)
+            resu=temp_xl
         else:
             resu=temp_data
         self.__clear_row_temp()
@@ -378,8 +399,14 @@ class XlSheet:
         Return:bool;
         '''
         if (
-            self.__parse_str_match(str_con_row, row_series) == True 
-            and self.__parse_num_compare(num_con_row, row_series) == True
+            self.__parse_str_match(
+                str_con_row,
+                row_series
+            ) == True 
+            and self.__parse_num_compare(
+                num_con_row,
+                row_series
+            ) == True
         ):
             return True
         else:
@@ -391,6 +418,10 @@ class XlSheet:
         over_write=False,
         type_xl=False
     ):
+        '''
+        Get all records whose value of `search_col` in
+        `target_list`.
+        '''
         self.__clear_row_temp()
         for row in self.data.iterrows():
             row_data=row[1]
@@ -418,6 +449,7 @@ class XlSheet:
             '''
             logic_resu=[]
             for regex_str in regex_list:
+                regex_str=re.compile(regex_str)
                 if match_mode==False:
                     logic_resu.append(
                         re.search(regex_str,the_str) is not None
@@ -489,8 +521,6 @@ class XlSheet:
             match_mode=condition_row[3]
         '''
         self.__clear_row_temp()
-        #  if self.data is None:
-            #  self.set_key()
         if isinstance(condition_matrix, list) and len(condition_matrix)==4:
             condition_matrix=[condition_matrix]
         else:
@@ -521,8 +551,6 @@ class XlSheet:
         num_condition_matrix=condition_dict['number']
         if isinstance(num_condition_matrix, list) and len(num_condition_matrix)==3:
             num_condition_matrix=[num_condition_matrix]
-        #  if self.data is None:
-            #  self.set_key()
         for i in self.data.iterrows():
             row_data=i[1]
             condition_set=[]
@@ -538,7 +566,10 @@ class XlSheet:
             else:
                 pass
             continue
-        resu=self.get_row_temp_data(over_write=over_write,type_xl=type_xl)
+        resu=self.get_row_temp_data(
+            over_write=over_write,
+            type_xl=type_xl
+        )
         return resu
     def filter(
         self,

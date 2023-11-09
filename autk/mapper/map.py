@@ -52,7 +52,11 @@ class XlMap:
         pass
     def append_col_name(self,col_name):
         if col_name in self.columns:
-            print('[Warning]:append column to map. {} already exists.'.format(col_name))
+            print(
+                '[Warning]: {} already included in {}.'.format(
+                    col_name,self.__class__.__name__
+                )
+            )
             pass
         else:
             setattr(self,col_name,len(self.show.keys()))
@@ -100,7 +104,7 @@ class XlMap:
         print('[Note] create map from list: ',columns)
         xlmap=cls()
         xlmap._overwt_dict()
-        xlmap.append_col_list(columns)
+        xlmap.extend_col_list(columns)
         print('[Note] new map created:\n',xlmap.show)
         return xlmap
     @classmethod

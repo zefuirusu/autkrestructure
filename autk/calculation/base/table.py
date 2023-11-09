@@ -441,6 +441,7 @@ class ImmortalTable:
                 resu.extend(d)
             return resu
         '''
+        #TODO
         self.__clear_temp()
         def __filter_list_single(
                 xl_obj,
@@ -481,23 +482,17 @@ class ImmortalTable:
         return resu
     def filter_regex_list(
         self,
-        regex_list,
-        search_col,
-        match_mode=False,
-        over_write=False,
-        type_xl=False
+        *args,
+        **kwargs,
     ):
         '''
         This method has not been believed to be effective;
         '''
         self.__clear_temp()
-        self.apply_xl_func(
-            XlSheet.filter_regex_list,
-            (regex_list,search_col,match_mode,over_write)
-        )
-        resu=self.get_df_temp_data(
-            over_write=over_write,
-            type_xl=type_xl
+        resu=self.apply_xl_df(
+            'filter_regex_list',
+            *args,
+            **kwargs,
         )
         self.__clear_temp()
         return resu
@@ -658,6 +653,63 @@ class ImmortalTable:
         return sum(set(
             self.apply_xl_collect('sumifs',*args,**kwargs).values()
         ))
+    def apply_xl_resu_size(
+        self,
+        xl_func_name:str,
+        *args,
+        **kwargs
+    ):
+        '''
+        '''
+        data=self.apply_xl_collect(
+            xl_func_name,
+            *args,
+            **kwargs
+        )
+        size={}
+        for xl_name,xl in data.items():
+            if isinstance(xl,XlSheet):
+                size.update({xl_name:xl.data.shape})
+            elif isinstance(xl,DataFrame):
+                size.update({xl_name:xl.shape})
+            else:
+                pass
+            continue
+        size_df=DataFrame(
+            size.items(),
+            columns=[
+                self.xlset[0].__class__.__name__,
+                'result_size'
+            ],
+            #  index=list(data.keys())
+        )
+        return size_df
+    def apply_xl_df(
+        self,
+        xl_func_name:str,
+        *args,
+        **kwargs
+    )->DataFrame:
+        #TODO
+        xl_collect=self.apply_xl_collect(
+            xl_func_name,
+            *args,
+            **kwargs
+        )
+        resuli=[]
+        for xl_name,xl in xl_collect.items():
+            if isinstance(xl,XlSheet):
+                resuli.append(xl.data)
+            elif isinstance(xl,DataFrame):
+                resuli.append(xl)
+            else:
+                pass
+        data=concat(
+            resuli,
+            axis=0,
+            join='outer'
+        )
+        return data
     def apply_xl_collect(
         self,
         xl_func_name:str,
@@ -672,6 +724,8 @@ class ImmortalTable:
                 "xl_obj_3":result_3,
                 ....
             }
+        where:
+            results may be XlSheet or DataFrame.
         '''
         resuli={} #[]
         def __collect_apply(xl,xl_func_name):
@@ -826,6 +880,7 @@ class ImmortalTable:
         Expected to be perfect.
         Return all keys (data in column 'key_name') according to the passed argument condition_matrix.
         '''
+        #TODO
         # self.__clear_temp()
         d=self.filter(condition_matrix,filter_type='str')
         resu_keys=list(d[self.key_name].drop_duplicates())
