@@ -12,6 +12,8 @@ class XlMap:
     '''
     def _overwt_dict(self):
         self.__dict__={}
+    def get_index(self,col_name):
+        return self.show[col_name]
     def has_cols(self,col_list):
         checkli=[]
         for col in col_list:
@@ -53,8 +55,9 @@ class XlMap:
     def append_col_name(self,col_name):
         if col_name in self.columns:
             print(
-                '[Warning]: {} already included in {}.'.format(
-                    col_name,self.__class__.__name__
+                '[Warning]: `{}` already included in {}.'.format(
+                    col_name,
+                    self.__class__.__name__
                 )
             )
             pass

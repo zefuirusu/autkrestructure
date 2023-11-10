@@ -41,6 +41,24 @@ class XlSheet:
         self.xlmap=xlmap
         self.load_raw_data()
         pass
+    def __str__(self):
+        return str(self.show)
+    def __len__(self):
+        return 1
+    def __add__(
+        self,
+        other
+    ):
+        resu=self.blank_copy()
+        resu.load_df_by_map(
+            concat(
+                [deepcopy(self.data),deepcopy(other.data)],
+                axis=0,
+                join='outer'
+            ),
+            xlmap=deepcopy(other.xlmap)
+        )
+        return resu
     @property
     def name(self):
         name_str='None#None#0' if self.shmeta is None else '#'.join([
@@ -72,8 +90,6 @@ class XlSheet:
             }
         }
         return show
-    def __str__(self):
-        return str(self.show)
     def __set_key_from_map(self):
         if self.xlmap.has_cols(
                 [self.xlmap.key_name]+self.xlmap.key_index
@@ -295,6 +311,37 @@ class XlSheet:
             resu=temp_data
         self.__clear_row_temp()
         return resu
+    def check_cols(self):
+        '''
+        Check if `self.xlmap.columns` corresponds
+        with `self.data.columns`;
+        '''
+        if (
+            isinstance(self.data,DataFrame) 
+            and isinstance(self.xlmap,XlMap)
+        ):
+            return self.xlmap.has_cols(
+                list(self.data.columns)
+            )
+        else:
+            print('[Note] columns-check failed. check data or map.')
+            return False
+    def append_col_name(self,col_name):
+        self.xlmap.append_col_name(col_name)
+        if self.xlmap.has_cols([col_name]):
+            pass
+        else:
+            self.data.insert(
+                self.xlmap.get_index(col_name),
+                col_name,
+                0
+            )
+        print('check cols after append:',self.check_cols())
+        pass
+    def extend_col_list(self,col_list):
+        for col_name in col_list:
+            self.append_col_name(col_name)
+        pass
     def apply_df_func(
         self,
         df_apply_func,
@@ -320,8 +367,8 @@ class XlSheet:
             # `col_index` cannot be assigned.
             # maybe self.xlmap.insert_col_name(col_name,col_index)
             # later.
-            self.xlmap.append_col_name(col_name)
-            col_index=self.xlmap.show[col_name]
+            self.append_col_name(col_name)
+            col_index=self.xlmap.get_index(col_name)
             self.data.insert(
                 col_index,
                 col_name,
