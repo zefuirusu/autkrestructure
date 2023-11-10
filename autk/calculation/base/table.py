@@ -47,7 +47,8 @@ class ImmortalTable:
         self.data=None
         self.load_count=0
         ### start initialize:
-        self.collect_xl()
+        if self.xlmeta is not None:
+            self.collect_xl()
         pass
     def __str__(self):
         return str(self.show)
@@ -58,24 +59,38 @@ class ImmortalTable:
         self.xlset=[]
         self.data=None
         self.load_count=0
+        pass
+    @property
+    def shape(self)->Dataframe:
+        #TODO
+        return
     @property
     def show(self):
         show={
-            "calculator":self.__class__.__name__,
+            "calculator":
+                self.__class__.__name__,
+            "data_size":{
+                "xl_count":len(self.xlset),
+                "shape":self.shape
+            },
             "xlmap":{
                 str(type(self.xlmap)):
                 self.xlmap.show
             },
             "xlmeta":{
                 self.xlmeta.__class__.__name__:
-                self.xlmeta.data
+                None if self.xlmeta is None else self.xlmeta.data
             },
-            #  "xlset":[xl.show for xl in self.xlset]
         }
         return show
     def append_col_name(self,col_name):
         self.xlmap.append_col_name(col_name)
         print('[Note]check cols:',self.check_cols())
+    def blank_copy(self):
+        return self.__class__(
+            xlmap=self.xlmap,
+            xlmeta=None
+        )
     def collect_xl(self):
         self.__clear_data()
         thli=[]
@@ -105,6 +120,7 @@ class ImmortalTable:
         )
         pass
     def append_df_by_map(self,df):
+        #XlSheet.load_df_by_map()
         pass
     def check_cols(self):
         '''
@@ -153,49 +169,6 @@ class ImmortalTable:
         self.load_raw_data()
         pass
     @property
-    def colscan(self):
-        self.check_xl_cols()
-        df_meta=[]
-        for xl in self.xlset:
-            #TODO
-            bs=[xl.pure_file_name,xl.sheet_name] # book-sheet as bs
-            col=xl.columns
-            bs.extend(col)
-            df_meta.append(bs)
-            continue
-        df_meta=DataFrame(df_meta)
-        meta=df_meta.T
-        return meta
-    @property
-    def xlscan(self):
-        scan_xl_df=[]
-        for xl in self.xlset:
-            if xl.xlmap is not None:
-                scan_xl_df.append(
-                    [
-                        xl.pure_file_name,#TODO
-                        xl.sheet_name,
-                        xl.title,
-                        xl.data.shape,
-                        xl.xlmap.name
-                    ]
-                )
-            else:
-                scan_xl_df.append(
-                    [
-                        xl.pure_file_name,#TODO
-                        xl.sheet_name,
-                        xl.title,
-                        xl.data.shape,
-                        'no_map'
-                    ]
-                )
-        scan_xl_df=DataFrame(
-            scan_xl_df,
-            columns=['file','sheet_name','title','shape','map']
-        )
-        return scan_xl_df
-    @property
     def rawdf(self):
         '''
         It seems useless, because self.data may be updated when using ImmortalTable.
@@ -224,8 +197,6 @@ class ImmortalTable:
         else:
             df=None
         return df
-    #  def append_df_to_temp(self,df):
-        #  self.__df_temp.append(df)
     def get_df_temp_data(
             self,
             over_write=False,
@@ -263,57 +234,6 @@ class ImmortalTable:
             return xl
         else:
             return resu
-    def join(self,if_split=False):
-        '''
-        Join all sheets.
-        This method is not completed.
-        '''
-        if if_split==False: # do not split into different sheets;
-            pass
-        else: # split into different sheets;
-            pass
-        pass
-    def split(self,by):
-        '''
-        return:
-            class ImmortalTable;
-        '''
-        # cal=self.get_fake(copy=False, use_meta=False)
-        cal=self.duplicate(use_meta=False)
-        cal.xlset=[]
-        def __split_single(single_value):
-            fake_cal=self.duplicate(use_meta=True)
-            single_xl=fake_cal.filter(
-                [[single_value,by,False,True]],
-                filter_type='str',
-                over_write=True,
-                type_xl=True
-            )
-            setattr(single_xl,'pure_file_name',str(single_value))#TODO
-            setattr(single_xl,'sheet_name',str(single_value))
-            cal.xlset.append(single_xl)
-            pass
-        possible_values=self.vlookup(
-            r'.*',
-            by,
-            resu_col=None,
-            if_regex=True,
-            match_mode=False
-        )
-        thread_list=[]
-        for single_value in possible_values:
-            t=Thread(
-                target=__split_single,
-                args=(single_value,),
-                name=''.join([
-                    'Table-split-',
-                    str(single_value)
-                ])
-            )
-            thread_list.append(t)
-            continue
-        start_thread_list(thread_list)
-        return cal
     def __filter_num_single(
             self,
             xl_obj,
@@ -496,63 +416,6 @@ class ImmortalTable:
         )
         self.__clear_temp()
         return resu
-    def fake_filter(
-        self,
-        condition,
-        filter_type='adv',
-        copy=False
-    ):
-        '''
-        parameters: same as self.filter (except over_write);
-        return: class ImmortalTable;
-        '''
-        if copy==False:
-            cal=self.caltable(use_meta=True)
-        else:
-            cal=self.duplicate(use_meta=True)
-        cal.filter(
-            condition,
-            filter_type=filter_type,
-            over_write=True,
-            type_xl=False
-        )
-        return cal
-    def fake_filter_list(
-        self,
-        target_list,
-        search_col,
-        copy=False
-    ):
-        if copy==False:
-            cal=self.caltable(use_meta=True)
-        else:
-            cal=self.duplicate(use_meta=True)
-        cal.filter_list(
-            target_list,
-            search_col,
-            over_write=True,
-            type_xl=False
-        )
-        return cal
-    def fake_filter_regex_list(
-        self,
-        regex_list,
-        search_col,
-        match_mode=False,
-        copy=False
-    ):
-        if copy==False:
-            cal=self.caltable(use_meta=True)
-        else:
-            cal=self.duplicate(use_meta=True)
-        cal.filter_regex_list(
-            regex_list,
-            search_col,
-            match_mode=match_mode,
-            over_write=True,
-            type_xl=False
-        )
-        return cal
     def vlookup(
         self,
         str_item,
@@ -653,124 +516,21 @@ class ImmortalTable:
         return sum(set(
             self.apply_xl_collect('sumifs',*args,**kwargs).values()
         ))
-    def apply_xl_resu_size(
-        self,
-        xl_func_name:str,
-        *args,
-        **kwargs
-    ):
-        '''
-        '''
-        data=self.apply_xl_collect(
-            xl_func_name,
-            *args,
-            **kwargs
-        )
-        size={}
-        for xl_name,xl in data.items():
-            if isinstance(xl,XlSheet):
-                size.update({xl_name:xl.data.shape})
-            elif isinstance(xl,DataFrame):
-                size.update({xl_name:xl.shape})
-            else:
-                pass
-            continue
-        size_df=DataFrame(
-            size.items(),
-            columns=[
-                self.xlset[0].__class__.__name__,
-                'result_size'
-            ],
-            #  index=list(data.keys())
-        )
-        return size_df
-    def apply_xl_df(
-        self,
-        xl_func_name:str,
-        *args,
-        **kwargs
-    )->DataFrame:
-        #TODO
-        xl_collect=self.apply_xl_collect(
-            xl_func_name,
-            *args,
-            **kwargs
-        )
-        resuli=[]
-        for xl_name,xl in xl_collect.items():
-            if isinstance(xl,XlSheet):
-                resuli.append(xl.data)
-            elif isinstance(xl,DataFrame):
-                resuli.append(xl)
-            else:
-                pass
-        data=concat(
-            resuli,
-            axis=0,
-            join='outer'
-        )
-        return data
-    def apply_xl_collect(
-        self,
-        xl_func_name:str,
-        *args,
-        **kwargs
-    )->dict:
-        '''
-        Returns:
-            {
-                "xl_obj_1":result_1,
-                "xl_obj_2":result_2,
-                "xl_obj_3":result_3,
-                ....
-            }
-        where:
-            results may be XlSheet or DataFrame.
-        '''
-        resuli={} #[]
-        def __collect_apply(xl,xl_func_name):
-            xl_resu=getattr(xl,xl_func_name)(*args,**kwargs)
-            #  if xl_resu is None:
-                #  pass
-            #  elif isinstance(xl_resu,list):
-                #  resuli.extend(xl_resu)
-            #  else:
-                #  resuli.append(xl_resu)
-            resuli.update({
-                xl.name:xl_resu
-            })
-        thli=[]
-        for xl in self.xlset:
-            thli.append(
-                Thread(
-                    target=__collect_apply,
-                    args=(xl,xl_func_name,),
-                    name='~'.join([
-                        self.__class__.__name__,
-                        'apply',
-                        xl.name,
-                        xl_func_name
-                    ])
-                )
-            )
-            continue
-        start_thread_list(thli)
-        return resuli
     def apply_xl_func(
         self,
-        xl_func,
+        xl_func,# a function
         *args,
         **kwargs,
     ):
         '''
-        This method starts multi-thread to manipulate every xl,
-        in self.xlset to call one of his method named `xl_func`,
-        so as to collect data into outside data-capsule.
-        Then you get data by self.get_df_temp_data();
-        This method works with self.get_df_temp_data;
+        This method starts multi-thread
+        to manipulate every xl in self.xlset.
         `xl_func` must be customized, whose first
-        parameter is xl, followed by other arguments 
-        needed by `xl_func`;
+        parameter is xl;
+        When designing what `xl_func`, think about
+        what `xl_func` can do with its first argument
+        as `xl`.
+        This function returns 0.
         '''
         thread_list=[]
         for xl in self.xlset:
@@ -787,7 +547,151 @@ class ImmortalTable:
             )
             continue
         start_thread_list(thread_list)
-        return
+        return 0
+    def apply_xl_collect(
+        self,
+        xl_func_name:str,
+        *args,
+        **kwargs
+    )->dict:
+        '''
+        Returns:
+            {
+                "xl_obj_1":result_1,
+                "xl_obj_2":result_2,
+                "xl_obj_3":result_3,
+                ....
+            }
+        where:
+            results may be XlSheet,DataFrame,list,or set,etc.
+            if results are XlSheet/DataFrame, they can be
+            joined into a single DataFrame and size are known.
+        '''
+        resuli={} # key:XlSheet.name,value:results
+        def __collect_apply(xl,xl_func_name):
+            xl_resu=getattr(
+                xl,
+                xl_func_name
+            )(*args,**kwargs)
+            resuli.update({
+                xl.name:xl_resu
+            })
+        # the following can be replaced by
+        # `self.apply_xl_func`
+        #  thli=[]
+        #  for xl in self.xlset:
+            #  thli.append(
+                #  Thread(
+                    #  target=__collect_apply,
+                    #  args=(xl,xl_func_name,),
+                    #  name='~'.join([
+                        #  self.__class__.__name__,
+                        #  'apply',
+                        #  xl.name,
+                        #  xl_func_name
+                    #  ])
+                #  )
+            #  )
+            #  continue
+        #  start_thread_list(thli)
+        self.apply_xl_func(
+            __collect_apply,
+            xl_func_name
+        )
+        return resuli
+    def apply_xl_collect_df(
+        self,
+        xl_func_name:str,
+        *args,
+        **kwargs
+    )->DataFrame:
+        '''
+        Transform what `self.apply_xl_collect` returns
+        into DataFrame.
+        If `self.apply_xl_collect` called,
+        each thread of `getattr(XlSheet,xl_func_name)(*args,*kwargs)`
+        returns DataFrame or XlSheet,
+        this method will collect them into a DataFrame.
+        '''
+        xl_collect=self.apply_xl_collect(
+            xl_func_name,
+            *args,
+            **kwargs
+        )
+        resuli=[]
+        for xl_name,xl in xl_collect.items():
+            if isinstance(xl,XlSheet):
+                resuli.append(xl.data)
+            elif isinstance(xl,DataFrame):
+                resuli.append(xl)
+            else:
+                resuli.append(
+                    DataFrame([],columns=self.xlmap.columns)
+                )
+        data=concat(
+            resuli,
+            axis=0,
+            join='outer'
+        )
+        return data
+    def apply_xl_collect_list(
+        self,
+        xl_func_name:str,
+        *args,
+        **kwargs
+    )->list:
+        '''
+        If results of `self.apply_xl_collect` are list,
+        join them into a single list.
+        '''
+        xl_collect=self.apply_xl_collect(
+            xl_func_name,
+            *args,
+            **kwargs
+        )
+        resuli=[]
+        for xl_name,xl in xl_collect.items():
+            if isinstance(xl,list):
+                resuli.extend(xl)
+            if isinstance(xl,set):
+                resuli.extend(list(xl))
+            else:
+                #  resuli.append(xl)
+                pass
+        return resuli
+    def apply_xl_collect_size(
+        self,
+        xl_func_name:str,
+        *args,
+        **kwargs
+    )->DataFrame:
+        '''
+        Size of the return of `self.apply_xl_df`.
+        '''
+        data=self.apply_xl_collect(
+            xl_func_name,
+            *args,
+            **kwargs
+        )
+        size={}
+        for xl_name,xl in data.items():
+            if isinstance(xl,XlSheet):
+                size.update({xl_name:xl.data.shape})
+            elif isinstance(xl,DataFrame):
+                size.update({xl_name:xl.shape})
+            elif isinstance(xl,list):
+                size.update({xl_name:len(xl)})
+            else:
+                size.update({xl_name:None})
+            continue
+        size_df=DataFrame(
+            size.items(),
+            columns=[
+                self.xlset[0].__class__.__name__,
+                'result_size'
+            ],
+        )
+        return size_df
     def apply_df_func(
         self,
         df_apply_func,
@@ -841,38 +745,47 @@ class ImmortalTable:
         def __change_single(xl,col_name,target_type):
             xl.change_dtype(col_name,target_type)
             pass
-        thread_list=[]
-        for xl in self.xlset:
-            t=Thread(
-                target=__change_single,
-                args=(xl,col_name,target_type),
-                name=''.join(
-                    [
-                        r'change_dtype->',
-                        xl.name,
-                    ]
-                )
-            )
-            thread_list.append(t)
-        start_thread_list(thread_list)
+        #  thread_list=[]
+        #  for xl in self.xlset:
+            #  t=Thread(
+                #  target=__change_single,
+                #  args=(xl,col_name,target_type),
+                #  name=''.join(
+                    #  [
+                        #  r'change_dtype->',
+                        #  xl.name,
+                    #  ]
+                #  )
+            #  )
+            #  thread_list.append(t)
+        #  start_thread_list(thread_list)
+        self.apply_xl_func(
+            __change_dtype,
+            col_name,
+            target_type,
+        )
         pass
     def change_float_to_str(self,col_name):
         def __change_single(xl,col_name):
             xl.change_float_to_str(col_name)
-        thread_list=[]
-        for xl in self.xlset:
-            t=Thread(
-                target=__change_single,
-                args=(xl,col_name,),
-                name=''.join(
-                    [
-                        r'change_float_to_str->',
-                        xl.name,
-                    ]
-                )
-            )
-            thread_list.append(t)
-        start_thread_list(thread_list)
+        #  thread_list=[]
+        #  for xl in self.xlset:
+            #  t=Thread(
+                #  target=__change_single,
+                #  args=(xl,col_name,),
+                #  name=''.join(
+                    #  [
+                        #  r'change_float_to_str->',
+                        #  xl.name,
+                    #  ]
+                #  )
+            #  )
+            #  thread_list.append(t)
+        #  start_thread_list(thread_list)
+        self.apply_xl_func(
+            __change_single,
+            col_name
+        )
         pass
     ### the following are not perfect !
     def filter_key_record(self,condition_matrix):
@@ -886,7 +799,28 @@ class ImmortalTable:
         resu_keys=list(d[self.key_name].drop_duplicates())
         # self.__clear_temp()
         return self.filter_list(resu_keys, search_col=self.key_name)
-    ### the above are not perfect.
+    def join(self,if_split=False)->XlSheet:
+        '''
+        Join all sheets.
+        This method is not completed.
+        '''
+        if if_split==False: # do not split into different sheets;
+            pass
+        else: # split into different sheets;
+            pass
+        pass
+    def split(self,by:str):
+        '''
+        This method is completed.
+        return:
+            class ImmortalTable;
+        '''
+        table=self.blank_copy()
+        table.xlset=self.apply_xl_collect_list(
+            'split',
+            by,
+        )
+        return table
     pass
 if __name__=='__main__':
     pass

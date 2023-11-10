@@ -336,12 +336,12 @@ class XlSheet:
         pass
     def change_dtype(self,col_name,target_type=str):
         self.data[col_name]=self.data[col_name].astype(target_type)
-        pass
+        return 0
     def change_float_to_str(self,col_name):
         def trans_row_dtype(row_series):
             return transType(row_series[col_name])
         self.data[col_name]=self.data.apply(trans_row_dtype, axis=1)
-        pass
+        return 0
     def __parse_str_match(self,condition_row,row_series):
         '''
         Return:bool
@@ -411,65 +411,6 @@ class XlSheet:
             return True
         else:
             return False
-    def filter_list(
-        self,
-        target_list,
-        search_col,
-        over_write=False,
-        type_xl=False
-    ):
-        '''
-        Get all records whose value of `search_col` in
-        `target_list`.
-        '''
-        self.__clear_row_temp()
-        for row in self.data.iterrows():
-            row_data=row[1]
-            if row_data[search_col] in target_list:
-                # need deep copy of row_data?
-                self.__row_temp.append(row_data)
-            continue
-        resu=self.get_row_temp_data(
-            over_write=over_write,
-            type_xl=type_xl
-        )
-        return resu
-    def filter_regex_list(
-        self,
-        regex_list,
-        search_col,
-        match_mode=False,
-        over_write=False,
-        type_xl=False
-    ):
-        self.__clear_row_temp()
-        def multi_regex_match(the_str,regex_list):
-            '''
-            Any of regex_list matches 'the_str', returns True;
-            '''
-            logic_resu=[]
-            for regex_str in regex_list:
-                regex_str=re.compile(regex_str)
-                if match_mode==False:
-                    logic_resu.append(
-                        re.search(regex_str,the_str) is not None
-                    )
-                else:
-                    logic_resu.append(
-                        re.match(regex_str,the_str) is not None
-                    )
-                continue
-            if True in logic_resu:
-                return True
-            else:
-                return False
-        for row in self.data.iterrows():
-            row_data=row[1]
-            the_str=str(row_data[search_col])
-            if multi_regex_match(the_str,regex_list)==True:
-                self.__row_temp.append(row_data)
-        resu=self.get_row_temp_data(over_write=over_write,type_xl=type_xl)
-        return resu
     def filter_num(
         self,
         condition_matrix,
@@ -610,6 +551,65 @@ class XlSheet:
             )
         else:
             pass
+    def filter_list(
+        self,
+        target_list,
+        search_col,
+        over_write=False,
+        type_xl=False
+    ):
+        '''
+        Get all records whose value of `search_col` in
+        `target_list`.
+        '''
+        self.__clear_row_temp()
+        for row in self.data.iterrows():
+            row_data=row[1]
+            if row_data[search_col] in target_list:
+                # need deep copy of row_data?
+                self.__row_temp.append(row_data)
+            continue
+        resu=self.get_row_temp_data(
+            over_write=over_write,
+            type_xl=type_xl
+        )
+        return resu
+    def filter_regex_list(
+        self,
+        regex_list,
+        search_col,
+        match_mode=False,
+        over_write=False,
+        type_xl=False
+    ):
+        self.__clear_row_temp()
+        def multi_regex_match(the_str,regex_list):
+            '''
+            Any of regex_list matches 'the_str', returns True;
+            '''
+            logic_resu=[]
+            for regex_str in regex_list:
+                regex_str=re.compile(regex_str)
+                if match_mode==False:
+                    logic_resu.append(
+                        re.search(regex_str,the_str) is not None
+                    )
+                else:
+                    logic_resu.append(
+                        re.match(regex_str,the_str) is not None
+                    )
+                continue
+            if True in logic_resu:
+                return True
+            else:
+                return False
+        for row in self.data.iterrows():
+            row_data=row[1]
+            the_str=str(row_data[search_col])
+            if multi_regex_match(the_str,regex_list)==True:
+                self.__row_temp.append(row_data)
+        resu=self.get_row_temp_data(over_write=over_write,type_xl=type_xl)
+        return resu
     def vlookup(
         self,
         find_str,
@@ -678,6 +678,55 @@ class XlSheet:
             type_xl=False
         )[sum_col]
         return sum(values_to_sum)
+    def split(self,by:str)->list:
+        resu=[]
+        if self.xlmap.has_cols([by]):
+            from threading import Thread
+            from autk.gentk.funcs import start_thread_list
+            value_list=self.vlookups(
+                by,
+                [['.*',by,True,False]],
+                filter_type='str',
+                unique=True,
+            )
+            def __sub_filter(sub_v):
+                sub_xl=self.blank_copy()
+                sub_xl.load_df_by_map(
+                    deepcopy(self.data),
+                    xlmap=self.xlmap
+                )
+                sub_xl.filter(
+                    [[sub_v,by,True,True]],
+                    filter_type='str',
+                    over_write=True,
+                    type_xl=False
+                )
+                resu.append(
+                    sub_xl
+                )
+                pass
+            thli=[]
+            for sub_v in value_list:
+                thli.append(
+                    Thread(
+                        target=__sub_filter,
+                        args=(sub_v,)
+                    )
+                )
+                continue
+            start_thread_list(thli)
+            pass
+        else:
+            print('[Warning] check your parameters: {}'.format(by))
+        return resu
+    def to_table(self,by:str):
+        from autk.calculation.base.table import ImmortalTable
+        table=ImmortalTable(
+            xlmap=self.xlmap,
+            xlmeta=None
+        )
+        table.xlset=self.split(by)
+        return table
     ### below are not perfect ???
     def percentage(self,percent_col_name,target_col_name):
         '''
