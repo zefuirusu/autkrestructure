@@ -37,16 +37,17 @@ class CalSheet(XlSheet):
             self.__set_date()
         pass
     def __set_drcr(self):
-        print('[Note] check dr/cr:',self.xlmap.has_cols(self.xlmap.drcrdesc))
-        print('[Note] check drcr:',self.xlmap.has_cols(['drcr']))
-        self.change_dtype(
-            self.xlmap.drcrdesc[0],
-            target_type=float
-        )
-        self.change_dtype(
-            self.xlmap.drcrdesc[1],
-            target_type=float
-        )
+        if self.xlmap.has_cols(self.xlmap.drcrdesc):
+            self.change_dtype(
+                self.xlmap.drcrdesc[0],
+                target_type=float
+            )
+            self.change_dtype(
+                self.xlmap.drcrdesc[1],
+                target_type=float
+            )
+        else:
+            print('[Warning] check dr/cr:',self.xlmap.columns)
         def __cal_drcr(row_series):
             dr_col=self.xlmap.drcrdesc[0]
             cr_col=self.xlmap.drcrdesc[1]
@@ -60,6 +61,10 @@ class CalSheet(XlSheet):
                 return dr_amt-cr_amt
             else:
                 return 0.0
+        if self.xlmap.has_cols(['drcr']):
+            pass
+        else:
+            print('[Note] check drcr:',self.xlmap.has_cols(['drcr']))
         self.apply_df_func(
             __cal_drcr,
             'drcr',
@@ -68,11 +73,12 @@ class CalSheet(XlSheet):
     def __set_acctmap(self):
         '''
         '''
-        print('[Note] check accid/accna:',self.xlmap.has_cols([
+        if self.xlmap.has_cols([
             self.xlmap.accid_col,
             self.xlmap.accna_col,
-        ]))
-        if isinstance(self.data,DataFrame):
+        ]) and isinstance(self.data,DataFrame):
+            self.change_dtype(self.xlmap.accid_col,str)
+            self.change_dtype(self.xlmap.accna_col,str)
             map_df=self.data[[self.xlmap.accid_col,self.xlmap.accna_col]]
             map_dict=zip(
                 list(map_df[self.xlmap.accid_col]),
@@ -86,20 +92,25 @@ class CalSheet(XlSheet):
                )
             )
             pass
+        else:
+            print('[Warning] check accid/accna or data:',self.xlmap.has_cols([
+                self.xlmap.accid_col,
+                self.xlmap.accna_col,
+            ]))
         pass
     def __set_top(self):
-        self.change_dtype(
-            self.xlmap.accid_col,
-            str
-        )
         if (
                 hasattr(self.xlmap,'top_accid_len')
             and self.xlmap.has_cols([
                 getattr(self.xlmap,'accid_col'),
-                getattr(self.xlmap,'top_accid_col')
+                getattr(self.xlmap,'top_accid_col'),
             ])
         ):
             print('[Note] check accid:ok')
+            self.change_dtype(
+                self.xlmap.accid_col,
+                str
+            )
             def __set_top_accid(row_series):
                 accid=row_series[self.xlmap.accid_col]
                 top_accid=accid[0:self.xlmap.top_accid_len]
@@ -147,19 +158,19 @@ class CalSheet(XlSheet):
         setattr(self,'top_accid_len',top_accid_len)
         setattr(self,'accna_split_by',accna_split_by)
         if self.shmeta[0] is not None:
-            self.change_float_to_str(self.accid_col)
-            self.change_float_to_str(self.accna_col)
+            self.change_float_to_str(self.xlmap.accid_col)
+            self.change_float_to_str(self.xlmap.accna_col)
             def top_accid_apply_func(row_series):
-                accid=row_series[self.accid_col]
-                top_accid=accid[0:self.top_accid_len]
+                accid=row_series[self.xlmap.accid_col]
+                top_accid=accid[0:self.xlmap.top_accid_len]
                 return top_accid
             def top_accna_apply_func(row_series):
-                accna=row_series[self.accna_col]
+                accna=row_series[self.xlmap.accna_col]
                 top_accna=accna.split(self.xlmap.accna_split_by)[0]
                 top_accna=str(top_accna)
                 return top_accna
-            self.apply_df_func(top_accid_apply_func,1,'top_accid')
-            self.apply_df_func(top_accna_apply_func,1,'top_accna')
+            self.apply_df_func(top_accid_apply_func,self.xlmap.top_accid)
+            self.apply_df_func(top_accna_apply_func,self.xlmap.top_accna)
         pass
     def set_date(self,date_col='date',date_split_by=r'-'):
         def __get_year(row_series):
@@ -201,9 +212,9 @@ class CalSheet(XlSheet):
         if self.shmeta[0] is not None and date_col in self.columns:
             date_col_index=list(self.columns).index(date_col)
             self.change_dtype(date_col,target_type=str)
-            self.apply_df_func(__get_year,date_col_index,'year')
-            self.apply_df_func(__get_month,date_col_index+1,'month')
-            self.apply_df_func(__get_day,date_col_index+2,'day')
+            self.apply_df_func(__get_year,'year',date_col_index)
+            self.apply_df_func(__get_month,'month',date_col_index+1)
+            self.apply_df_func(__get_day,'day',date_col_index+2)
         pass
     #  def duplicate(self,use_meta=False):
         #  from copy import deepcopy
@@ -225,12 +236,12 @@ class CalSheet(XlSheet):
             #  file_path=None,
             #  sheet_name='sheet0',
             #  title=0,
-            #  key_index=deepcopy(self.key_index),
-            #  key_name=deepcopy(self.key_name),
-            #  drcrdesc=deepcopy(self.drcrdesc),
-            #  accid_col=deepcopy(self.accid_col),
-            #  accna_col=deepcopy(self.accna_col),
-            #  date_col=deepcopy(self.date_col),
+            #  key_index=deepcopy(self.xlmap.key_index),
+            #  key_name=deepcopy(self.xlmap.key_name),
+            #  drcrdesc=deepcopy(self.xlmap.drcrdesc),
+            #  accid_col=deepcopy(self.xlmap.accid_col),
+            #  accna_col=deepcopy(self.xlmap.accna_col),
+            #  date_col=deepcopy(),
             #  date_split_by=self.date_split_by,
             xlmap=deepcopy(self.xlmap),
             use_map=self.use_map,
@@ -254,7 +265,7 @@ class CalSheet(XlSheet):
         '''
         if self.use_map==True:
             jr_data=self.filter(
-                [glid,self.key_name,True,True],
+                [glid,self.xlmap.key_name,True,True],
                 filter_type='str',
                 over_write=False,
                 type_xl=type_xl
@@ -262,7 +273,7 @@ class CalSheet(XlSheet):
             return jr_data
         else:
             jr_data=self.filter(
-                [[glid,self.key_name,True,True]],
+                [[glid,self.xlmap.key_name,True,True]],
                 filter_type='str',
                 over_write=False,
                 type_xl=False
@@ -303,10 +314,10 @@ class CalSheet(XlSheet):
         acctna_str=accna_item
         accna_item=self.__trans_accna_regex(accna_item,accurate=False)
         #  acct_cols=[
-            #  self.accid_col,
-            #  self.drcrdesc[0],
-            #  self.drcrdesc[1],
-            #  self.accna_col
+            #  self.xlmap.accid_col,
+            #  self.xlmap.drcrdesc[0],
+            #  self.xlmap.drcrdesc[1],
+            #  self.xlmap.accna_col
         #  ]
         accna_list=regex_filter(
             accna_item,
@@ -323,14 +334,14 @@ class CalSheet(XlSheet):
                 #  accurate=True,
                 #  type_xl=False,
                 #  accid_label=None
-            #  )[self.drcrdesc].sum(axis=0)
+            #  )[self.xlmap.drcrdesc].sum(axis=0)
             acct.update(
                 {accid:accna}
             )
             #  resu.append(
                 #  [accid,
-                 #  acct_sum[self.drcrdesc[0]],
-                 #  acct_sum[self.drcrdesc[1]],
+                 #  acct_sum[self.xlmap.drcrdesc[0]],
+                 #  acct_sum[self.xlmap.drcrdesc[1]],
                  #  accna]
             #  )
         #  resu=DataFrame(
@@ -364,10 +375,10 @@ class CalSheet(XlSheet):
         return acct
     def scan_byna(self,accna_item):
         acct_cols=[
-            self.accid_col,
-            self.drcrdesc[0],
-            self.drcrdesc[1],
-            self.accna_col
+            self.xlmap.accid_col,
+            self.xlmap.drcrdesc[0],
+            self.xlmap.drcrdesc[1],
+            self.xlmap.accna_col
         ]
         acct_json=self.whatna(accna_item)
         accid_list=list(acct_json.keys())
@@ -385,11 +396,11 @@ class CalSheet(XlSheet):
                     type_xl=False,
                     accid_label=None
                 )
-                acct_sum=acct_df[self.drcrdesc].sum(axis=0)
+                acct_sum=acct_df[self.xlmap.drcrdesc].sum(axis=0)
                 sub_resu=[
                     accurate_accid,
-                    acct_sum[self.drcrdesc[0]],
-                    acct_sum[self.drcrdesc[1]],
+                    acct_sum[self.xlmap.drcrdesc[0]],
+                    acct_sum[self.xlmap.drcrdesc[1]],
                     accna
                 ]
                 return sub_resu
@@ -426,7 +437,7 @@ class CalSheet(XlSheet):
                 type_xl=False,
                 accid_label=accid_label
             )
-            drcr_sum=drcr_data[self.drcrdesc].sum(axis=0)
+            drcr_sum=drcr_data[self.xlmap.drcrdesc].sum(axis=0)
             drcr_sum=list(drcr_sum)
             sub_resu=[
                 accurate_accid,
@@ -448,10 +459,10 @@ class CalSheet(XlSheet):
         resu=DataFrame(
             resu,
             columns=[
-                self.accid_col,
-                self.drcrdesc[0],
-                self.drcrdesc[1],
-                self.accna_col
+                self.xlmap.accid_col,
+                self.xlmap.drcrdesc[0],
+                self.xlmap.drcrdesc[1],
+                self.xlmap.accna_col
             ]
         )
         return resu
@@ -472,7 +483,7 @@ class CalSheet(XlSheet):
                 #  type_xl=False,
                 #  accid_label=accid_label
             #  )
-            #  drcr_sum=drcr_data[self.drcrdesc].sum(axis=0)
+            #  drcr_sum=drcr_data[self.xlmap.drcrdesc].sum(axis=0)
             #  drcr_sum=list(drcr_sum)
             #  sub_resu=[
                 #  accurate_accid,
@@ -497,30 +508,30 @@ class CalSheet(XlSheet):
         #  resu=DataFrame(
             #  resu,
             #  columns=[
-                #  self.accid_col,
-                #  self.drcrdesc[0],
-                #  self.drcrdesc[1],
-                #  self.accna_col
+                #  self.xlmap.accid_col,
+                #  self.xlmap.drcrdesc[0],
+                #  self.xlmap.drcrdesc[1],
+                #  self.xlmap.accna_col
             #  ]
         #  )
         #  return resu
     def filterAcct(
         self,
         accid_item,
-        side='all',
-        pure=False,
-        accurate=False,
-        over_write=False,
-        type_xl=False,
-        accid_label=None
+        side:str='all',
+        pure:bool=False,
+        accurate:bool=False,
+        over_write:bool=False,
+        type_xl:bool=False,
+        accid_label:str=None
     ):
-        if accid_label is None:
-            accid_label=self.accid_col
         accid_item=self.__trans_accid_regex(accid_item,accurate=accurate)
+        if isinstance(self.xlmap,MglMap) and accid_label is None:
+            accid_label=self.xlmap.accid_col
         if pure==True:
             if side=='all':
                 resu=self.filter(
-                    [[accid_item,self.accid_col,True,True]],
+                    [[accid_item,self.xlmap.accid_col,True,True]],
                     filter_type='str',
                     over_write=over_write,
                     type_xl=type_xl
@@ -529,8 +540,8 @@ class CalSheet(XlSheet):
             elif side=='dr':
                 resu=self.filter(
                     {
-                        'string':[[accid_item,self.accid_col,True,True]],
-                        'number':[[self.drcrdesc[0],'<>',0]]
+                        'string':[[accid_item,self.xlmap.accid_col,True,True]],
+                        'number':[[self.xlmap.drcrdesc[0],'<>',0]]
                     },
                     filter_type='adv',
                     over_write=over_write,
@@ -540,8 +551,8 @@ class CalSheet(XlSheet):
             elif side=='cr':
                 resu=self.filter(
                     {
-                        'string':[[accid_item,self.accid_col,True,True]],
-                        'number':[[self.drcrdesc[1],'<>',0]]
+                        'string':[[accid_item,self.xlmap.accid_col,True,True]],
+                        'number':[[self.xlmap.drcrdesc[1],'<>',0]]
                     },
                     filter_type='adv',
                     over_write=over_write,
@@ -550,13 +561,13 @@ class CalSheet(XlSheet):
                 pass
             else:
                 resu=None
-                print('[Note:MGL] Invalid argument, filter None will not overwrite.')
+                print('[Error:MGL] Invalid argument, filter None will not overwrite.')
                 pass
             pass
         elif pure==False:
             if side=='all':
                 resu=self.filter(
-                    [[accid_item,self.accid_col,True,True]],
+                    [[accid_item,self.xlmap.accid_col,True,True]],
                     filter_type='str',
                     over_write=False,
                     type_xl=False
@@ -565,8 +576,8 @@ class CalSheet(XlSheet):
             elif side=='dr':
                 resu=self.filter(
                     {
-                        'string':[[accid_item,self.accid_col,True,True]],
-                        'number':[[self.drcrdesc[0],'<>',0]]
+                        'string':[[accid_item,self.xlmap.accid_col,True,True]],
+                        'number':[[self.xlmap.drcrdesc[0],'<>',0]]
                     },
                     filter_type='adv',
                     over_write=False,
@@ -576,8 +587,8 @@ class CalSheet(XlSheet):
             elif side=='cr':
                 resu=self.filter(
                     {
-                        'string':[[accid_item,self.accid_col,True,True]],
-                        'number':[[self.drcrdesc[1],'<>',0]]
+                        'string':[[accid_item,self.xlmap.accid_col,True,True]],
+                        'number':[[self.xlmap.drcrdesc[1],'<>',0]]
                     },
                     filter_type='adv',
                     over_write=False,
@@ -587,18 +598,18 @@ class CalSheet(XlSheet):
             else:
                 resu=None
                 print(
-                    '[Note:MGL] Invalid argument, got None; not overwritten;'
+                    '[Error:MGL] Invalid argument, got None; data not overwritten;'
                 )
                 pass
             acct_glid_list=list(
-                    resu[self.key_name].drop_duplicates()
+                    resu[self.xlmap.key_name].drop_duplicates()
             )
             if len(acct_glid_list)==0:
                 resu=None
             else:
                 resu=self.filter_list(
                     acct_glid_list,
-                    search_col=self.key_name,
+                    search_col=self.xlmap.key_name,
                     over_write=over_write,
                     type_xl=type_xl
                 )
@@ -639,7 +650,7 @@ class CalSheet(XlSheet):
         Get full Journal Entries according to 'item_name' matched by regex_str;
         '''
         if key_name is None:
-            key_name=self.key_name
+            key_name=self.xlmap.key_name
         item_data=self.filter(
             [[regex_str,by,True,False]],
             'str',
@@ -648,7 +659,7 @@ class CalSheet(XlSheet):
         )
         #  item_data=self.xl2df(item_data)
         key_list=list(
-            item_data[self.key_name].drop_duplicates()
+            item_data[self.xlmap.key_name].drop_duplicates()
         )
         resu=self.filter_list(
             key_list,
@@ -769,7 +780,7 @@ class CalSheet(XlSheet):
             pure=True,
             accurate=accurate,
             type_xl=False,
-            accid_label=self.accid_col
+            accid_label=self.xlmap.accid_col
         )
         dr=self.getAcct(
             dr_accid,
@@ -777,18 +788,18 @@ class CalSheet(XlSheet):
             pure=True,
             accurate=accurate,
             type_xl=False,
-            accid_label=self.accid_col
+            accid_label=self.xlmap.accid_col
         )
         common_key_list=list(
             set(
-                dr[self.key_name]
+                dr[self.xlmap.key_name]
             )&set(
-                cr[self.key_name]
+                cr[self.xlmap.key_name]
             )
         )
         resu=self.filter_list(
             common_key_list,
-            self.key_name,
+            self.xlmap.key_name,
             over_write=over_write,
             type_xl=type_xl
         )
@@ -802,19 +813,19 @@ class CalSheet(XlSheet):
             type_xl=True
         )
         dr_sum=common_xl.sumifs(
-            self.drcrdesc[0],
-            [[dr_accid,self.accid_col,True,True]],
+            self.xlmap.drcrdesc[0],
+            [[dr_accid,self.xlmap.accid_col,True,True]],
             filter_type='str'
         )
         cr_sum=common_xl.sumifs(
-            self.drcrdesc[1],
-            [[cr_accid,self.accid_col,True,True]],
+            self.xlmap.drcrdesc[1],
+            [[cr_accid,self.xlmap.accid_col,True,True]],
             filter_type='str'
         )
         cr2dr_sum=DataFrame(
             [[dr_sum,0],[0,cr_sum]],
             index=[dr_accid,cr_accid],
-            columns=self.drcrdesc
+            columns=self.xlmap.drcrdesc
         )
         return cr2dr_sum
     def cor_glid(
@@ -830,7 +841,7 @@ class CalSheet(XlSheet):
                 accurate=accurate,
                 over_write=False,
                 type_xl=False
-            )[self.key_name]
+            )[self.xlmap.key_name]
         )
         glid_list=list(glid_list)
         return glid_list
@@ -840,8 +851,11 @@ class CalSheet(XlSheet):
         '''
         accid is just accid, not regex;
         '''
-        resu_unit=self.duplicate(use_meta=False)
-        analysis_unit=self.duplicate(use_meta=True)
+        #  resu_unit=self.duplicate(use_meta=False)
+        resu_unit=self.blank_copy()
+        #  analysis_unit=self.duplicate(use_meta=True)
+        analysis_unit=self.blank_copy()
+        analysis_unit.load_df_by_map(self.data)
         analysis_unit.filterAcct(
             accid,
             side=side,
@@ -849,32 +863,32 @@ class CalSheet(XlSheet):
             accurate=True,
             over_write=True,
             type_xl=False,
-            accid_label=self.accid_col
+            accid_label=self.xlmap.accid_col
         )
         if side=='cr':
-            side_name=analysis_unit.drcrdesc[1]
+            side_name=analysis_unit.xlmap.drcrdesc[1]
         elif side=='dr':
-            side_name=analysis_unit.drcrdesc[0]
+            side_name=analysis_unit.xlmap.drcrdesc[0]
         else:
             # 'cr' side is for default;
-            side_name=analysis_unit.drcrdesc[1]
+            side_name=analysis_unit.xlmap.drcrdesc[1]
         def __acct_mark_side(row_series):
-            current_accid=row_series[analysis_unit.accid_col]
+            current_accid=row_series[analysis_unit.xlmap.accid_col]
             side_amount=row_series[side_name]
             if current_accid==accid and side_amount !=0:
                 return 'target_acct'
             else:
                 return 'opposite_acct'
-        analysis_unit.apply_df_func(__acct_mark_side,1,'mark_record')
+        analysis_unit.apply_df_func(__acct_mark_side,'mark_record',1)
         # opposite account id:
         oppo_accid_list=list(
             set(
-                analysis_unit.data[analysis_unit.accid_col]
+                analysis_unit.data[analysis_unit.xlmap.accid_col]
             )
         )
         oppo_glid_list=list(
             set(
-                analysis_unit.data[analysis_unit.key_name]
+                analysis_unit.data[analysis_unit.xlmap.key_name]
             )
         )
         resu_array=[]
@@ -883,7 +897,7 @@ class CalSheet(XlSheet):
             oppo_amt_sum=analysis_unit.sumifs(
                 'drcr',[
                     ['opposite_acct','mark_record',True,True],
-                    [oppo_accid,analysis_unit.accid_col,True,True]
+                    [oppo_accid,analysis_unit.xlmap.accid_col,True,True]
                 ],
                 filter_type='str'
             )
@@ -895,8 +909,8 @@ class CalSheet(XlSheet):
             resu_array,
             columns=[
                 str(accid),
-                analysis_unit.accid_col,
-                analysis_unit.accna_col
+                analysis_unit.xlmap.accid_col,
+                analysis_unit.xlmap.accna_col
             ]
         )
         resu_df.sort_values(
@@ -909,8 +923,9 @@ class CalSheet(XlSheet):
             ignore_index=True,
             key=None
         )
-        resu_unit.accept_df(resu_df)
-        resu_unit.set_top_acct(top_accid_len=4,accna_split_by=r'/')
+        #  resu_unit.accept_df(resu_df)
+        resu_unit.load_df_by_map(resu_df)
+        #  resu_unit.set_top_acct(top_accid_len=4,accna_split_by=r'/')
         # pvt_df=resu_unit.data.pivot_table(
         #     values=['drcr'],
         #     index=['accna']
@@ -920,8 +935,8 @@ class CalSheet(XlSheet):
         # print(resu_unit.data)
         resu_cols=[
             'top_accid','top_accna',
-            analysis_unit.accid_col,
-            analysis_unit.accna_col,
+            analysis_unit.xlmap.accid_col,
+            analysis_unit.xlmap.accna_col,
             str(accid)
         ]
         # resu_unit has columns:
@@ -937,7 +952,7 @@ class CalSheet(XlSheet):
         return resu_df
     def side_split(self,accid_item,side='cr',show_col='accna'):
         '''
-        show_col must be one of :['top_accna','top_accid',self.accid_col,self.accna_col];
+        show_col must be one of :['top_accna','top_accid',self.xlmap.accid_col,self.xlmap.accna_col];
         '''
         tar_accid_list=list(self.whatid(accid_item).keys())
         resu_dfli=[]
@@ -1005,7 +1020,7 @@ class CalSheet(XlSheet):
         Debit number is positive;
         '''
         accid_item=self.__trans_accid_regex(accid,accurate=True)
-        accid_list=self.scan_byid(accid_item, accid_label=self.accid_col)
+        accid_list=self.scan_byid(accid_item, accid_label=self.xlmap.accid_col)
         acct_mgl=self.duplicate(use_meta=True)
         resu_mgl=self.duplicate(use_meta=False)
         acct_mgl.filterAcct(
@@ -1018,9 +1033,9 @@ class CalSheet(XlSheet):
             accid_label=None
         )
         if side=='cr':
-            side_name=acct_mgl.drcrdesc[1]
+            side_name=acct_mgl.xlmap.drcrdesc[1]
         elif side=='dr':
-            side_name=acct_mgl.drcrdesc[0]
+            side_name=acct_mgl.xlmap.drcrdesc[0]
         else:
             return [
                 self.side_analysis(
@@ -1033,16 +1048,16 @@ class CalSheet(XlSheet):
                 )
             ]
         def __acct_mark_side(row_series):
-            current_accid=row_series[acct_mgl.accid_col]
+            current_accid=row_series[acct_mgl.xlmap.accid_col]
             side_amount=row_series[side_name]
             if current_accid==accid and side_amount !=0:
                 return 'target_acct'
             else:
                 return 'opposite_acct'
-        acct_mgl.apply_df_func(__acct_mark_side,1,'mark_record')
+        acct_mgl.apply_df_func(__acct_mark_side,'mark_record',1)
         accid_list=list(
             set(
-                acct_mgl.data[acct_mgl.accid_col]
+                acct_mgl.data[acct_mgl.xlmap.accid_col]
             )
         )
         resu_array=[]
@@ -1050,7 +1065,7 @@ class CalSheet(XlSheet):
             acct_sum=acct_mgl.sumifs(
                 'drcr',[
                     ['opposite_acct','mark_record',True,True],
-                    [accid,acct_mgl.accid_col,True,True]
+                    [accid,acct_mgl.xlmap.accid_col,True,True]
                 ],
                 filter_type='str'
             )
@@ -1060,7 +1075,7 @@ class CalSheet(XlSheet):
             continue
         resu_array=DataFrame(
             resu_array,
-            columns=[acct_mgl.accid_col,'drcr',acct_mgl.accna_col]
+            columns=[acct_mgl.xlmap.accid_col,'drcr',acct_mgl.accna_col]
         )
         resu_array.sort_values(
             'drcr',

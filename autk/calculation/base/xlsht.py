@@ -393,7 +393,6 @@ class XlSheet:
         '''
         Return:bool
         '''
-        # print('str',condition_row)
         regitem=condition_row[0]
         compare_col=condition_row[1]
         if_regex=condition_row[2]
@@ -509,7 +508,10 @@ class XlSheet:
             match_mode=condition_row[3]
         '''
         self.__clear_row_temp()
-        if isinstance(condition_matrix, list) and len(condition_matrix)==4:
+        if (
+            isinstance(condition_matrix, list) 
+            and len(condition_matrix)==4
+        ):
             condition_matrix=[condition_matrix]
         else:
             pass
@@ -517,7 +519,10 @@ class XlSheet:
             row_data=i[1]
             condition_set=[]
             for condition_row in condition_matrix:
-                condition_set.append(self.__parse_str_match(condition_row,row_data))
+                condition_set.append(
+                    self.__parse_str_match(condition_row,row_data)
+                )
+                continue
             if condition_set==[True]*len(condition_set):
             # if condition_set==[True]*len(condition_matrix):
                 self.__row_temp.append(row_data)

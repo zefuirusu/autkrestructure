@@ -84,7 +84,7 @@ def regex_filter(regex_str,list_like,match_mode=False):
     list_like is a list-like iterable object, whose elements are 'str';
     '''
     import re
-    regex_str=re.compile(regex_str)
+    regex_str=re.compile(str(regex_str))
     if match_mode == False:
         def regex_result(element):
             return (re.search(regex_str,element) is not None)

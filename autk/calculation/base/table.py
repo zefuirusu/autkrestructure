@@ -35,8 +35,8 @@ class ImmortalTable:
     '''
     def __init__(
         self,
-        xlmap:XlMap=XlMap(),
-        xlmeta:JsonMeta=JsonMeta({'BLANK_PATH':[['sheet',0]]}),
+        xlmap:XlMap=None,#XlMap(),
+        xlmeta:JsonMeta=None,#JsonMeta({'BLANK_PATH':[['sheet',0]]}),
     ):
         ### basic attributes:
         self.xlmap=xlmap
@@ -47,8 +47,7 @@ class ImmortalTable:
         self.data=None
         self.load_count=0
         ### start initialize:
-        if self.xlmeta is not None:
-            self.collect_xl()
+        self.collect_xl()
         pass
     def __str__(self):
         return str(self.show)
@@ -85,7 +84,7 @@ class ImmortalTable:
         shape=DataFrame(
             shape,
             columns=[
-                self.xlset[0].__class__.__name__,
+                self.xlset[0].__class__.__name__ if len(self.xlset)>0 else 'BLANK',
                 'rows',
                 'columns'
             ],
@@ -114,7 +113,7 @@ class ImmortalTable:
             },
             "xlmap":{
                 str(type(self.xlmap)):
-                self.xlmap.show
+                None if self.xlmap is None else self.xlmap.show
             },
             "xlmeta":{
                 self.xlmeta.__class__.__name__:
@@ -150,15 +149,35 @@ class ImmortalTable:
         collect XlSheet from `self.xlmeta` by
         `self.xlmap`, into `self.xlset`.
         '''
+        print('start collecting xl to self.xlset.')
         self.__clear_data()
+        def __single_append(shmeta):
+            '''
+            same as `self.append_xl_by_meta`
+            '''
+            xl=XlSheet(
+                xlmap=self.xlmap,
+                shmeta=shmeta
+            )
+            if isinstance(self.xlmap,XlMap):
+                pass
+            else:
+                self.xlmap=XlMap()
+                self.xlmap.extend_col_list(
+                    xl.xlmap.columns
+                )
+            self.xlset.append(xl)
+            pass
         thli=[]
         for shmeta in self.xlmeta.split_to_shmeta():
             thli.append(
                 Thread(
-                    target=self.append_xl_by_meta,
+                    target=__single_append,
                     args=(shmeta,),
                     name='~'.join([
-                        'table-load-xlsheet',
+                        self.__class__.__name__,
+                        'load',
+                        'xlsheet'
                     ])
                 )
             )
@@ -170,12 +189,19 @@ class ImmortalTable:
         Append the xl object into self.xlset,
         using self.xlmap, by `shmeta`;
         '''
-        self.xlset.append(
-            XlSheet(
-                xlmap=self.xlmap,
-                shmeta=shmeta
-            )
+        #TODO not perfect when self.xlmap=None
+        xl=XlSheet(
+            xlmap=self.xlmap,
+            shmeta=shmeta
         )
+        if isinstance(self.xlmap,XlMap):
+            pass
+        else:
+            self.xlmap=XlMap()
+            self.xlmap.extend_col_list(
+                xl.xlmap.columns
+            )
+        self.xlset.append(xl)
         pass
     def append_xl_by_map(
         self,
@@ -195,7 +221,9 @@ class ImmortalTable:
         pass
     def check_cols(self):
         '''
-        check whether columns of all xl_obj fit with each other;
+        check whether columns of all
+        `XlSheet.xlmap.columns` fit with
+        `self.xlmap.columns` and each other;
         '''
         checkli=[]
         for xl in self.xlset:
@@ -418,10 +446,12 @@ class ImmortalTable:
         return resu
     def filter_list(
         self,
-        target_list,
-        search_col,
-        over_write=False,
-        type_xl=False
+        #  target_list,
+        #  search_col,
+        #  over_write=False,
+        #  type_xl=False
+        *args,
+        **kwargs,
     ):
         '''
         Get all columns of data according to the given item list in the column of search_col.
@@ -433,43 +463,47 @@ class ImmortalTable:
                 resu.extend(d)
             return resu
         '''
-        #TODO
         self.__clear_temp()
-        def __filter_list_single(
-                xl_obj,
-                target_list,
-                search_col,
-                over_write=False
-        ):
-            df=xl_obj.filter_list(
-                target_list,
-                search_col,
-                over_write=over_write
-            )
-            self.__df_temp.append(df)
-        thread_list=[]
-        for xl in self.xlset:
-            t=Thread(
-                target=__filter_list_single,
-                args=(
-                    xl,
-                    target_list,
-                    search_col,
-                    over_write
-                ),
-                name=''.join(
-                    [
-                        r'filter_list->',
-                        xl.name,
-                    ]
-                )
-            )
-            thread_list.append(t)
-        start_thread_list(thread_list)
-        resu=self.get_df_temp_data(
-            over_write=over_write,
-            type_xl=type_xl
+        resu=self.apply_xl_collect_df(
+            'filter_list',
+            *args,
+            **kwargs,
         )
+        #  def __filter_list_single(
+                #  xl_obj,
+                #  target_list,
+                #  search_col,
+                #  over_write=False
+        #  ):
+            #  df=xl_obj.filter_list(
+                #  target_list,
+                #  search_col,
+                #  over_write=over_write
+            #  )
+            #  self.__df_temp.append(df)
+        #  thread_list=[]
+        #  for xl in self.xlset:
+            #  t=Thread(
+                #  target=__filter_list_single,
+                #  args=(
+                    #  xl,
+                    #  target_list,
+                    #  search_col,
+                    #  over_write
+                #  ),
+                #  name=''.join(
+                    #  [
+                        #  r'filter_list->',
+                        #  xl.name,
+                    #  ]
+                #  )
+            #  )
+            #  thread_list.append(t)
+        #  start_thread_list(thread_list)
+        #  resu=self.get_df_temp_data(
+            #  over_write=over_write,
+            #  type_xl=type_xl
+        #  )
         self.__clear_temp()
         return resu
     def filter_regex_list(
@@ -761,22 +795,23 @@ class ImmortalTable:
             *args,
             **kwargs
         )
-        size={}
+        size=[]
         for xl_name,xl in data.items():
             if isinstance(xl,XlSheet):
-                size.update({xl_name:xl.data.shape})
+                size.append([xl_name,xl.data.shape[0],xl.data.shape[1]])
             elif isinstance(xl,DataFrame):
-                size.update({xl_name:xl.shape})
+                size.append([xl_name,xl.shape[0],xl.shape[1]])
             elif isinstance(xl,list):
-                size.update({xl_name:len(xl)})
+                size.append([xl_name,len(xl),0])
             else:
-                size.update({xl_name:None})
+                size.append([xl_name,None,None])
             continue
         size_df=DataFrame(
-            size.items(),
+            size,
             columns=[
                 self.xlset[0].__class__.__name__,
-                'result_size'
+                'rows',
+                'columns'
             ],
         )
         return size_df
