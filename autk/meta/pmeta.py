@@ -174,9 +174,7 @@ class PathMeta(JsonMeta):
             print("[Error:] `xlpath` is neither a path nor a directory!")
         pass
     pass
-class DirMeta(JsonMeta):
-    def __init__(self):
-        pass
+class DirMeta(PathMeta):
     pass
 if __name__=='__main__':
     pass

@@ -10,7 +10,7 @@ from numpy import array,zeros
 from pandas import read_excel,DataFrame
 
 from autk.gentk.funcs import regex_filter,start_thread_list
-from autk.mapper.map import XlMap
+from autk.mapper.base import XlMap
 
 class XlBook:
     '''
@@ -106,18 +106,31 @@ class XlBook:
                 continue
             continue
         return resu_df
+    def save_bk(self,bk):
+        if self.suffix=='xlsx' or 'xlsm':
+            bk.save(self.file_path)
+        else:
+            bk.save(self.file_path)
+        pass
     def get_bk(self):
+        '''
+        seems useless.
+        '''
         if self.suffix=='xlsx':
             bk=load_workbook(self.file_path)
         elif self.suffix=='xlsm':
-            bk=open_workbook(self.file_path,keep_vba=True)
+            bk=load_workbook(self.file_path,keep_vba=True)
         elif self.suffix=='xls':
             bk=open_workbook(self.file_path)
         else:
             bk=open_workbook(self.file_path)
         return bk
     def find_sheet(self,regex_str):
-        possible_names=regex_filter(regex_str,self.shtli,match_mode=False)
+        possible_names=regex_filter(
+            regex_str,
+            self.shtli,
+            match_mode=False
+        )
         return possible_names
     def get_sht(self,sheet_name):
         if self.suffix=='xlsx' or 'xlsm':
@@ -324,12 +337,6 @@ class XlBook:
                 has_title=False
             ).T[0]
         )
-    def save_bk(self,bk):
-        if self.suffix=='xlsx' or 'xlsm':
-            bk.save(self.file_path)
-        else:
-            bk.save(self.file_path)
-        pass
     def __xls_fill(self,sheet_name,cell_index,value,save=False):
         import xlutils
         b=open_workbook(self.file_path)
@@ -411,16 +418,99 @@ class XlBook:
         else:
             print('You may check argument: ',matrix)
             matrix=array(matrix)
-            self.paste_matrix(matrix,start_index,sheet_name)
+            self.paste_matrix(
+                matrix,
+                start_index,
+                sheet_name
+            )
             pass
         pass
-    def paste_list(self,value_list,start_index,sheet_name,vertical=True):
+    def paste_list(
+        self,
+        value_list,
+        start_index,
+        sheet_name,
+        vertical=True
+    ):
         value_list=array([value_list])
         if vertical==False:
             pass
         else:
             value_list=value_list.T
-        self.paste_matrix(value_list,start_index,sheet_name)
+        self.paste_matrix(
+            value_list,
+            start_index,
+            sheet_name
+        )
+        pass
+    def insert_blank(
+        self,
+        idx,
+        amount,
+        sheet_name,
+        col_ins=False
+    ):
+        '''
+        Insert `amount` rows/columns before row_index/col_index:`idx`
+        into `sheet_name`;
+        '''
+        bk=self.get_bk()
+        if (
+            self.suffix=='xlsx' or 
+            self.suffix=='xlsm'
+        ):
+            sht=bk[sheet_name]
+            if col_ins==True:
+                sht.insert_cols(idx,amount=amount)
+            else: # insert rows
+                sht.insert_rows(idx,amount=amount)
+            pass
+        elif self.suffix=='xls':
+            #  sht=bk.sheet_by_name(sheet_name)
+            print(
+                '[Error] Inserting to `xls` is not supported currently.'
+            )
+            pass
+        self.save_bk(bk)
+        pass
+    def insert_matrix(
+        self,
+        matrix, # ndarray;
+        cell_index:(int,int),
+        sheet_name:str,
+        col_ins:bool=False,
+    ):
+        '''
+        `cell_index` starts from (1,1);
+        '''
+        from numpy import ndarray,nditer
+        if isinstance(matrix,ndarray):
+            pass
+        elif isinstance(matrix,DataFrame):
+            matrix=matrix.values
+        elif isinstance(matrix,list) and matrix.ndim==2:
+            matrix=array(matrix)
+        else:
+            pass
+        if col_ins==True:
+            idx=cell_index[1]
+            amount=matrix.shape[1]
+            pass
+        else: # insert rows and paste;
+            idx=cell_index[0]
+            amount=matrix.shape[0]
+            pass
+        self.insert_blank(
+            cell_index[0],
+            matrix.shape[0],
+            sheet_name,
+            col_ins=col_ins
+        )
+        self.paste_matrix(
+            matrix,
+            cell_index,
+            sheet_name
+        )
         pass
     def clear_sheet(self,sheet_name):
         from numpy import full

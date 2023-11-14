@@ -9,10 +9,10 @@ from threading import Thread
 from pandas import DataFrame
 
 from autk.gentk.funcs import start_thread_list,transType,save_df,regex_filter,get_time_str
+from autk.mapper.glmap import MglMap
+from autk.meta.pmeta import JsonMeta
 from autk.calculation.base.table import ImmortalTable
 from autk.calculation.mortal.calgl import CalSheet
-from autk.mapper.map import MglMap,get_glmap
-from autk.meta.pmeta import JsonMeta
 
 class MGL(ImmortalTable):
     '''

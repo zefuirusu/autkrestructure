@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 from pandas import concat,DataFrame,read_excel
 
 from autk.gentk.funcs import transType,get_time_str
-from autk.mapper.map import XlMap
+from autk.mapper.base import XlMap
 from autk.meta.pmeta import PathMeta,JsonMeta
 from autk.brother.xlbk import XlBook
 
@@ -352,6 +352,7 @@ class XlSheet:
         If self.xlmap.show[col_name] is not None,
         new data will overwrite this column.
         Whatever you passed to `col_index` it is ignored currently.
+        `col_index` is useless.
         '''
         if self.xlmap.has_cols([col_name]):
             self.data[col_name]=deepcopy(

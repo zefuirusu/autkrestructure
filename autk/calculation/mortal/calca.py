@@ -1,61 +1,122 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pysnooper
+
 import os
 import re
 from copy import deepcopy
 from threading import Thread
+from pandas import DataFrame
 
-from autk.mapper.map import ChartMap,ApArMap
+from autk.mapper.chmap import GenChartMap,ChartMap,ApArMap
+from autk.meta.pmeta import PathMeta,JsonMeta
 from autk.calculation.base.xlsht import XlSheet
+from autk.calculation.mortal.calgl import CalSheet
 
 class CalChart(XlSheet):
     '''
-    CalChart must have a map to indicate its column-structure;
-    If xlmap is passed None,then columns will be:
-        ['entity','accid','accna','start_bal_type','start','dr_amount','cr_amount','end_bal_type','end','check_balance']
     '''
+    @pysnooper.snoop(depth=1,prefix='[CalChart]',relative_time=True)
     def __init__(
         self,
-        shmeta=[None,'sheet0',0],
-        # structure of the table is less important than meta information.
-        xlmap=None,
-        #  key_index=['accid'], #['凭证日期','字','号'],
-        #  key_name='accid',
-        #  drcrdesc=['dr_amount','cr_amount'],#['借方发生','贷方发生'],
-        #  accid_col='accid',#科目编号,
-        #  accna_col='accna',#科目名称,
-        #  date_col='date',#凭证日期',
-        #  date_split_by=r'-',
-        #  top_accid_len=4,
-        #  accna_split_by=r'/',
-        #  use_map=False,
-        keep_meta_info=True,
+        xlmap:GenChartMap=None,
+        shmeta:PathMeta=None,
     ):
-        if xlmap is None:
-            xlmap=ChartMap.from_list([
-                'entity','accid','accna','start_bal_type','start','dr_amount','cr_amount','end_bal_type','end','check_balance'
-            ])
-        else:
-            pass
-        XlSheet.__init__(
-            self,
-            shmeta=shmeta,
+        self.acctmap={}
+        self.acctmap_invert={}
+        super().__init__(
             xlmap=xlmap,
-            use_map=True,
-            keep_meta_info=keep_meta_info,
-            key_index=[xlmap.accid_col],
-            key_name=xlmap.accid_col,
+            shmeta=shmeta
         )
-        self.set_key_cols(
-            drcrdesc=xlmap.drcrdesc,
-            accid_col=xlmap.accid_col,
-            accna_col=xlmap.accna_col
-        )
-        self.set_top_acct(
-            xlmap.top_accid_len,
-            xlmap.accna_split_by
-        )
+        if (
+            isinstance(self.xlmap,GenChartMap)
+            and isinstance(self.shmeta,JsonMeta)
+        ):
+            self.__set_acctmap()
+            self.__set_top()
+        #  self.set_key_cols(
+            #  drcrdesc=xlmap.drcrdesc,
+            #  accid_col=xlmap.accid_col,
+            #  accna_col=xlmap.accna_col
+        #  )
+        #  self.set_top_acct(
+            #  xlmap.top_accid_len,
+            #  xlmap.accna_split_by
+        #  )
+        pass
+    def __set_acctmap(self):
+        '''
+        '''
+        if self.xlmap.has_cols([
+            self.xlmap.accid_col,
+            self.xlmap.accna_col,
+        ]) and isinstance(self.data,DataFrame):
+            self.change_dtype(self.xlmap.accid_col,str)
+            self.change_dtype(self.xlmap.accna_col,str)
+            map_df=self.data[[self.xlmap.accid_col,self.xlmap.accna_col]]
+            map_dict=zip(
+                list(map_df[self.xlmap.accid_col]),
+                list(map_df[self.xlmap.accna_col])
+            )
+            self.acctmap.update(map_dict)
+            self.acctmap_invert=dict(
+               zip(
+                   self.acctmap.values(),
+                   self.acctmap.keys()
+               )
+            )
+            pass
+        else:
+            print('[Warning] check accid/accna or data:',self.xlmap.has_cols([
+                self.xlmap.accid_col,
+                self.xlmap.accna_col,
+            ]))
+        pass
+    def __set_top(self):
+        if (
+                hasattr(self.xlmap,'top_accid_len')
+            and self.xlmap.has_cols([
+                getattr(self.xlmap,'accid_col'),
+                getattr(self.xlmap,'top_accid_col'),
+            ])
+        ):
+            print('[Note] check accid:ok')
+            self.change_dtype(
+                self.xlmap.accid_col,
+                str
+            )
+            def __set_top_accid(row_series):
+                accid=row_series[self.xlmap.accid_col]
+                top_accid=accid[0:self.xlmap.top_accid_len]
+                return top_accid
+            self.apply_df_func(
+                __set_top_accid,
+                self.xlmap.top_accid_col
+            )
+        else:
+            print('[Warning]:check your xlmap.')
+        if (
+                hasattr(self.xlmap,'accna_split_by')
+            and self.xlmap.has_cols([
+                getattr(self.xlmap,'accna_col'),
+                getattr(self.xlmap,'top_accna_col')
+            ])
+        ):
+            print('[Note] check accna:ok')
+            def __set_top_accna(row_series):
+                accna=str(
+                    row_series[self.xlmap.accna_col])
+                top_accna=accna.split(
+                    self.xlmap.accna_split_by
+                )[0]
+                return top_accna
+            self.apply_df_func(
+                __set_top_accna,
+                self.xlmap.top_accna_col
+            )
+        else:
+            print('[Warning]:check your xlmap.')
         pass
     def set_key_cols(
         self,

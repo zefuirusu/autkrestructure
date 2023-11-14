@@ -6,7 +6,7 @@ from threading import Thread
 from pandas import DataFrame
 
 from autk.gentk.funcs import transType,regex_filter,save_df
-from autk.mapper.map import MglMap
+from autk.mapper.glmap import MglMap
 from autk.meta.pmeta import JsonMeta,PathMeta
 from autk.calculation.base.xlsht import XlSheet
 
@@ -150,89 +150,89 @@ class CalSheet(XlSheet):
         ])):
             print('[Note] check date column:ok')
         pass
-    def set_top_acct(
-        self,
-        top_accid_len=4,
-        accna_split_by=r'/'
-    ):
-        setattr(self,'top_accid_len',top_accid_len)
-        setattr(self,'accna_split_by',accna_split_by)
-        if self.shmeta[0] is not None:
-            self.change_float_to_str(self.xlmap.accid_col)
-            self.change_float_to_str(self.xlmap.accna_col)
-            def top_accid_apply_func(row_series):
-                accid=row_series[self.xlmap.accid_col]
-                top_accid=accid[0:self.xlmap.top_accid_len]
-                return top_accid
-            def top_accna_apply_func(row_series):
-                accna=row_series[self.xlmap.accna_col]
-                top_accna=accna.split(self.xlmap.accna_split_by)[0]
-                top_accna=str(top_accna)
-                return top_accna
-            self.apply_df_func(top_accid_apply_func,self.xlmap.top_accid)
-            self.apply_df_func(top_accna_apply_func,self.xlmap.top_accna)
-        pass
-    def set_date(self,date_col='date',date_split_by=r'-'):
-        def __get_year(row_series):
-            if self.use_map==True:
-                date_str=row_series[self.xlmap.date_col]
-            else:
-                date_str=row_series[date_col]
-            if isinstance(date_str,str) and date_str != '0.0':
-                year=transType(date_str.split(date_split_by)[0])
-            else:
-                year='0'
-            return year
-        def __get_month(row_series):
-            if self.use_map==True:
-                date_str=row_series[self.xlmap.date_col]
-            else:
-                date_str=row_series[date_col]
-            if isinstance(date_str,str) and (date_str != '0.0' or date_str != 0.0):
-                month=transType(date_str.split(date_split_by)[1])
-            else:
-                month='0'
-            return month
-        def __get_day(row_series):
-            if self.use_map==True:
-                date_str=row_series[self.xlmap.date_col]
-            else:
-                date_str=row_series[date_col]
-            if isinstance(date_str,str) and date_str != '0.0':
-                day=transType(date_str.split(date_split_by)[2])
-            else:
-                day='0'
-            return day
-        if self.use_map==True:
-            setattr(self,'date_col',self.xlmap.date_col)
-            setattr(self,'date_split_by',self.xlmap.date_split_by)
-        else:
-            setattr(self,'date_col',date_col)
-            setattr(self,'date_split_by',date_split_by)
-        if self.shmeta[0] is not None and date_col in self.columns:
-            date_col_index=list(self.columns).index(date_col)
-            self.change_dtype(date_col,target_type=str)
-            self.apply_df_func(__get_year,'year',date_col_index)
-            self.apply_df_func(__get_month,'month',date_col_index+1)
-            self.apply_df_func(__get_day,'day',date_col_index+2)
-        pass
+    #  def set_top_acct(
+        #  self,
+        #  top_accid_len=4,
+        #  accna_split_by=r'/'
+    #  ):
+        #  setattr(self,'top_accid_len',top_accid_len)
+        #  setattr(self,'accna_split_by',accna_split_by)
+        #  if self.shmeta[0] is not None:
+            #  self.change_float_to_str(self.xlmap.accid_col)
+            #  self.change_float_to_str(self.xlmap.accna_col)
+            #  def top_accid_apply_func(row_series):
+                #  accid=row_series[self.xlmap.accid_col]
+                #  top_accid=accid[0:self.xlmap.top_accid_len]
+                #  return top_accid
+            #  def top_accna_apply_func(row_series):
+                #  accna=row_series[self.xlmap.accna_col]
+                #  top_accna=accna.split(self.xlmap.accna_split_by)[0]
+                #  top_accna=str(top_accna)
+                #  return top_accna
+            #  self.apply_df_func(top_accid_apply_func,self.xlmap.top_accid)
+            #  self.apply_df_func(top_accna_apply_func,self.xlmap.top_accna)
+        #  pass
+    #  def set_date(self,date_col='date',date_split_by=r'-'):
+        #  def __get_year(row_series):
+            #  if self.use_map==True:
+                #  date_str=row_series[self.xlmap.date_col]
+            #  else:
+                #  date_str=row_series[date_col]
+            #  if isinstance(date_str,str) and date_str != '0.0':
+                #  year=transType(date_str.split(date_split_by)[0])
+            #  else:
+                #  year='0'
+            #  return year
+        #  def __get_month(row_series):
+            #  if self.use_map==True:
+                #  date_str=row_series[self.xlmap.date_col]
+            #  else:
+                #  date_str=row_series[date_col]
+            #  if isinstance(date_str,str) and (date_str != '0.0' or date_str != 0.0):
+                #  month=transType(date_str.split(date_split_by)[1])
+            #  else:
+                #  month='0'
+            #  return month
+        #  def __get_day(row_series):
+            #  if self.use_map==True:
+                #  date_str=row_series[self.xlmap.date_col]
+            #  else:
+                #  date_str=row_series[date_col]
+            #  if isinstance(date_str,str) and date_str != '0.0':
+                #  day=transType(date_str.split(date_split_by)[2])
+            #  else:
+                #  day='0'
+            #  return day
+        #  if self.use_map==True:
+            #  setattr(self,'date_col',self.xlmap.date_col)
+            #  setattr(self,'date_split_by',self.xlmap.date_split_by)
+        #  else:
+            #  setattr(self,'date_col',date_col)
+            #  setattr(self,'date_split_by',date_split_by)
+        #  if self.shmeta[0] is not None and date_col in self.columns:
+            #  date_col_index=list(self.columns).index(date_col)
+            #  self.change_dtype(date_col,target_type=str)
+            #  self.apply_df_func(__get_year,'year',date_col_index)
+            #  self.apply_df_func(__get_month,'month',date_col_index+1)
+            #  self.apply_df_func(__get_day,'day',date_col_index+2)
+        #  pass
     #  def duplicate(self,use_meta=False):
         #  from copy import deepcopy
         #  calculator=deepcopy(self)
         #  if use_meta==False:
             #  calculator.clear()
         #  return calculator
-    def accept_df(self,in_df):
-        '''
-        if you code 'self.data=in_df',
-        index/columns of them may differs,
-        yet inner data will be the same;
-        '''
-        super().accept_df(in_df)
-        self.__parse_acctmap()
-    def calxl(self,df=None):
-        cal=CalSheet(
-            shmeta=[None,self.sheet_name,self.title],
+    #  def accept_df(self,in_df):
+        #  '''
+        #  if you code 'self.data=in_df',
+        #  index/columns of them may differs,
+        #  yet inner data will be the same;
+        #  '''
+        #  super().accept_df(in_df)
+        #  self.__parse_acctmap()
+    #  def calxl(self,df=None):
+        #  cal=CalSheet(
+            #  shmeta=[None,self.sheet_name,self.title],
             #  file_path=None,
             #  sheet_name='sheet0',
             #  title=0,
@@ -243,12 +243,12 @@ class CalSheet(XlSheet):
             #  accna_col=deepcopy(self.xlmap.accna_col),
             #  date_col=deepcopy(),
             #  date_split_by=self.date_split_by,
-            xlmap=deepcopy(self.xlmap),
-            use_map=self.use_map,
-            keep_meta_info=self.keep_meta_info,
-        )
-        cal.accept_df(df)
-        return cal
+            #  xlmap=deepcopy(self.xlmap),
+            #  use_map=self.use_map,
+            #  keep_meta_info=self.keep_meta_info,
+        #  )
+        #  cal.accept_df(df)
+        #  return cal
     #  def xl2df(self,xl):
         #  '''
         #  Transfer XlSheet into it's data;
@@ -846,6 +846,7 @@ class CalSheet(XlSheet):
         glid_list=list(glid_list)
         return glid_list
     def find_opposite(self,col_index,col_name='opposite_accid'):
+        #TODO
         pass
     def acct_side_split(self,accid,side='cr'):
         '''
@@ -1012,92 +1013,94 @@ class CalSheet(XlSheet):
                 random_state=random_state,
                 axis=axis
             )
-    ##### the following will be abandoned; ####
-    def fake_side_analysis(self,accid,side='cr',pvt_mode=False,type_xl=False):
-        '''
-        accid must NOT be regex!
-        Credit number is negative;
-        Debit number is positive;
-        '''
-        accid_item=self.__trans_accid_regex(accid,accurate=True)
-        accid_list=self.scan_byid(accid_item, accid_label=self.xlmap.accid_col)
-        acct_mgl=self.duplicate(use_meta=True)
-        resu_mgl=self.duplicate(use_meta=False)
-        acct_mgl.filterAcct(
-            accid_item,
-            side=side,
-            pure=False,
-            accurate=True,
-            over_write=True,
-            type_xl=False,
-            accid_label=None
-        )
-        if side=='cr':
-            side_name=acct_mgl.xlmap.drcrdesc[1]
-        elif side=='dr':
-            side_name=acct_mgl.xlmap.drcrdesc[0]
-        else:
-            return [
-                self.side_analysis(
-                    accid,
-                    side='dr'
-                ),
-                self.side_analysis(
-                    accid,
-                    side='cr'
-                )
-            ]
-        def __acct_mark_side(row_series):
-            current_accid=row_series[acct_mgl.xlmap.accid_col]
-            side_amount=row_series[side_name]
-            if current_accid==accid and side_amount !=0:
-                return 'target_acct'
-            else:
-                return 'opposite_acct'
-        acct_mgl.apply_df_func(__acct_mark_side,'mark_record',1)
-        accid_list=list(
-            set(
-                acct_mgl.data[acct_mgl.xlmap.accid_col]
-            )
-        )
-        resu_array=[]
-        for accid in accid_list:
-            acct_sum=acct_mgl.sumifs(
-                'drcr',[
-                    ['opposite_acct','mark_record',True,True],
-                    [accid,acct_mgl.xlmap.accid_col,True,True]
-                ],
-                filter_type='str'
-            )
-            resu_array.append(
-                [accid,acct_sum,self.acctmap[accid]]
-            )
-            continue
-        resu_array=DataFrame(
-            resu_array,
-            columns=[acct_mgl.xlmap.accid_col,'drcr',acct_mgl.accna_col]
-        )
-        resu_array.sort_values(
-            'drcr',
-            axis=0,
-            ascending=False, # if True,1 to 9;
-            inplace=True,
-            kind='quicksort',
-            na_position='last',
-            ignore_index=True,
-            key=None
-        )
-        resu_mgl.accept_df(resu_array)
-        resu_mgl.set_top_acct(top_accid_len=4,accna_split_by=r'/')
-        if pvt_mode==True:
-            pvt_data=resu_mgl.data.pivot_table(
-                values=['drcr'],
-                index=['top_accna']
-            )
-            resu_mgl.accept_df(pvt_data)
-            pass
-        if type_xl==False:
-            return resu_mgl.data
-        else:
-            return resu_mgl
+
+##### the following will be abandoned; ####
+
+    #  def fake_side_analysis(self,accid,side='cr',pvt_mode=False,type_xl=False):
+        #  '''
+        #  accid must NOT be regex!
+        #  Credit number is negative;
+        #  Debit number is positive;
+        #  '''
+        #  accid_item=self.__trans_accid_regex(accid,accurate=True)
+        #  accid_list=self.scan_byid(accid_item, accid_label=self.xlmap.accid_col)
+        #  acct_mgl=self.duplicate(use_meta=True)
+        #  resu_mgl=self.duplicate(use_meta=False)
+        #  acct_mgl.filterAcct(
+            #  accid_item,
+            #  side=side,
+            #  pure=False,
+            #  accurate=True,
+            #  over_write=True,
+            #  type_xl=False,
+            #  accid_label=None
+        #  )
+        #  if side=='cr':
+            #  side_name=acct_mgl.xlmap.drcrdesc[1]
+        #  elif side=='dr':
+            #  side_name=acct_mgl.xlmap.drcrdesc[0]
+        #  else:
+            #  return [
+                #  self.side_analysis(
+                    #  accid,
+                    #  side='dr'
+                #  ),
+                #  self.side_analysis(
+                    #  accid,
+                    #  side='cr'
+                #  )
+            #  ]
+        #  def __acct_mark_side(row_series):
+            #  current_accid=row_series[acct_mgl.xlmap.accid_col]
+            #  side_amount=row_series[side_name]
+            #  if current_accid==accid and side_amount !=0:
+                #  return 'target_acct'
+            #  else:
+                #  return 'opposite_acct'
+        #  acct_mgl.apply_df_func(__acct_mark_side,'mark_record',1)
+        #  accid_list=list(
+            #  set(
+                #  acct_mgl.data[acct_mgl.xlmap.accid_col]
+            #  )
+        #  )
+        #  resu_array=[]
+        #  for accid in accid_list:
+            #  acct_sum=acct_mgl.sumifs(
+                #  'drcr',[
+                    #  ['opposite_acct','mark_record',True,True],
+                    #  [accid,acct_mgl.xlmap.accid_col,True,True]
+                #  ],
+                #  filter_type='str'
+            #  )
+            #  resu_array.append(
+                #  [accid,acct_sum,self.acctmap[accid]]
+            #  )
+            #  continue
+        #  resu_array=DataFrame(
+            #  resu_array,
+            #  columns=[acct_mgl.xlmap.accid_col,'drcr',acct_mgl.accna_col]
+        #  )
+        #  resu_array.sort_values(
+            #  'drcr',
+            #  axis=0,
+            #  ascending=False, # if True,1 to 9;
+            #  inplace=True,
+            #  kind='quicksort',
+            #  na_position='last',
+            #  ignore_index=True,
+            #  key=None
+        #  )
+        #  resu_mgl.accept_df(resu_array)
+        #  resu_mgl.set_top_acct(top_accid_len=4,accna_split_by=r'/')
+        #  if pvt_mode==True:
+            #  pvt_data=resu_mgl.data.pivot_table(
+                #  values=['drcr'],
+                #  index=['top_accna']
+            #  )
+            #  resu_mgl.accept_df(pvt_data)
+            #  pass
+        #  if type_xl==False:
+            #  return resu_mgl.data
+        #  else:
+            #  return resu_mgl
     pass

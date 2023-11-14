@@ -13,9 +13,9 @@ from xlrd import open_workbook
 from pandas import concat,DataFrame
 
 from autk.gentk.funcs import start_thread_list
-from autk.calculation.base.xlsht import XlSheet
-from autk.mapper.map import XlMap
+from autk.mapper.base import XlMap
 from autk.meta.pmeta import JsonMeta
+from autk.calculation.base.xlsht import XlSheet
 
 class ImmortalTable:
     '''
@@ -866,9 +866,6 @@ class ImmortalTable:
         pass
     ### the following are not perfect !
     def change_dtype(self,col_name,target_type=str):
-        def __change_single(xl,col_name,target_type):
-            xl.change_dtype(col_name,target_type)
-            pass
         #  thread_list=[]
         #  for xl in self.xlset:
             #  t=Thread(
@@ -883,8 +880,8 @@ class ImmortalTable:
             #  )
             #  thread_list.append(t)
         #  start_thread_list(thread_list)
-        self.apply_func(
-            __change_dtype,
+        self.apply_xl(
+            'change_dtype',
             col_name,
             target_type,
         )
