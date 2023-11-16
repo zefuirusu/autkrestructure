@@ -8,8 +8,8 @@ from copy import deepcopy
 from threading import Thread
 from pandas import concat
 
-from autk.calculation.base.table import ImmortalTable
 from autk.gentk.funcs import f2dict,start_thread_list,save_df,get_time_str
+from autk.calculation.base.table import ImmortalTable
 
 class STB:
     def __init__(

@@ -565,7 +565,7 @@ class XlBook:
             return read_excel(
                 self.file_path,
                 sheet_name=sheet_name,
-                header=titile,
+                header=title,
                 engine='xlrd'
             )
         elif self.suffix==r'xlsx':
