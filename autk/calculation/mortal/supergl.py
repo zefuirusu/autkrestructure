@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # encoding = 'utf-8'
+'''
+Super General Ledger
+'''
+
 from copy import deepcopy
 from pandas import concat
 from threading import Thread
 
 from autk.gentk.funcs import f2dict,get_time_str,start_thread_list,save_df
 from autk.calculation.mortal.mortalgl import MGL
+from autk.calculation.base.suppertable import STB
 
-class SGL:
+class SGL(STB):
     def __init__(
             self,
             meta_json_path=None,

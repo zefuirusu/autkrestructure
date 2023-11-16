@@ -17,7 +17,6 @@ from autk.calculation.mortal.calgl import CalSheet
 class CalChart(XlSheet):
     '''
     '''
-    @pysnooper.snoop(depth=1,prefix='[CalChart]',relative_time=True)
     def __init__(
         self,
         xlmap:GenChartMap=None,

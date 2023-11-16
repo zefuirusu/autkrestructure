@@ -6,7 +6,7 @@ from threading import Thread
 
 #  from autk.parser.entry import Acct
 from autk.gentk.funcs import transType,get_time_str
-from autk.mapper.map import ChartMap,ApArMap
+from autk.mapper.chmap import ChartMap,ApArMap
 from autk.calculation.base.table import ImmortalTable
 from autk.calculation.mortal.calca import CalChart
 
