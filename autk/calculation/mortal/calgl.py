@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 from copy import deepcopy
 from threading import Thread
 from pandas import DataFrame
@@ -64,7 +65,12 @@ class CalSheet(XlSheet):
         if self.xlmap.has_cols(['drcr']):
             pass
         else:
-            print('[Note] check drcr:',self.xlmap.has_cols(['drcr']))
+            print(
+                '[{}] check drcr:'.format(
+                    self.__class__.__name__,
+                    self.xlmap.has_cols(['drcr']),
+                ),
+            )
         self.apply_df_func(
             __cal_drcr,
             'drcr',
@@ -106,7 +112,7 @@ class CalSheet(XlSheet):
                 getattr(self.xlmap,'top_accid_col'),
             ])
         ):
-            print('[Note] check accid:ok')
+            print('[{}] check accid:ok'.format(self.__class__.__name__))
             self.change_dtype(
                 self.xlmap.accid_col,
                 str
@@ -128,7 +134,7 @@ class CalSheet(XlSheet):
                 getattr(self.xlmap,'top_accna_col')
             ])
         ):
-            print('[Note] check accna:ok')
+            print('[{}] check accna:ok'.format(self.__class__.__name__))
             def __set_top_accna(row_series):
                 accna=str(
                     row_series[self.xlmap.accna_col])
@@ -148,7 +154,7 @@ class CalSheet(XlSheet):
         and self.xlmap.has_cols([
             getattr(self.xlmap,'date_col'),
         ])):
-            print('[Note] check date column:ok')
+            print('[{}] check date column:ok'.format(self.__class__.__name__))
         pass
     #  def set_top_acct(
         #  self,

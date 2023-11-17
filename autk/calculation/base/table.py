@@ -47,7 +47,8 @@ class ImmortalTable:
         self.data=None
         self.load_count=0
         ### start initialize:
-        self.collect_xl()
+        if isinstance(xlmeta,JsonMeta):
+            self.collect_xl()
         pass
     def __str__(self):
         return str(self.show)
@@ -93,10 +94,11 @@ class ImmortalTable:
     @property
     def shape(self):
         print(
-            '[Note] test shape: rows {}, columns {}'.format(
+            '[{}] test shape: rows {}, columns {}'.format(
+                self.__class__.__name__,
                 self.data.shape[0]==self.xlshape['rows'].sum(),
                 self.data.shape[1]==self.xlshape['columns'].max()
-            ) if self.data is not None else '[Note] raw data unloaded.'
+            ) if self.data is not None else '[Warning] raw data unloaded.'
         )
         return (
             self.xlshape['rows'].sum(),
@@ -189,11 +191,7 @@ class ImmortalTable:
         Append the xl object into self.xlset,
         using self.xlmap, by `shmeta`;
         '''
-        #TODO not perfect when self.xlmap=None
-        xl=XlSheet(
-            xlmap=self.xlmap,
-            shmeta=shmeta
-        )
+        #TODO never test when self.xlmap=None
         if isinstance(self.xlmap,XlMap):
             pass
         else:
@@ -201,7 +199,26 @@ class ImmortalTable:
             self.xlmap.extend_col_list(
                 xl.xlmap.columns
             )
+        if len(self.xlset)==0:
+            xl=XlSheet(
+                xlmap=self.xlmap,
+                shmeta=shmeta
+            )
+        else:
+            xl=self.xlset[0].__class__(
+                xlmap=self.xlmap,
+                shmeta=shmeta
+            )
         self.xlset.append(xl)
+        if self.load_count>0:
+            self.load_raw_data()
+        print(
+            '[{}] test cols after {} appended to xlset:'.format(
+                self.__class__.__name__,
+                xl.__class__.__name__
+            ),
+            self.check_cols()
+        )
         pass
     def append_xl_by_map(
         self,
@@ -213,11 +230,54 @@ class ImmortalTable:
         has `JsonMeta` as `shmeta` or not.
         Yet xl.xlmap is important.
         '''
-        #TODO
+        #TODO never tested.
+        if (
+            #  isinstance(self.xlmap,XlMap)
+            #  and
+            isinstance(xlmap,XlMap)
+        ):
+            self.xlmap.extend_col_list(
+                xlmap.columns
+            )
+        else:
+            pass
+        self.xlset.append(xl)
+        if self.load_count>0:
+            self.load_raw_data()
+        print(
+            '[{}] test cols after {} appended to xlset by map {}:'.format(
+                self.__class__.__name__,
+                xl.__class__.__name__,
+                xl.map.__class__.__name__
+            ),
+            self.check_cols()
+        )
         pass
     def append_df_by_map(self,df):
         #XlSheet.load_df_by_map()
-        #TODO
+        if len(self.xlset)==0:
+            xl=XlSheet(
+                xlmap=self.xlmap,
+                xlmeta=None
+            )
+        else:
+            xl=self.xlset[0].__class__(
+                xlmap=self.xlmap,
+                shmeta=None
+            )
+        xl.load_df_by_map(
+            df,
+            xlmap=None
+        )
+        self.xlset.append(xl)
+        if self.load_count>0:
+            self.load_raw_data()
+        print(
+            '[{}] test cols after `DataFrame` appended:'.format(
+                self.__class__.__name__,
+            ),
+            self.check_cols()
+        )
         pass
     def check_cols(self):
         '''
@@ -416,7 +476,8 @@ class ImmortalTable:
         return:
             pandas.core.frame.DataFrame.
         '''
-        #TODO
+        #TODO can be simplified.
+        # same as self.apply_xl_collect_df('filter',*args,**kwargs);
         self.__clear_temp()
         if filter_type=='str':
             self.__start_filter(
@@ -652,6 +713,12 @@ class ImmortalTable:
                 )
             )
             continue
+        #  print(
+            #  '[{}] function `{}` is to be applied.'.format(
+                #  self.__class__.__name__,
+                #  xl_func.__name__,
+            #  )
+        #  )
         start_thread_list(thread_list)
         return 0
     def apply_xl(
@@ -666,6 +733,13 @@ class ImmortalTable:
                 xl_func_name
             )(*args,**kwargs)
             pass
+        print(
+            '[{}] function `{}` of `{}` to be applied.'.format(
+                self.__class__.__name__,
+                xl_func_name,
+                self.xlset[0].__class__.__name__,
+            )
+        )
         self.apply_func(
             __single_apply,
         )
@@ -864,22 +938,28 @@ class ImmortalTable:
         start_thread_list(thread_list)
         #  self.load_raw_data()
         pass
-    ### the following are not perfect !
+    def filter_key_record(
+        self,
+        condition,
+        filter_type='adv'
+    ):
+        '''
+        Expected to be perfect.
+        Return all keys (data in column 'key_name') according to the passed argument condition_matrix.
+        '''
+        resu_keys=list(self.apply_xl_collect_df(
+            'filter',
+            condition,
+            filter_type
+
+        )[self.xlmap.key_name].drop_duplicates())
+        return self.filter_list(
+            resu_keys, 
+            self.xlmap.key_name,
+            False,
+            False
+        )
     def change_dtype(self,col_name,target_type=str):
-        #  thread_list=[]
-        #  for xl in self.xlset:
-            #  t=Thread(
-                #  target=__change_single,
-                #  args=(xl,col_name,target_type),
-                #  name=''.join(
-                    #  [
-                        #  r'change_dtype->',
-                        #  xl.name,
-                    #  ]
-                #  )
-            #  )
-            #  thread_list.append(t)
-        #  start_thread_list(thread_list)
         self.apply_xl(
             'change_dtype',
             col_name,
@@ -887,38 +967,27 @@ class ImmortalTable:
         )
         pass
     def change_float_to_str(self,col_name):
-        def __change_single(xl,col_name):
-            xl.change_float_to_str(col_name)
-        #  thread_list=[]
-        #  for xl in self.xlset:
-            #  t=Thread(
-                #  target=__change_single,
-                #  args=(xl,col_name,),
-                #  name=''.join(
-                    #  [
-                        #  r'change_float_to_str->',
-                        #  xl.name,
-                    #  ]
-                #  )
-            #  )
-            #  thread_list.append(t)
-        #  start_thread_list(thread_list)
-        self.apply_func(
-            __change_single,
+        self.apply_xl(
+            'change_float_to_str',
             col_name
         )
         pass
-    def filter_key_record(self,condition_matrix):
+    def split(self,by:str):
         '''
-        Expected to be perfect.
-        Return all keys (data in column 'key_name') according to the passed argument condition_matrix.
+        This method is completed.
+        return:
+            class ImmortalTable;
         '''
         #TODO
-        # self.__clear_temp()
-        d=self.filter(condition_matrix,filter_type='str')
-        resu_keys=list(d[self.key_name].drop_duplicates())
-        # self.__clear_temp()
-        return self.filter_list(resu_keys, search_col=self.key_name)
+        # not perfect when same columns appear in different XlSheet;
+        # the result may duplicate.
+        table=self.blank_copy()
+        table.xlset=self.apply_xl_collect_list(
+            'split',
+            by,
+        )
+        return table
+    ### the following are not perfect !
     def join(self,if_split=False)->XlSheet:
         '''
         Join all sheets.
@@ -929,18 +998,6 @@ class ImmortalTable:
         else: # split into different sheets;
             pass
         pass
-    def split(self,by:str):
-        '''
-        This method is completed.
-        return:
-            class ImmortalTable;
-        '''
-        table=self.blank_copy()
-        table.xlset=self.apply_xl_collect_list(
-            'split',
-            by,
-        )
-        return table
     pass
 if __name__=='__main__':
     pass

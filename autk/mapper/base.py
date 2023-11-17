@@ -64,10 +64,18 @@ class XlMap:
             )
             pass
         else:
-            setattr(self,col_name,len(self.show.keys()))
+            col_index=len(self.columns)
+            setattr(self,col_name,col_index)
+            print(
+                '[{}] append new column `{}` at index `{}`.'.format(
+                    self.__class__.__name__,
+                    col_name,
+                    col_index
+                )
+            )
     def extend_col_list(self,col_list):
-        for attr_name in col_list:
-            self.append_col_name(attr_name)
+        for col in col_list:
+            self.append_col_name(col)
             continue
         pass
     def save(self,savepath):

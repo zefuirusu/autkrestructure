@@ -40,11 +40,13 @@ class MGL(ImmortalTable):
         ):
         print('---Initializing MGL---')
         t_start=datetime.datetime.now()
+        self.gl_matrix=None
+        self.acctmap={}
         super().__init__(
             xlmap,
             xlmeta,
         )
-        self.gl_matrix=None
+        self.__parse_acctmap()
         t_end=datetime.datetime.now()
         t_interval=t_end-t_start
         print('Initialize time spent:',t_interval)
@@ -803,7 +805,12 @@ class MGL(ImmortalTable):
         save_df(cr_split,'cr_split',savepath)
         pass
     def side_split(self,accid_item,side='cr',show_col='accna'):
-        #  self.clear_temp_df()
+        return self.apply_xl_collect_df(
+            'side_split',
+            accid_item,
+            side,
+            show_col
+        )
         thread_list=[]
         for xl in self.xlset:
             t=Thread(
@@ -992,41 +999,41 @@ class MGL(ImmortalTable):
         if over_write==True:
             self.gl_matrix=gl_matrix
         return gl_matrix
-    def append_df(self,in_df):
-        '''
-        columns of input DataFrame must correspond to that of self.xlmeta!
-        Same as:
-            xl=self.calxl()
-            xl.accept_data(in_df)
-            self.xlset.append(xl)
-            # table=self.duplicate(use_meta=False)
-            if self.data is not None:
-                self.data=concat([self.data,in_df])
-            else:
-                self.data=in_df
-        '''
-        from pandas import concat
-        xl=CalSheet(
-            [None,
-            '',
-            self.common_title],
-            xlmap=deepcopy(self.xlmap),
+    #  def append_df(self,in_df):
+        #  '''
+        #  columns of input DataFrame must correspond to that of self.xlmeta!
+        #  Same as:
+            #  xl=self.calxl()
+            #  xl.accept_data(in_df)
+            #  self.xlset.append(xl)
+            #  table=self.duplicate(use_meta=False)
+            #  if self.data is not None:
+                #  self.data=concat([self.data,in_df])
+            #  else:
+                #  self.data=in_df
+        #  '''
+        #  from pandas import concat
+        #  xl=CalSheet(
+            #  [None,
+            #  '',
+            #  self.common_title],
+            #  xlmap=deepcopy(self.xlmap),
             #  use_map=self.use_map,
-            keep_meta_info=self.keep_meta_info,
-        )
-        xl.accept_data(in_df)
-        table=MGL(
-            key_index=self.xlmap.key_index,
-            key_name=self.xlmap.key_name,
-            xlmap=self.xlmap
-        )
-        table.xlset.append(xl)
-        table.data=in_df
-        self.xlset.extend(table.xlset)
-        if self.data is not None:
-            self.data=concat([self.data,table.data],axis=0,join='outer')
-        else:
-            self.data=table.data
+            #  keep_meta_info=self.keep_meta_info,
+        #  )
+        #  xl.accept_data(in_df)
+        #  table=MGL(
+            #  key_index=self.xlmap.key_index,
+            #  key_name=self.xlmap.key_name,
+            #  xlmap=self.xlmap
+        #  )
+        #  table.xlset.append(xl)
+        #  table.data=in_df
+        #  self.xlset.extend(table.xlset)
+        #  if self.data is not None:
+            #  self.data=concat([self.data,table.data],axis=0,join='outer')
+        #  else:
+            #  self.data=table.data
         pass
     def append_xl(self,file_path,sheet_name,title):
         from pandas import concat

@@ -95,7 +95,7 @@ class XlSheet:
                 [self.xlmap.key_name]+self.xlmap.key_index
         ):
             print(
-                '[Note] {} `{}` sets `{}` as key_name from key_index:{}'.format(
+                '[{}] `{}` sets `{}` as key_name from key_index:{}'.format(
                     self.__class__.__name__,
                     self.name,
                     self.xlmap.key_name,
@@ -168,7 +168,7 @@ class XlSheet:
             path=str(list(self.shmeta.data.keys())[0])
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[Note] {} `{}` loads data by {}.'.format(
+                    '[{}]  `{}` loads data by `{}`.'.format(
                         self.__class__.__name__,
                         self.name,
                         self.xlmap.__class__.__name__
@@ -182,7 +182,7 @@ class XlSheet:
                 self.__set_key_from_map()
             else:
                 print(
-                    '[Note] {} `{}` loads data without XlMap.'.format(
+                    '[{}]  `{}` loads data without XlMap.'.format(
                         self.__class__.__name__,
                         self.name
                     )
@@ -195,7 +195,7 @@ class XlSheet:
         else:
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[Note] {} `{}` created blank sheet by {}.'.format(
+                    '[{}]  `{}` created blank sheet by `{}`.'.format(
                         self.__class__.__name__,
                         self.name,
                         self.xlmap.__class__.__name__
@@ -236,9 +236,18 @@ class XlSheet:
         '''
         source_cols=list(df.columns.to_numpy())
         if self.xlmap.has_cols(source_cols):
-            print('[Note] columns fits with xlmap.')
+            print(
+                '[{}] columns fits with xlmap.'.format(
+                    self.__class__.__name__
+                )
+            )
         else:
-            print('[Note] input cols of df:',source_cols)
+            print(
+                '[{}] input `DataFrame` with cols:{}'.format(
+                    self.__class__.__name__,
+                    source_cols
+                ),
+            )
         if isinstance(self.xlmap,XlMap):
             data=DataFrame(
                 [],
@@ -272,9 +281,9 @@ class XlSheet:
                         over_write=False
                     )
             else:
-                self.xlmap.extend_col_list(list(
-                    df.columns
-                ))
+                self.xlmap.extend_col_list(
+                    list(df.columns)
+                )
             self.data=self.transform_df(df)
         else: # self.xlmap=None
             if isinstance(xlmap,XlMap):
@@ -324,7 +333,11 @@ class XlSheet:
                 list(self.data.columns)
             )
         else:
-            print('[Note] columns-check failed. check data or map.')
+            print(
+                '[Warning] {} failed in columns-check. check data or map.'.format(
+                    self.__class__.__name__,
+                )
+            )
             return False
     def append_col_name(self,col_name):
         self.xlmap.append_col_name(col_name)
@@ -793,14 +806,6 @@ class XlSheet:
             percent_col_name,
         )
         pass
-    def filter_key_record(self,condition_matrix):
-        '''
-        Expected to be perfect.
-        Seems useless.
-        Return all keys (data in column 'key_name') according to the passed argument condition_matrix.
-        '''
-        resu_keys=list(self.filter_str(condition_matrix)[self.key_name].drop_duplicates())
-        return self.filter_list(resu_keys, self.key_name)
     ### above are not perfect.
     pass
 if __name__=='__main__':
