@@ -6,11 +6,11 @@ from threading import Thread
 
 #  from autk.parser.entry import Acct
 from autk.gentk.funcs import transType,get_time_str
-from autk.mapper.chmap import ChartMap,ApArMap
+from autk.mapper.chmap import MchMap,ApArMap
 from autk.calculation.base.table import ImmortalTable
 from autk.calculation.mortal.calca import CalChart
 
-class MCA(ImmortalTable):
+class MCH(ImmortalTable):
     '''
     Mortal Chart of Account.
         self.camap is passed as an argument only when instantiating an XlSheet object, in method of parsing xlmeta.
@@ -78,7 +78,12 @@ class MCA(ImmortalTable):
             #  self.load_raw_data()
         t_end=datetime.datetime.now()
         t_interval=t_end-t_start
-        print('Initialize time spent:',t_interval)
+        print(
+            '[{}] Initialize time spent:{}'.format(
+                self.__class__.__name__,
+                t_interval,
+            ),
+        )
         print('---MCA Initialized---')
         pass
     def append_xl_by_meta(self,shmeta):
@@ -227,7 +232,7 @@ class MCA(ImmortalTable):
             print('shape of result DataFrame is: ',resu.shape)
             return resu
     pass
-class APAR(MCA):
+class APAR(MCH):
     def __init__(
             self,
             xlmeta,

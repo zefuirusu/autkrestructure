@@ -3,18 +3,8 @@
 
 from autk.mapper.base import XlMap
 
-class GenChartMap(XlMap):
+class MchMap(XlMap):
     def __init__(self):
-        self.entity=None
-        self.year=None
-        self.accid=2 #科目编号
-        self.accna=3 #科目名称
-        self.start_bal_type=4 #期初余额方向
-        self.start_amount=5
-        self.dr_amount=6
-        self.cr_amount=7
-        self.end_bal_type=4 #期末余额方向
-        self.end_amount=8
         pass
     @property
     def drcrdesc(self):
@@ -38,12 +28,15 @@ class GenChartMap(XlMap):
     def accna_split_by(self):
         return r'/'
     pass
-class ChartMap(GenChartMap):
+class EchMap(MchMap):
     def __init__(self):
         '''
-        key_cols必须和Acct类的accept_key_chart_row(key_chart_row)方法联动，否则MCA类的getAcct(accid=6001)方法会得到错误的数据！
+        key_cols必须和Acct类的accept_key_chart_row(key_chart_row)方法联动，
+        否则MCA类的getAcct(accid=6001)方法会得到错误的数据！
         '''
         # self.if_index_map=if_index_map
+        self.entity=None
+        self.year=None
         self.top_accid=None #一级科目编号
         self.top_accna=None #一级科目名称
         self.start_amount=5
@@ -65,20 +58,8 @@ class ChartMap(GenChartMap):
         # self.year=None
         # self.month=None
         pass
-    @property
-    def accid_col(self):
-        return 'accid'
-    @property
-    def accna_col(self):
-        return 'accna'
-    @property
-    def drcrdesc(self):
-        return ['dr','cr']
-    @property
-    def key_cols(self):
-        return ['accid','accna','start_amount','dr','cr','end_amount']
     pass
-class ApArMap(ChartMap):
+class ApArMap(MchMap):
     '''
     columns:[科目编号,科目名称,核算项目编号,核算项目名称,币种,方向,期初余额,本期借方发生额,本期贷方发生额,期末余额];
     '''
@@ -168,7 +149,12 @@ def get_glmap(columns,key_index=['date','mark','jrid'],drcrdesc=['dr_amount','cr
     columns must be included:
         glid,date,mark,jrid,accid,accna,dr_amount,cr_amount,item_name,note;
     '''
-    print('[Note] columns of glmap:\n',columns)
+    print(
+        '[{}] columns of glmap:\n{}.'.format(
+            self.__class__.__name__,
+            columns
+        ),
+    )
     class InstantMap(MglMap):
         def __init__(self):
             if isinstance(columns,list):
@@ -179,7 +165,12 @@ def get_glmap(columns,key_index=['date','mark','jrid'],drcrdesc=['dr_amount','cr
                 for k in columns.keys():
                     setattr(self,k,columns[k])
             else:
-                print('[Warning] invalid columns:',columns)
+                print(
+                    '[Warning][{}] invalid columns:{}'.format(
+                        self.__class__.__name__,
+                        columns
+                    ),
+                )
                 pass
             pass
         @property

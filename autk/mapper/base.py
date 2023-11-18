@@ -12,7 +12,7 @@ class XlMap:
     columns of GL is right in the same order of attributes of map object.
     Remember:index starts from 0.
     '''
-    def _overwt_dict(self):
+    def clear_cols(self):
         self.__dict__={}
     def get_index(self,col_name):
         return self.show[col_name]
@@ -33,7 +33,7 @@ class XlMap:
         }
         '''
         if over_write==True:
-            self._overwt_dict()
+            self.clear_cols()
         from os.path import isfile
         if isinstance(json_str,dict):
             pass
@@ -51,13 +51,11 @@ class XlMap:
             # then set correct attributes according to json_str;
             setattr(self,k,json_str[k])
             continue
-    def insert_col_name(self,col_name,col_index):
-        # TODO
-        pass
     def append_col_name(self,col_name):
         if col_name in self.columns:
             print(
-                '[Warning]: `{}` already included in {}.'.format(
+                '[Warning][{}]: `{}` already included in {}.'.format(
+                    self.__class__.__name__,
                     col_name,
                     self.__class__.__name__
                 )
@@ -78,6 +76,19 @@ class XlMap:
             self.append_col_name(col)
             continue
         pass
+    def change_cols(self,new_cols):
+        '''
+        `new_cols` can be dict or list.
+        '''
+        if isinstance(new_cols,dict):
+            self.accept_json(new_cols,over_write=True)
+        elif isinstance(new_cols,list):
+            self.clear_cols()
+            self.extend_col_list(new_cols)
+        pass
+    def insert_col_name(self,col_name,col_index):
+        # TODO
+        pass
     def save(self,savepath):
         from json import dumps
         with open(savepath,'w',encoding='utf-8') as f:
@@ -89,7 +100,7 @@ class XlMap:
                 )
             )
         print(
-            '[Note] {} data saved to:{}'.format(
+            '[{}] data saved to:{}'.format(
                 self.__class__.__name__,
                 savepath
             )
@@ -114,17 +125,32 @@ class XlMap:
         return []
     @classmethod
     def from_list(cls,columns):
-        print('[Note] create map from list: ',columns)
+        print(
+            '[{}] creates map from list: {}.'.format(
+                cls.__name__,
+                columns
+            ),
+        )
         xlmap=cls()
-        xlmap._overwt_dict()
+        xlmap.clear_cols()
         xlmap.extend_col_list(columns)
-        print('[Note] new map created:\n',xlmap.show)
+        print(
+            '[{}] new map created:\n{}'.format(
+                cls.__name__,
+                xlmap.show
+            ),
+        )
         return xlmap
     @classmethod
     def from_dict(cls,columns):
-        print('[Note] create map from dict: ',columns)
+        print(
+            '[{}] create map from dict:\n{}.'.format(
+                cls.__name__,
+                columns,
+            ),
+        )
         xlmap=cls()
-        #  xlmap._overwt_dict()
+        #  xlmap.clear_cols()
         xlmap.accept_json(columns,over_write=True)
         return xlmap
     pass

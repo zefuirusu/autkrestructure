@@ -95,7 +95,7 @@ class XlSheet:
                 [self.xlmap.key_name]+self.xlmap.key_index
         ):
             print(
-                '[{}] `{}` sets `{}` as key_name from key_index:{}'.format(
+                '[{}|{}] key_name `{}` is set from key_index:{}'.format(
                     self.__class__.__name__,
                     self.name,
                     self.xlmap.key_name,
@@ -114,7 +114,10 @@ class XlSheet:
             )
         else:
             print(
-                '[Warning] check key_index of {}:'.format(self.name),
+                '[Warning][{}|{}] check `key_index`:'.format(
+                    self.__class__.__name__,
+                    self.name
+                ),
                 'key in xlmap:{}/{}'.format(
                     self.xlmap.key_name,
                     self.xlmap.key_index
@@ -168,7 +171,7 @@ class XlSheet:
             path=str(list(self.shmeta.data.keys())[0])
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[{}]  `{}` loads data by `{}`.'.format(
+                    '[{}|{}] data loaded by map `{}`.'.format(
                         self.__class__.__name__,
                         self.name,
                         self.xlmap.__class__.__name__
@@ -182,7 +185,7 @@ class XlSheet:
                 self.__set_key_from_map()
             else:
                 print(
-                    '[{}]  `{}` loads data without XlMap.'.format(
+                    '[{}|{}] data loaded without XlMap.'.format(
                         self.__class__.__name__,
                         self.name
                     )
@@ -195,7 +198,7 @@ class XlSheet:
         else:
             if isinstance(self.xlmap,XlMap):
                 print(
-                    '[{}]  `{}` created blank sheet by `{}`.'.format(
+                    '[{}|{}] blank sheet created by map `{}`.'.format(
                         self.__class__.__name__,
                         self.name,
                         self.xlmap.__class__.__name__
@@ -208,7 +211,7 @@ class XlSheet:
                 self.data.fillna(0.0,inplace=True)
                 pass
             else:
-                print('[Warning] {} `{}` loaded `None` data.'.format(
+                print('[Warning][{}|{}] `None` data loaded.'.format(
                     self.__class__.__name__,
                     self.name
                 ))
@@ -218,6 +221,7 @@ class XlSheet:
         pass
     def blank_copy(self):
         '''
+        `self.xlmap` will be deepcopy.
         self.data is blank-DataFrame if 
         self.xlmap is not None;
         else self.data=None;
@@ -226,6 +230,18 @@ class XlSheet:
             xlmap=deepcopy(self.xlmap),
             shmeta=None
         )
+    def df_copy(self,df:DataFrame):
+        xl=self.__class__(
+            xlmap=self.xlmap.__class__.from_list(
+                list(df.columns)
+            ),
+            shmeta=None
+        )
+        xl.load_df_by_map(
+            df,
+            xlmap=None
+        )
+        return xl
     def transform_df(self,df):
         '''
         Transform the input df so that 
@@ -237,15 +253,17 @@ class XlSheet:
         source_cols=list(df.columns.to_numpy())
         if self.xlmap.has_cols(source_cols):
             print(
-                '[{}] columns fits with xlmap.'.format(
-                    self.__class__.__name__
+                '[{}|{}] columns fits with xlmap.'.format(
+                    self.__class__.__name__,
+                    self.name,
                 )
             )
         else:
             print(
-                '[{}] input `DataFrame` with cols:{}'.format(
+                '[{}|{}] gets `DataFrame` with cols:{}'.format(
                     self.__class__.__name__,
-                    source_cols
+                    self.name,
+                    source_cols,
                 ),
             )
         if isinstance(self.xlmap,XlMap):
@@ -261,7 +279,13 @@ class XlSheet:
                 continue
             return data
         else:
-            print('[Warning] check self.xlmap, ',self.xlmap)
+            print(
+                '[Warning][{}|{}] transform failed.check `self.xlmap`:{} '.format(
+                    self.__class__.__name__,
+                    self.name,
+                    self.xlmap.show
+                ),
+            )
             return None
     def load_df_by_map(self,df,xlmap:XlMap=None):
         '''
@@ -334,8 +358,9 @@ class XlSheet:
             )
         else:
             print(
-                '[Warning] {} failed in columns-check. check data or map.'.format(
+                '[Warning][{}|{}] columns-check failed, check data or map.'.format(
                     self.__class__.__name__,
+                    self.name,
                 )
             )
             return False
@@ -349,7 +374,14 @@ class XlSheet:
                 col_name,
                 0
             )
-        print('check cols after append:',self.check_cols())
+        print(
+            '[{}|{}] check cols after column `{}` appended:{}.'.format(
+                self.__class__.__name__,
+                self.name,
+                col_name,
+                self.check_cols(),
+            ),
+        )
         pass
     def extend_col_list(self,col_list):
         for col_name in col_list:
@@ -359,7 +391,7 @@ class XlSheet:
         self,
         df_apply_func,
         col_name:str,
-        col_index:int=None,
+        col_index:int=None, # this parameter is useless.
     ):
         '''
         If self.xlmap.show[col_name] is not None,
@@ -783,7 +815,14 @@ class XlSheet:
             start_thread_list(thli)
             pass
         else:
-            print('[Warning] check your parameters: {}'.format(by))
+            print(
+                '[Warning][{}|{}] check if `{}` is in columns:{}.'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    by,
+                    self.xlmap.columns
+                )
+            )
         return resu
     def to_table(self,by:str):
         from autk.calculation.base.table import ImmortalTable
@@ -793,6 +832,112 @@ class XlSheet:
         )
         table.xlset=self.split(by)
         return table
+    ### the following can be derived by both `CalSheet` and `CalChart`;
+    def trans_accid_regex(self,accid,accurate=False):
+        '''
+        r'^'+accid+r'.*$' if not accurate, as default,
+        or r'^\s*'+accid+r'\s*$' if accurate is True;
+        Before/After the 'accid':
+        If accurate, only space will be allowed;
+        If not accurate, any str will be allowed;
+        
+        '''
+        import re
+        if accurate==False:
+            accid_item=str(accid).join([r'^.*',r'.*$'])
+        else:
+            accid_item=str(accid).join([r'^\s*',r'\s*$',])
+        # accid_item=re.sub(r'\.',r'\.',accid_item)
+        return accid_item
+    def trans_accna_regex(self,accna,accurate=False):
+        import re
+        if accurate==False:
+            accna_item=accna.join([r'^.*',r'.*$'])
+        else:
+            accna_item=accna.join([r'^\s*',r'\s*$'])
+        return accna_item
+    def whatna(self,accna_str):
+        '''
+        parameters:
+            accna_item:str
+                regular expression is supported.
+        return:dict
+            print DataFrame but return dict;
+            {accid:accna,accid:accna...}
+        '''
+        if not hasattr(self,'acctmap'):
+            print(
+                '[{}|{}}] attribute `{}` does not exist.'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    'acctmap'
+                )
+            )
+            return {}
+        else:
+            from autk.gentk.funcs import regex_filter
+            accna_item=self.trans_accna_regex(accna_str,accurate=False)
+            accna_list=regex_filter(
+                accna_item,
+                self.acctmap_invert.keys(),
+                match_mode=True
+            )
+            acct={}
+            for accna in accna_list:
+                accid=self.acctmap_invert[accna]
+                acct.update(
+                    {accid:accna}
+                )
+            print(
+                '[{}|{}]`{}` may be:\n\t{}'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    accna_str,
+                    acct,
+                ),
+            )
+            return acct
+    def whatid(self,accid_str):
+        '''
+        parameters:
+            accid_item:str
+                regular expression is supported.
+        return:dict
+            {accid:accna,accid:accna...}
+        '''
+        if not hasattr(self,'acctmap'):
+            print(
+                '[{}|{}] attribute `{}` does not exist.'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    'acctmap'
+                )
+            )
+            return {}
+        else:
+            from autk.gentk.funcs import regex_filter
+            accid_item=self.trans_accid_regex(accid_str,accurate=False)
+            acct={}
+            accid_list=regex_filter(
+                accid_item,
+                self.acctmap.keys(),
+                match_mode=True
+            )
+            for accid in accid_list:
+                acct.update(
+                    {accid:self.acctmap[accid]}
+                )
+                continue
+            print(
+                '[{}|{}]`{}` may be:\n\t{}'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    accid_str,
+                    acct
+                )
+            )
+            return acct
+    ### the above can be derived by both `CalSheet` and `CalChart`;
     ### below are not perfect ???
     def percentage(self,percent_col_name,target_col_name):
         '''

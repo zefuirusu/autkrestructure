@@ -49,7 +49,12 @@ class MGL(ImmortalTable):
         self.__parse_acctmap()
         t_end=datetime.datetime.now()
         t_interval=t_end-t_start
-        print('Initialize time spent:',t_interval)
+        print(
+            '[{}] Initialize time spent:{}'.format(
+                self.__class__.__name__,
+                t_interval
+            ),
+        )
         print('---MGL Initialized---')
         pass
     def collect_xl(self):
@@ -187,7 +192,7 @@ class MGL(ImmortalTable):
         else:
             accna_item=accna.join([r'^\s',r'\s$'])
         return compile(accna_item)
-    def whatna(self,accna_item):
+    def whatna(self,accna_str):
         '''
         parameters:
             accna_item:str
@@ -195,8 +200,7 @@ class MGL(ImmortalTable):
         return:dict
             {accid:accna,accid:accna...}
         '''
-        acctna_str=accna_item
-        accna_item=self.__trans_accna_regex(accna_item,accurate=False)
+        accna_item=self.__trans_accna_regex(accna_str,accurate=False)
         accna_list=regex_filter(
             accna_item,
             self.acctmap_invert.keys(),
@@ -209,9 +213,15 @@ class MGL(ImmortalTable):
             acct.update(
                 {accid:accna}
             )
-        print(acctna_str,':\t',acct)
+        print(
+            '[{}] {} may be:{}'.format(
+                self.__class__.__name__,
+                accna_str,
+                acct,
+            ),
+        )
         return acct
-    def whatid(self,accid_item):
+    def whatid(self,accid_str):
         '''
         parameters:
             accid_item:str
@@ -219,8 +229,7 @@ class MGL(ImmortalTable):
         return:dict
             {accid:accna,accid:accna...}
         '''
-        accid_str=accid_item
-        accid_item=accid_item.join([r'^.*',r'.*$'])
+        accid_item=self.__trans_accid_regex(accid_str,accurate=False)
         acct={}
         accid_list=regex_filter(
             accid_item,
@@ -232,7 +241,13 @@ class MGL(ImmortalTable):
                 {accid:self.acctmap[accid]}
             )
             continue
-        print(accid_str,'\t',acct)
+        print(
+            '[{}] {} may be:{}'.format(
+                self.__class__.__name__,
+                accid_str,
+                acct
+            )
+        )
         return acct
     def scan_byna(self,accna_item):
         acct_cols=[
