@@ -100,10 +100,10 @@ class InvChartMap(XlMap):
         self.name=0
         self.invid=1
         self.measure=2
-        self.append_col_list(self.num_cols)
-        self.append_col_list(self.amt_cols)
+        self.extend_col_list(self.num_cols)
+        self.extend_col_list(self.amt_cols)
         self.set_age_cols(ages_count)
-        #  self.append_col_list(self.get_age_cols(ages_count))
+        #  self.extend_col_list(self.get_age_cols(ages_count))
         pass
     @property
     def num_cols(self):
@@ -113,10 +113,10 @@ class InvChartMap(XlMap):
         return ['amt_start','amt_in','amt_out','amt_bal']
     @property
     def key_index(self):
-        return ['id']
+        return ['invid']
     @property
     def key_name(self):
-        return 'id'
+        return 'invid'
     def set_age_cols(self,ages_count):
         age_cols=[]
         for n in range(ages_count):
@@ -124,7 +124,7 @@ class InvChartMap(XlMap):
                 r'age'+str(n)
             )
             continue
-        self.append_col_list(age_cols)
+        self.extend_col_list(age_cols)
         return age_cols
     def get_age_cols(self,ages_count):
         age_cols=[]

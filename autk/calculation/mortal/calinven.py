@@ -15,38 +15,49 @@ from pandas import DataFrame,Series
 from threading import Thread
 
 from autk.mapper.chmap import InvChartMap,InvMonthMap
+from autk.meta.pmeta import PathMeta,JsonMeta
 from autk.calculation.base.xlsht import XlSheet
 
 class CalInv(XlSheet):
     def __init__(
         self,
-        shmeta=[None,'sheet0',0],
-        keep_meta_info=False,
-        key_index=['invid'], #['凭证日期','字','号'],
-        key_name='invid',
+        xlmap:InvChartMap=None,
+        shmeta:PathMeta=None,
+        #  shmeta=[None,'sheet0',0],
+        #  keep_meta_info=False,
+        #  key_index=['invid'], #['凭证日期','字','号'],
+        #  key_name='invid',
         age_len=3, ## age_len is the same as ages_count in map;
         is_previous=True,
         previous=None,
-        xlmap=InvChartMap(3),
-        use_map=False,
+        #  xlmap=InvChartMap(3),
+        #  use_map=False,
     ):
         self.data=None
         self.age_len=age_len
         self.is_previous=is_previous
         self.previous=previous
-        self.key_index=key_index
-        self.key_name=key_name
-        self.set_inv_attr(xlmap.num_cols,xlmap.amt_cols,xlmap.set_age_cols(age_len))
-        XlSheet.__init__(
-            self,
-            shmeta=shmeta,
-            xlmap=xlmap,
-            use_map=use_map,
-            keep_meta_info=keep_meta_info,
-            key_index=self.key_index,
-            key_name=self.key_name
+        #  self.key_index=key_index
+        #  self.xlmap.key_name=key_name
+        #  self.num_cols=[]
+        #  self.amt_cols=[]
+        self.age_cols=[] # this is important currently;
+        self.set_inv_attr(
+            xlmap.num_cols,
+            xlmap.amt_cols,
+            xlmap.get_age_cols(age_len)
+            # now self.xlmap does not extend age cols.
         )
-        self.set_key_index(key_index,key_name)
+        super().__init__(
+            #  self,
+            xlmap=xlmap,
+            shmeta=shmeta,
+            #  use_map=use_map,
+            #  keep_meta_info=keep_meta_info,
+            #  key_index=self.key_index,
+            #  key_name=self.xlmap.key_name
+        )
+        #  self.set_key_index(key_index,key_name)
         # columns of data differs if `is_previous` is True or not:
         if is_previous==False:
             self.xlmap.set_age_cols(0)
@@ -60,11 +71,20 @@ class CalInv(XlSheet):
             #  self.cal_age_by_merge(previous)
             #  self.cal_age_from_previous(previous)
         pass
-    def load_raw_data(self):
-        super().load_raw_data()
-        self.data=self.data[self.get_key_cols(previous=self.is_previous)]
-        self.columns=list(self.data.columns)
+    @property
+    def show(self):
+        show=super().show
+        show.update({
+            'is_previous':self.is_previous,
+            'previous':None if self.previous is None else self.previous.name,
+            'age_len':self.age_len,
+            'age_cols':self.age_cols
+        })
+        return show
     def set_inv_attr(self,num_cols,amt_cols,age_cols):
+        '''
+        may be useless right now.
+        '''
         if (
             num_cols !=[] or
             amt_cols !=[] or
@@ -73,7 +93,10 @@ class CalInv(XlSheet):
             self.num_cols=num_cols
             self.amt_cols=amt_cols
             self.age_cols=age_cols
-        elif self.use_map == True and (isinstance(xlmap,InvChartMap) or isinstance(xlmap,InvMonthMap)):
+        elif (
+            isinstance(xlmap,InvChartMap) 
+            or isinstance(xlmap,InvMonthMap)
+        ):
             self.num_cols=self.xlmap.num_cols
             self.amt_cols=self.xlmap.amt_cols
             self.age_cols=self.xlmap.get_age_cols(self.age_len)
@@ -84,12 +107,16 @@ class CalInv(XlSheet):
             pass
         pass
     def get_key_cols(self,previous=False):
-        k=[self.key_name]
+        k=[self.xlmap.key_name]
         if previous==True:
             k.extend(self.age_cols)
         else:
-            k.extend(self.amt_cols)
+            k.extend(self.xlmap.amt_cols)
         return k
+    def load_raw_data(self):
+        super().load_raw_data()
+        self.data=self.data[self.get_key_cols(previous=self.is_previous)]
+        #  self.columns=list(self.data.columns)
     def gen_new_age(self,over_write=False):
         '''
         This method will overwrite self.data;
@@ -130,9 +157,15 @@ class CalInv(XlSheet):
         #  right_df=pre_CalInv.data[pre_CalInv.get_key_cols(previous=True)]
         left_df=self.data
         right_df=pre_CalInv.data
-        print('left:\n',left_df)
-        print('right:\n',right_df)
-        resu=left_df.merge(right_df,how='left',on=self.key_name)
+        print(
+            '[{}|{}]left:\n'.format(self.__class__.__name__,self.name),
+            left_df
+        )
+        print(
+            '[{}|{}]right:\n'.format(self.__class__.__name__,self.name),
+            right_df
+        )
+        resu=left_df.merge(right_df,how='left',on=self.xlmap.key_name)
         #  self.xlmap.set_age_cols(self.age_len)
         #  print('current map:\n',self.xlmap.show)
         resu.fillna(0.0,inplace=True)
@@ -141,7 +174,10 @@ class CalInv(XlSheet):
             resu[self.age_cols[n]]=resu[self.age_cols[n-1]]
             pass
         resu[self.age_cols[0]]=Series([0]*resu.shape[0],index=resu.index)
-        print('merge result:\n',resu)
+        print(
+            '[{}|{}]merge result:\n'.format(self.__class__.__name__,self.name),
+            resu
+        )
         self.data=resu
         #  self.gen_new_age(over_write=True)
         return resu
@@ -163,7 +199,13 @@ class CalInv(XlSheet):
                     index=self.age_cols
                 )
             elif start_age_df.shape[0]>1:
-                print('物料编码重复！',inv_id)
+                print(
+                    '[{}|{}]物料编码重复:{}'.format(
+                        self.__class__.__name__,
+                        self.name,
+                        inv_id,
+                    ),
+                )
                 print(start_age_df)
                 start_age_series=Series(
                     [0.0]*self.age_len,
@@ -174,7 +216,13 @@ class CalInv(XlSheet):
                     [0.0]*self.age_len,
                     index=self.age_cols
                 )
-                print('woc!!!去年没这物料!',inv_id)
+                print(
+                    '[Warning][{}|{}]去年没这物料:{}'.format(
+                        self.__class__.__name__,
+                        self.name,
+                        inv_id,
+                    ),
+                )
             start_age_vector=start_age_series.values
             start_vector=zeros((self.age_len,),dtype=float)
             for n in range(len(start_vector)-1):
@@ -218,9 +266,9 @@ class CalInv(XlSheet):
             return end_vector
         def cal_by_row(row_series):
             end_amt_vector=get_end_amt(
-                get_start_amt(row_series[self.key_name]),
-                parse_dr_amt(row_series[self.amt_cols[1]]),
-                parse_cr_amt(row_series[self.amt_cols[2]])
+                get_start_amt(row_series[self.xlmap.key_name]),
+                parse_dr_amt(row_series[self.xlmap.amt_cols[1]]),
+                parse_cr_amt(row_series[self.xlmap.amt_cols[2]])
             )
             end_amt_series=Series(end_amt_vector,index=self.age_cols)
             return end_amt_series
@@ -242,7 +290,13 @@ class CalInv(XlSheet):
         #  )
         '''
         for age in self.age_cols:
-            print('current_age:',age)
+            print(
+                '[{}|{}]current_age:{}'.format(
+                    self.__class__.__name__,
+                    self.name,
+                    age,
+                ),
+            )
             self.data.apply(
                 cal_current_age,
                 axis=1,
@@ -254,14 +308,14 @@ class CalInv(XlSheet):
     def check(self):
         def check_bal(row_series):
             return (
-                row_series[self.amt_cols[0]]+
-                row_series[self.amt_cols[1]]-
-                row_series[self.amt_cols[2]]
+                row_series[self.xlmap.amt_cols[0]]+
+                row_series[self.xlmap.amt_cols[1]]-
+                row_series[self.xlmap.amt_cols[2]]
             )
         def check_age_sum(row_series):
             return (
                 row_series[self.age_cols].values.sum()-
-                row_series[self.amt_cols[3]]
+                row_series[self.xlmap.amt_cols[3]]
             )
         bal_logic_series=self.data.apply(
             check_bal,

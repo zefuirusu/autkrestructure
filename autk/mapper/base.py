@@ -22,6 +22,12 @@ class XlMap:
             checkli.append(col in self.columns)
             continue
         return [True]*len(col_list)==checkli
+    def invert_has_cols(self,col_list):
+        checkli=[]
+        for col in self.columns:
+            checkli.append(col in col_list)
+            continue
+        return [True]*len(self.columns)==checkli
     def accept_json(self,json_str,over_write=False):
         '''
         The passed argument 'json_str' indicates the location of the column

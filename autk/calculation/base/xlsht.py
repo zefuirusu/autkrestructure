@@ -346,19 +346,55 @@ class XlSheet:
         return resu
     def check_cols(self):
         '''
-        Check if `self.xlmap.columns` corresponds
-        with `self.data.columns`;
+        Check if all columns from `self.data.columns`
+        are in `self.xlmap.columns`;
+        If `self.xlmap.columns` is larger and contains
+        what is in `self.data.columns`, it returns true.
         '''
         if (
             isinstance(self.data,DataFrame) 
             and isinstance(self.xlmap,XlMap)
         ):
-            return self.xlmap.has_cols(
+            normal_check=self.xlmap.has_cols(
                 list(self.data.columns)
             )
+            invert_check=self.xlmap.invert_has_cols(
+                list(self.data.columns)
+            )
+            if normal_check and invert_check:
+                print(
+                    '[{}|{}] columns completely fit.'.format(
+                        self.__class__.__name__,
+                        self.name
+                    )
+                )
+            elif normal_check==True and invert_check==False:
+                print(
+                    '[Warning][{}|{}] `xlmap` has extra columns beyond `self.data`:{}'.format(
+                        self.__class__.__name__,
+                        self.name,
+                        set(self.xlmap.columns)-set(list(self.data.columns))
+                    )
+                )
+            elif normal_check==False and invert_check==True:
+                print(
+                    '[Warning][{}|{}] `xlmap` has less columns beyond `self.data`:{}'.format(
+                        self.__class__.__name__,
+                        self.name,
+                        set(list(self.data.columns))-set(self.xlmap.columns)
+                    )
+                )
+            else:
+                print(
+                    '[Warning][{}|{}] `xlmap` and  `self.data` are nothing in common.'.format(
+                        self.__class__.__name__,
+                        self.name,
+                    )
+                )
+            return normal_check
         else:
             print(
-                '[Warning][{}|{}] columns-check failed, check data or map.'.format(
+                '[Warning][{}|{}] column-check failed, check data or map.'.format(
                     self.__class__.__name__,
                     self.name,
                 )
