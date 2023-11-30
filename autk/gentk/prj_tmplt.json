@@ -1,0 +1,27 @@
+{
+    "map_conf":{
+        "cols":{
+            "entity":null,
+            "glid":null,
+            "top_accid":null,
+            "top_accna":null
+        },
+        "key_name":"glid",
+        "key_index":[],
+        "drcrdesc":["dr","cr"],
+        "accid_col":"accid",
+        "accna_col":"accna",
+        "top_accid_col":"top_accid",
+        "top_accna_col":"top_accna",
+        "date_col":"date",
+        "top_accid_len":4,
+        "accna_split_by":"/",
+        "date_split_by":"-"
+    },
+    "meta_conf":{
+        "path_1":[
+            ["sheet0",0],
+            ["sheet1",0]
+        ]
+    }
+}
