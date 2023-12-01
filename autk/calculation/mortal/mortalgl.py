@@ -42,6 +42,7 @@ class MGL(ImmortalTable):
         t_start=datetime.datetime.now()
         self.gl_matrix=None
         self.acctmap={}
+        self.acctmap_invert={}
         super().__init__(
             xlmap,
             xlmeta,
@@ -90,7 +91,7 @@ class MGL(ImmortalTable):
                     name='~'.join([
                         self.__class__.__name__,
                         'load',
-                        'callsheet'
+                        'calsheet'
                     ])
                 )
             )
@@ -113,19 +114,17 @@ class MGL(ImmortalTable):
         self.set_key_cols() must be called before this.
         '''
         self.acctmap={}
-        thread_list=[]
+        self.acctmap_invert={}
+        thli=[]
         for xl in self.xlset:
-            thread_list.append(
+            thli.append(
                 Thread(
                     target=self.acctmap.update,
                     args=(xl.acctmap,)
                 )
             )
             continue
-        for t in thread_list:
-            t.start()
-        for t in thread_list:
-            t.join()
+        start_thread_list(thli)
         self.acctmap_invert=dict(
            zip(
                self.acctmap.values(),

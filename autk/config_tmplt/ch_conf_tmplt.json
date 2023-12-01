@@ -1,0 +1,23 @@
+{
+    "map_conf":{
+        "cols":{
+            "entity":null,
+            "top_accid":null,
+            "top_accna":null
+        },
+        "entity_col":"entity",
+        "drcrdesc":["dr","cr"],
+        "accid_col":"accid",
+        "accna_col":"accna",
+        "top_accid_col":"top_accid",
+        "top_accna_col":"top_accna",
+        "top_accid_len":4,
+        "accna_split_by":"/"
+    },
+    "meta_conf":{
+        "path_1":[
+            ["sheet0",0],
+            ["sheet1",0]
+        ]
+    }
+}

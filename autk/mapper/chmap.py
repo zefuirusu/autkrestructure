@@ -7,6 +7,9 @@ class MchMap(XlMap):
     def __init__(self):
         pass
     @property
+    def entity_col(self):
+        return 'entity'
+    @property
     def drcrdesc(self):
         return ['dr','cr']
     @property
