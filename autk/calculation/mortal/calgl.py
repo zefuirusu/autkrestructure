@@ -27,16 +27,23 @@ class CalSheet(XlSheet):
             xlmap=xlmap,
             shmeta=shmeta,
         )
+        pass
+    def load_raw_data(self):
+        super().load_raw_data()
         if (
             isinstance(self.xlmap,MglMap)
             and isinstance(self.shmeta,JsonMeta)
         ):
+            print(
+                '[{}] setting acct map.'.format(
+                    self.__class__.__name__,
+                )
+            )
             self.__set_drcr()
             self.__set_acctmap()
             ## set_top and set_date are optional.
             self.__set_top()
             self.__set_date()
-        pass
     def __set_drcr(self):
         if self.xlmap.has_cols(self.xlmap.drcrdesc):
             self.change_dtype(

@@ -230,7 +230,12 @@ class XlSheet:
             xlmap=deepcopy(self.xlmap),
             shmeta=None
         )
-    def df_copy(self,df:DataFrame):
+    def copy_by_df(self,df:DataFrame):
+        '''
+        Transform the imput df,
+        using its own columns,
+        into `XlSheet`.
+        '''
         xl=self.__class__(
             xlmap=self.xlmap.__class__.from_list(
                 list(df.columns)
@@ -242,13 +247,15 @@ class XlSheet:
             xlmap=None
         )
         return xl
-    def transform_df(self,df):
+    def transform_df(self,df)->DataFrame:
         '''
         Transform the input df so that 
         it fits with self.xlmap;
         Used when isinstance(self.xlmap,XlMap);
         self.xlmap must be an instance of XlMap;
         This method does not change self.xlmap.
+        Returns:
+            DataFrame or None.
         '''
         source_cols=list(df.columns.to_numpy())
         if self.xlmap.has_cols(source_cols):

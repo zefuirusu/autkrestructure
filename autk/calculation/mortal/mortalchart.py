@@ -38,8 +38,6 @@ class MCH(ImmortalTable):
             xlmap,
             xlmeta,
         )
-        self.__parse_acctmap()
-        self.change_float_to_str(self.xlmap.accid_col)
         t_end=datetime.datetime.now()
         t_interval=t_end-t_start
         print(
@@ -84,6 +82,8 @@ class MCH(ImmortalTable):
             )
             continue
         start_thread_list(thli)
+        self.__parse_acctmap()
+        self.change_float_to_str(self.xlmap.accid_col)
         pass
     def append_xl_by_meta(self,shmeta):
         self.xlset.append(
@@ -120,7 +120,7 @@ class MCH(ImmortalTable):
         self.acctmap={}
         self.acctmap_invert={}
     def __trans_accid_regex(self,accid):
-        accid_item=''.join([r'^\s*',str(accid),r'\s*$'])
+        accid_item=str(accid).join([r'^\s*',r'.*\s*$'])
         return accid_item
     def getid(self,accna):
         '''
@@ -150,31 +150,35 @@ class MCH(ImmortalTable):
         )
     def getAcct(self,accid='6001'):
         '''
-        此方法基本完成，还需要完善的是，
-        没有xlmap的情况下如何结构化返回结果，需要手动指定self.key_cols.
-        Acct类和ChartMap类必须联动。
         '''
         accid_item=self.__trans_accid_regex(accid)
-        # accid_item=accid
+        #  accid_item=str(accid)
         resu=self.filter(
             [[accid_item,self.xlmap.accid_col,True,True]],
-            filter_type='str'
+            filter_type='str',
+            type_xl=False,
         )
-        if resu.shape[0]==1:
-            if self.xlmap is not None:
-                resu=resu[self.xlmap.key_cols]
-                resu=resu.iloc[0,:]
-                resu=list(resu)
-                a1=Acct()
-                a1.accept_key_chart_row(resu)
-                print(a1.__dict__)
-                return resu
-            else:
-                print("You don't have an xlmap for MortalChartAccount!")
-                return []
-        else:
-            print('shape of result DataFrame is: ',resu.shape)
-            return resu
+        return resu
+        #  if resu.shape[0]==1:
+            #  if isinstance(self.xlmap,MchMap):
+                #  resu=resu.iloc[0,:]
+                #  resu=list(resu)
+                #  return resu
+            #  else:
+                #  print(
+                    #  "[Warning][{}] You don't have an xlmap for MortalChartAccount!".format(
+                        #  self.__class__.__name__,
+                    #  )
+                #  )
+                #  return []
+        #  else:
+            #  print(
+                #  '[{}|getAcct]shape of result DataFrame is:{}.',format(
+                    #  self.__class__.__name__,
+                    #  resu.shape
+                #  )
+            #  )
+            #  return resu
     pass
 class APAR(MCH):
     def __init__(

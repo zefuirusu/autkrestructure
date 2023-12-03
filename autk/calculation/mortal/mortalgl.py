@@ -47,7 +47,6 @@ class MGL(ImmortalTable):
             xlmap,
             xlmeta,
         )
-        self.__parse_acctmap()
         t_end=datetime.datetime.now()
         t_interval=t_end-t_start
         print(
@@ -63,7 +62,11 @@ class MGL(ImmortalTable):
         collect XlSheet from `self.xlmeta` by
         `self.xlmap`, into `self.xlset`.
         '''
-        print('start collecting xl to self.xlset.')
+        print(
+            '[{}]start collecting xl to self.xlset.'.format(
+                self.__class__.__name__
+            )
+        )
         self.__clear_data()
         def __single_append(shmeta):
             '''
@@ -97,6 +100,7 @@ class MGL(ImmortalTable):
             )
             continue
         start_thread_list(thli)
+        self.__parse_acctmap()
         pass
     def append_xl_by_meta(self,shmeta):
         '''
@@ -111,7 +115,6 @@ class MGL(ImmortalTable):
         pass
     def __parse_acctmap(self):
         '''
-        self.set_key_cols() must be called before this.
         '''
         self.acctmap={}
         self.acctmap_invert={}
@@ -177,7 +180,6 @@ class MGL(ImmortalTable):
         or r'^\s*'+accid+r'\s*$' if accurate is True;
         
         '''
-        # import re
         if accurate==False:
             accid_item=str(accid).join([r'^',r'.*$'])
         else:
@@ -199,14 +201,14 @@ class MGL(ImmortalTable):
         return:dict
             {accid:accna,accid:accna...}
         '''
-        accna_item=self.__trans_accna_regex(accna_str,accurate=False)
+        #  accna_item=self.__trans_accna_regex(accna_str,accurate=False)
+        accna_item=str(accna_str)
         accna_list=regex_filter(
             accna_item,
             self.acctmap_invert.keys(),
             match_mode=True
         )
         acct={}
-        #  resu=[]
         for accna in accna_list:
             accid=self.acctmap_invert[accna]
             acct.update(
@@ -228,7 +230,8 @@ class MGL(ImmortalTable):
         return:dict
             {accid:accna,accid:accna...}
         '''
-        accid_item=self.__trans_accid_regex(accid_str,accurate=False)
+        #  accid_item=self.__trans_accid_regex(accid_str,accurate=False)
+        accid_item=str(accid_str)
         acct={}
         accid_list=regex_filter(
             accid_item,
@@ -772,8 +775,6 @@ class MGL(ImmortalTable):
                 accid_label=self.xlmap.accid_col
             )
         )
-        #  print(target_cal.data)
-        #  print(ref_cal.data)
         def drop_zero(resu_list):
             for test_value in resu_list:
                 if test_value in [0,0.0,'0','0.0']:
@@ -804,7 +805,6 @@ class MGL(ImmortalTable):
                     multi_values=multi_values[0]
                 else:
                     multi_values=';'.join(multi_values)
-                #  print(multi_values)
                 return multi_values
         target_cal.apply_df_func(__df_find_opposite,col_index,col_name)
         return target_cal
@@ -850,8 +850,12 @@ class MGL(ImmortalTable):
             accid=str(accid)[0:self.top_accid_len]
             pass
         accid_item=self.__trans_accid_regex(accid,accurate=True)
-        acct_mgl=self.duplicate(use_meta=True)
-        resu_mgl=self.duplicate(use_meta=False)
+        acct_mgl=self.blank_copy()
+        for xl in self.xlset:
+            acct_mgl.append_xl_by_map(
+                deepcopy(xl),
+                xlmap=None
+            )
         acct_mgl.filterAcct(
             accid_item,
             side=side,
@@ -863,9 +867,9 @@ class MGL(ImmortalTable):
             accid_label=None
         )
         if side=='cr':
-            side_name=acct_mgl.drcrdesc[1]
+            side_name=acct_mgl.xlmap.drcrdesc[1]
         elif side=='dr':
-            side_name=acct_mgl.drcrdesc[0]
+            side_name=acct_mgl.xlmap.drcrdesc[0]
         else:
             return [
                 self.side_analysis(
@@ -880,18 +884,29 @@ class MGL(ImmortalTable):
                 )
             ]
         def __acct_mark_side(row_series):
-            current_accid=row_series[acct_mgl.accid_col]
+            current_accid=row_series[acct_mgl.xlmap.accid_col]
             side_amount=row_series[side_name]
             if current_accid==accid and side_amount !=0:
                 return 'target_acct'
             else:
                 return 'opposite_acct'
-        acct_mgl.apply_df_func(__acct_mark_side,1,'mark_record')
+        acct_mgl.apply_df_func(
+            __acct_mark_side,
+            'mark_record'
+        )
+        resu_mgl=self.__class__(
+            xlmap=self.xlmap.__class__.from_list([
+                acct_mgl.xlmap.top_accid_col,
+                acct_mgl.xlmap.accid_col,
+                'drcr',
+                acct_mgl.xlmap.accna_col,
+                acct_mgl.xlmap.top_accna_col
+            ]),
+            xlmeta=None,
+        )
         def __acct_xl_sum_opposite(
             xl,
             accid_list,
-            new_file_name,
-            new_sheet_name
         ):
             
             resu_array=[]
@@ -900,7 +915,7 @@ class MGL(ImmortalTable):
                     'drcr',
                     [
                         ['opposite_acct','mark_record',True,True],
-                        [acct,acct_mgl.accid_col,True,True]
+                        [acct,acct_mgl.xlmap.accid_col,True,True]
                     ],
                     filter_type='str'
                 )
@@ -910,7 +925,11 @@ class MGL(ImmortalTable):
                 continue
             resu_array=DataFrame(
                 resu_array,
-                columns=[acct_mgl.accid_col,'drcr',acct_mgl.accna_col]
+                columns=[
+                    acct_mgl.xlmap.accid_col,
+                    'drcr',
+                    acct_mgl.xlmap.accna_col,
+                ]
             )
             resu_array.sort_values(
                 'drcr',
@@ -922,37 +941,37 @@ class MGL(ImmortalTable):
                 ignore_index=True,
                 key=None
             )
-            #  print('result_array:\n',resu_array)
-            resu_xl=self.calxl(resu_array)
-            setattr(resu_xl,'pure_file_name',new_file_name)
-            setattr(resu_xl,'sheet_name',new_sheet_name)
-            # setattr(resu_xl,'columns',list(resu_array.columns))
-            resu_mgl.xlset.append(resu_xl)
-            return resu_array
-        acct_mgl.load_raw_data()
+            resu_mgl.append_df_by_map(resu_array)
+            return
         accid_list=list(
-            acct_mgl.data[acct_mgl.accid_col].drop_duplicates()
+            acct_mgl.data[acct_mgl.xlmap.accid_col].drop_duplicates()
         )
         thread_list=[]
         for xl in acct_mgl.xlset:
             t=Thread(
                 target=__acct_xl_sum_opposite,
-                args=(xl,accid_list,xl.pure_file_name,xl.sheet_name),
+                args=(
+                    xl,
+                    accid_list,
+                ),
                 name=''.join([
                     'apply->',
                     getattr(__acct_xl_sum_opposite,'__name__'),
                     r',for:',
-                    xl.pure_file_name,
-                    xl.sheet_name
+                    xl.name
                 ])
             )
             thread_list.append(t)
             continue
-        for t in thread_list:
-            t.start()
-        for t in thread_list:
-            t.join()
-        resu_mgl.set_top_acct(top_accid_len=4,accna_split_by=r'/')
+        start_thread_list(thread_list)
+        resu_mgl.apply_df_func(
+            lambda row_series:str(row_series[self.xlmap.accid_col][0:self.xlmap.top_accid_len]),
+            self.xlmap.top_accid_col
+        )
+        resu_mgl.apply_df_func(
+            lambda row_series:str(row_series[self.xlmap.accna_col].split(self.xlmap.accna_split_by)[0]),
+            self.xlmap.top_accna_col
+        )
         return resu_mgl
     def rand_sample(
         self,

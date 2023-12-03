@@ -248,7 +248,7 @@ class ImmortalTable:
             '[{}] test cols after {} appended to xlset by map {}:'.format(
                 self.__class__.__name__,
                 xl.__class__.__name__,
-                xl.map.__class__.__name__
+                xl.xlmap.__class__.__name__
             ),
             self.check_cols()
         )
@@ -258,7 +258,7 @@ class ImmortalTable:
         if len(self.xlset)==0:
             xl=XlSheet(
                 xlmap=self.xlmap,
-                xlmeta=None
+                shmeta=None
             )
         else:
             xl=self.xlset[0].__class__(
@@ -307,7 +307,7 @@ class ImmortalTable:
                     args=(xl_obj,),
                     name=''.join(
                         [r'load_raw_data->',
-                        xl_obj.shmeta.path,]
+                        xl_obj.name,]
                     )
                 )
             )
@@ -321,11 +321,16 @@ class ImmortalTable:
         self.__clear_temp()
         pass
     def fresh_data(self):
+        previous_load_count=deepcopy(self.load_count)
         self.__clear_temp()
         self.__clear_data()
-        self.load_count=0
         self.collect_xl()
-        self.load_raw_data()
+        if previous_load_count>0:
+            self.load_raw_data()
+        pass
+    def fresh_xl(self):
+        self.apply_xl('load_raw_data')
+        self.fresh_data()
         pass
     @property
     def rawdf(self):
@@ -699,6 +704,12 @@ class ImmortalTable:
         as `xl`.
         This function returns 0.
         '''
+        print(
+            '[{}|apply_func] external function `{}` applied.'.format(
+                self.__class__.__name__,
+                xl_func.__name__,
+            )
+        )
         thread_list=[]
         for xl in self.xlset:
             thread_list.append(
@@ -727,6 +738,12 @@ class ImmortalTable:
         *args,
         **kwargs
     ):
+        print(
+            '[{}|apply_xl] every member in `self.xlset` calls `{}`.'.format(
+                self.__class__.__name__,
+                xl_func_name,
+            )
+        )
         def __single_apply(xl):
             getattr(
                 xl,
@@ -763,6 +780,12 @@ class ImmortalTable:
             if results are XlSheet/DataFrame, they can be
             joined into a single DataFrame and size are known.
         '''
+        print(
+            '[{}|apply_xl_collect] start to collect `{}` into dict.'.format(
+                self.__class__.__name__,
+                xl_func_name,
+            )
+        )
         resuli={} # key:XlSheet.name,value:results
         def __collect_apply(xl,xl_func_name):
             xl_resu=getattr(
@@ -809,6 +832,12 @@ class ImmortalTable:
         returns DataFrame or XlSheet,
         this method will collect them into a DataFrame.
         '''
+        print(
+            '[{}|apply_xl_collect_df] start to collect `{}` into DataFrame.'.format(
+                self.__class__.__name__,
+                xl_func_name,
+            )
+        )
         xl_collect=self.apply_xl_collect(
             xl_func_name,
             *args,
@@ -840,6 +869,12 @@ class ImmortalTable:
         If results of `self.apply_xl_collect` are list,
         join them into a single list.
         '''
+        print(
+            '[{}|apply_xl_collect_list] start to collect list results of `{}`.'.format(
+                self.__class__.__name__,
+                xl_func_name,
+            )
+        )
         xl_collect=self.apply_xl_collect(
             xl_func_name,
             *args,
@@ -864,6 +899,12 @@ class ImmortalTable:
         '''
         Size of the return of `self.apply_xl_collect_df`.
         '''
+        print(
+            '[{}|apply_xl_collect_size] calculate the size of data colleced by `{}`.'.format(
+                self.__class__.__name__,
+                xl_func_name,
+            )
+        )
         data=self.apply_xl_collect(
             xl_func_name,
             *args,
@@ -908,6 +949,13 @@ class ImmortalTable:
             row_series_func:function
             col_name:str
         '''
+        print(
+            '[{}|apply_df_func] call function {} and get result in column:`{}`.'.format(
+                self.__class__.__name__,
+                row_series_func.__name__,
+                col_name,
+            )
+        )
         if self.xlmap.has_cols([col_name]):
             pass
         else:
@@ -916,27 +964,30 @@ class ImmortalTable:
             xl.apply_df_func(
                 row_series_func,
                 col_name,
-                col_index=None,
+                col_index=None,# this will be deleted later.
             )
             pass
-        thread_list=[]
-        for xl in self.xlset:
-            t=Thread(
-                target=__apply_single,
-                args=(xl,),
-                name=''.join(
-                    [
-                        r'apply->',
-                        getattr(row_series_func,'__name__'),
-                        ',for:',
-                        xl.name
-                    ]
-                )
-            )
-            thread_list.append(t)
-            continue
-        start_thread_list(thread_list)
+        #  thread_list=[]
+        #  for xl in self.xlset:
+            #  t=Thread(
+                #  target=__apply_single,
+                #  args=(xl,),
+                #  name=''.join(
+                    #  [
+                        #  r'apply->',
+                        #  getattr(row_series_func,'__name__'),
+                        #  ',for:',
+                        #  xl.name
+                    #  ]
+                #  )
+            #  )
+            #  thread_list.append(t)
+            #  continue
+        #  start_thread_list(thread_list)
         #  self.load_raw_data()
+        self.apply_func(__apply_single,)
+        if self.load_count>0:
+            self.load_raw_data()
         pass
     def filter_key_record(
         self,
