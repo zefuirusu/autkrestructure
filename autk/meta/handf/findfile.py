@@ -112,9 +112,9 @@ def locate_and_save(
     '''
     from os.path import isfile,isdir
     from pandas import DataFrame,Series
-    from autk.parser.funcs import f2list
-    from autk.parser.funcs import save_df
-    from autk.parser.funcs import relative_path
+    from autk.gentk.funcs import f2list
+    from autk.gentk.funcs import save_df
+    from autk.gentk.funcs import relative_path
     if ref_path is None:
         ref_path=savepath
     if isinstance(strli,list):
