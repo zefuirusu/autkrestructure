@@ -501,7 +501,8 @@ class XlBook:
             amount=matrix.shape[0]
             pass
         self.insert_blank(
-            cell_index[0],
+            #  cell_index[0],
+            idx,
             matrix.shape[0],
             sheet_name,
             col_ins=col_ins
