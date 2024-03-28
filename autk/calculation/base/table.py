@@ -950,7 +950,7 @@ class ImmortalTable:
             col_name:str
         '''
         print(
-            '[{}|apply_df_func] call function {} and get result in column:`{}`.'.format(
+            '[{}|apply_df_func] call function `{}` and get result in column:`{}`.'.format(
                 self.__class__.__name__,
                 row_series_func.__name__,
                 col_name,

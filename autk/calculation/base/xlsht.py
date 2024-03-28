@@ -459,7 +459,7 @@ class XlSheet:
             self.append_col_name(col_name)
             col_index=self.xlmap.get_index(col_name)
             self.data.insert(
-                col_index,
+                len(self.xlmap.columns)-1,#  col_index,
                 col_name,
                 self.data.apply(
                     df_apply_func,

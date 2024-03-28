@@ -68,8 +68,8 @@ class XlMap:
             )
             pass
         else:
-            col_index=len(self.columns)
-            setattr(self,col_name,col_index)
+            col_index=len(self.columns) # may cause bug when col_index not in original columns from XLSX book;
+            setattr(self,col_name,None) # so `col_index` was replaced by `None`;
             print(
                 '[{}] append new column `{}` at index `{}`.'.format(
                     self.__class__.__name__,

@@ -601,15 +601,35 @@ class XlBook:
             [],
             columns=xlmap.columns
         )
+        print(
+            '[{}] xlmap show:{}'.format(
+                self.__class__.__name__,
+                xlmap.show
+            )
+        )
         for col in xlmap.columns:
             col_index=xlmap.show[col]
             if isinstance(col_index,int):
+                print(
+                    '[{}] draw column `{}` at location `{}` from source data.'.format(
+                        self.__class__.__name__,
+                        col,
+                        col_index
+                    )
+                )
                 col_from_source=source_data.columns.to_numpy()[col_index]
                 data[col]=deepcopy(
                     source_data[col_from_source]
                 )
             elif isinstance(col_index,list):
                 data[col]=0
+                print(
+                    '[{}] draw column `{}` at location `{}` from source data.'.format(
+                        self.__class__.__name__,
+                        col,
+                        col_index
+                    )
+                )
                 for sub_col_index in col_index:
                     sub_col_from_source=source_data.columns[sub_col_index]
                     data[col]=deepcopy(
