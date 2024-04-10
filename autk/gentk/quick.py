@@ -2,12 +2,29 @@
 # -*- coding: utf-8 -*-
 
 from autk.gentk.funcs import f2dict
+from autk.meta.pmeta import JsonMeta
 from autk.mapper.glmap import MglMap
 from autk.mapper.chmap import MchMap
-from autk.meta.pmeta import JsonMeta
 from autk.calculation.mortal.mortalgl import MGL
 from autk.calculation.mortal.mortalchart import MCH
 
+def gl(
+    xlmap_path:str,
+    xlmeta_json:str,
+):
+    return MGL(
+        xlmap=xlmap_path,
+        xlmeta=f2dict(xlmeta_path)
+    )
+def chart(
+    xlmap_path:str,
+    xlmeta_json:str,
+):
+    return MCH(
+        xlmap=xlmap_path,
+        xlmeta=f2dict(xlmeta_path)
+    )
+    pass
 def gl_from_json(json_path):
     gl_conf=f2dict(json_path)
     map_conf=gl_conf['map_conf']

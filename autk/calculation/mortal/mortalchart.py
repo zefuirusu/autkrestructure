@@ -30,7 +30,7 @@ class MCH(ImmortalTable):
         '''
         key_index, key_name, and chartmap, are useless, keep them as default.
         '''
-        print('---Initializing MCA---')
+        print('---Initializing MCH---')
         t_start=datetime.datetime.now()
         self.acctmap={}
         self.acctmap_invert={}
@@ -46,7 +46,7 @@ class MCH(ImmortalTable):
                 t_interval,
             ),
         )
-        print('---MCA Initialized---')
+        print('---MCH Initialized---')
         pass
     def collect_xl(self):
         '''
