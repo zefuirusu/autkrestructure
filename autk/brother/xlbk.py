@@ -391,6 +391,56 @@ class XlBook:
         '''
         self.get_fill_func(save=True)(sheet_name,cell_index[0],cell_index[1],value)
         pass
+    def fill_bydf(self,matrix):
+        '''
+        matrix could be: DataFrame,array, or 2-dimension list;
+        _________________________________________
+        |sheet_name|row_index|column_index|value|
+        -----------------------------------------
+        |__________|_________|____________|_____|
+        '''
+        #  from threading import Thread
+        #  thread_list=[]
+        if isinstance(matrix,DataFrame):
+            cols=matrix.columns
+            for row in matrix.iterrows():
+                row_data=row[1]
+                sht=row_data[cols[0]]
+                r_index=row_data[cols[1]]
+                c_index=row_data[cols[2]]
+                v=row_data[cols[3]]
+                self.get_fill_func(save=True)(sht,r_index,c_index,v)
+                #  thread_list.append(
+                    #  Thread(
+                        #  target=self.get_fill_func(save=True),
+                        #  args=(sht,r_index,c_index,v)
+                    #  )
+                #  )
+            pass
+        elif isinstance(matrix,list) or isinstance(matrix,array):
+            for row in matrix:
+                sht=row[0]
+                r_index=row[1]
+                c_index=row[2]
+                v=row[3]
+                self.get_fill_func(save=True)(sht,r_index,c_index,v)
+                #  thread_list.append(
+                    #  Thread(
+                        #  target=self.get_fill_func(save=True),
+                        #  args=(sht,r_index,c_index,v)
+                    #  )
+                #  )
+            pass
+        else:
+            #  thread_list.append(
+                #  Thread(
+                    #  target=print,
+                    #  args=('check your arguments:matrix',),
+                #  )
+            #  )
+            pass
+        #  start_thread_list(thread_list)
+        pass
     def paste_matrix(self,matrix,start_index,sheet_name):
         '''
         matrix:
@@ -518,49 +568,6 @@ class XlBook:
         z=full(self.shape[0],'')
         self.paste_matrix(z,(1,1),sheet_name)
         pass
-    def fill_bydf(self,sheet_name,matrix):
-        '''
-        matrix could be: DataFrame,array, or 2-dimension list;
-        _________________________________________
-        |sheet_name|row_index|column_index|value|
-        -----------------------------------------
-        |__________|_________|____________|_____|
-        '''
-        from threading import Thread
-        thread_list=[]
-        if isinstance(matrix,DataFrame):
-            cols=matrix.columns
-            for row in matrix.iterrows():
-                row_data=row[1]
-                sht=row_data[cols[0]]
-                r_index=row_data[cols[1]]
-                c_index=row_data[cols[2]]
-                v=row_data[cols[3]]
-                thread_list.append(
-                    Thread(
-                        target=self.get_fill_func(save=True),
-                        args=(sht,r_index,c_index,v)
-                    )
-                )
-            pass
-        elif isinstance(matrix,list):
-            for row in matrix:
-                sht=row[0]
-                r_index=row[1]
-                c_index=row[2]
-                v=row[3]
-                thread_list.append(
-                    Thread(
-                        target=self.get_fill_func(save=True),
-                        args=(sht,r_index,c_index,v)
-                    )
-                )
-            pass
-        elif isinstance(matrix,array):
-            pass
-        else:
-            pass
-        pass
     def get_df(self,sheet_name,title=0):
         if self.suffix==r'xls':
             return read_excel(
@@ -640,25 +647,41 @@ class XlBook:
                 pass
             continue
         return data
-    def to_mtb(self,common_title=0,auto_load=False):
+    def to_sht(
+        self,
+        sheet_name:str,
+        xlmap:XlMap=None,
+        common_title=0,
+    ):
+        from autk.calculation.base.xlsht import XlSheet
+        from autk.meta.pmeta import PathMeta
+        xl=XlSheet(
+            xlmap=xlmap,
+            shmeta=PathMeta(
+                self.file_path,
+                shtli=[sheet_name],
+                common_title=common_title,
+                keep_additional=False,
+            ),
+        )
+        return xl
+    def to_mtb(
+        self,
+        common_title=0,
+        auto_load=False
+    ):
         '''
         Transform self into ImmortalTable.
         '''
-        from autk.reader.base.table import ImmortalTable
+        from autk.calculation.base.table import ImmortalTable
         xlmeta={}
         xlmeta.update(
             {self.file_path:[[sht,common_title] for sht in
                              self.shtli]}
         )
         return ImmortalTable(
-            xlmeta=xlmeta,
-            common_title=common_title,
             xlmap=None,
-            use_map=False,
-            auto_load=auto_load,
-            keep_meta_info=True,
-            #  key_index=[],
-            #  key_name='key_id'
+            xlmeta=xlmeta,
         )
         pass
     def to_mgl(
@@ -674,11 +697,8 @@ class XlBook:
                              self.shtli]}
         )
         return MGL(
+            xlmap=None,
             xlmeta=xlmeta,
-            common_title=common_title,
-            xlmap=xlmap,
-            auto_load=auto_load,
-            nick_name='mgl_frbk'
         )
     def to_chart(
         self,
@@ -686,19 +706,15 @@ class XlBook:
         xlmap=None,
         auto_load=False
     ):
-        from autk.reader.mortal.chart import MCA
+        from autk.calculation.mortal.mortalchart import MCH
         xlmeta={}
         xlmeta.update(
             {self.file_path:[[sht,common_title] for sht in 
                              self.shtli]}
         )
-        return MCA(
+        return MCH(
+            xlmap=None,
             xlmeta=xlmeta,
-            common_title=common_title,
-            xlmap=xlmap,
-            auto_load=auto_load,
-            key_cols=[],
-            nick_name='mca_frbk'
         )
         pass
     def to_inventory(
