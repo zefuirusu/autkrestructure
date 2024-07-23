@@ -3,8 +3,6 @@
 '''
 Table
 '''
-import pysnooper
-
 from copy import deepcopy
 from os.path import isfile,isdir
 from threading import Thread
@@ -146,6 +144,19 @@ class ImmortalTable:
             xlmap=deepcopy(self.xlmap),
             xlmeta=None
         )
+    def blank_sht(self):
+        return XlSheet(
+            xlmap=self.xlmap,
+            shmeta=None
+        )
+    def regenkey(self):
+        self.apply_df_func(
+            lambda row_series:'-'.join([
+                row_series[item] for item in self.xlmap.key_index
+            ]),
+            self.xlmap.key_name
+        )
+        pass
     def collect_xl(self):
         '''
         collect XlSheet from `self.xlmeta` by

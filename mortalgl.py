@@ -28,6 +28,7 @@ class MGL(ImmortalTable):
             json_file_path, same as dict;
             xlsx_file_path, all sheets of the xlsx file will be loaded.
     '''
+    #  @pysnooper.snoop(depth=2,prefix='[MGL]',relative_time=True)
     def __init__(
         self,
         xlmap:MglMap=None,#MglMap(),
@@ -146,12 +147,6 @@ class MGL(ImmortalTable):
         self.acctmap={}
         self.acctmap_invert={}
         self.gl_matrix=None
-    def blank_sht(self):
-        return CalSheet(
-            xlmap=self.xlmap,
-            shmeta=None
-        )
-        pass
     def getjr(self,glid,type_xl=False):
         '''
         self.xlmap must not be None.
@@ -178,10 +173,11 @@ class MGL(ImmortalTable):
             return jr_data
         pass
     def __trans_accid_regex(self,accid,accurate=False):
-        #  '''
-        #  r'^'+accid+r'.*$' if not accurate, as default,
-        #  or r'^\s*'+accid+r'\s*$' if accurate is True;
-        #  '''
+        '''
+        r'^'+accid+r'.*$' if not accurate, as default,
+        or r'^\s*'+accid+r'\s*$' if accurate is True;
+        
+        '''
         if accurate==False:
             accid_item=str(accid).join([r'^',r'.*$'])
         else:
