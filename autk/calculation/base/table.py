@@ -152,7 +152,7 @@ class ImmortalTable:
     def regenkey(self):
         self.apply_df_func(
             lambda row_series:'-'.join([
-                row_series[item] for item in self.xlmap.key_index
+                str(row_series[item]) if item is not None else ''  for item in self.xlmap.key_index
             ]),
             self.xlmap.key_name
         )
