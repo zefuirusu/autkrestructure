@@ -160,40 +160,6 @@ class XlMap:
         xlmap.accept_json(columns,over_write=True)
         return xlmap
     pass
-#  def get_chmap(columns,drcrdesc=['dr_amount','cr_amount'],accna_split_by=r'/',top_accid_len=4):
-    #  '''
-    #  columns must be included:
-        #  accid,accna,dr_amount,cr_amount;
-        #  glid,date,mark,jrid,accid,accna,dr_amount,cr_amount,item_name,note;
-    #  '''
-    #  print('[Note] columns of chmap:\n',columns)
-    #  class InstantMap(GenChartMap):
-        #  def __init__(self):
-            #  if isinstance(columns,list):
-                #  for n in range(len(columns)):
-                    #  setattr(self,columns[n],n)
-                    #  continue
-            #  elif isinstance(columns,dict):
-                #  for k in columns.keys():
-                    #  setattr(self,k,columns[k])
-            #  else:
-                #  print('[Warning] invalid columns:',columns)
-                #  pass
-            #  pass
-        #  pass
-        #  @property
-        #  def drcrdesc(self):
-            #  drcrdesc=deepcopy(drcrdesc)
-            #  return drcrdesc
-        #  @property
-        #  def accna_split_by(self):
-            #  accna_split_by=deepcopy(accna_split_by)
-            #  return accna_split_by
-        #  @property
-        #  def top_accid_len(self):
-            #  top_accid_len=deepcopy(top_accid_len)
-            #  return top_accid_len
-    #  return InstantMap
 
 # standard item json:
 inv_gl_json={

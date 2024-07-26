@@ -1069,17 +1069,22 @@ class MGL(ImmortalTable):
             #  self.data=concat([self.data,table.data],axis=0,join='outer')
         #  else:
             #  self.data=table.data
-        pass
-    def append_xl(self,file_path,sheet_name,title):
-        from pandas import concat
-        table=MGL(key_index=self.xlmap.key_index,key_name=self.xlmap.key_name,xlmap=self.xlmap)
-        table.parse_meta([file_path,sheet_name,title], self.common_title, auto_load=True)
-        self.xlset.extend(table.xlset)
-        if self.data is not None:
-            self.data=concat([self.data,table.data],axis=0,join='outer')
-        else:
-            self.data=table.data
-        pass
+        #  pass
+    #  def append_xl(self,file_path,sheet_name,title):
+        #  '''
+        #  class `ImmortalTable` has method named `append_xl_by_map` and
+        #  `append_df_by_map`;
+        #  '''
+        #  from pandas import concat
+        #  table=MGL(key_index=self.xlmap.key_index,key_name=self.xlmap.key_name,xlmap=self.xlmap)
+        #  table.parse_meta([file_path,sheet_name,title], self.common_title, auto_load=True)
+        #  self.xlset.extend(table.xlset)
+        #  if self.data is not None:
+            #  self.data=concat([self.data,table.data],axis=0,join='outer')
+        #  else:
+            #  self.data=table.data
+        #  pass
+
     ##### method get_gl_matrix is not perfect;#####
     # def get_gl_matrix(self,if_top_accid=False,over_write=False):
     #     '''
