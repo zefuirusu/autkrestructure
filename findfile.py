@@ -89,7 +89,7 @@ def file_link(
                 trans2win[0],
                 '","',
                 trans2win[1],
-                '"),',
+                '"',
                 'RC[-1]),"open")'
             ])
         else:
