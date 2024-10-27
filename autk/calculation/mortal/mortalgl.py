@@ -849,7 +849,7 @@ class MGL(ImmortalTable):
         Debit amount is positive;
         '''
         if top_mode==True:
-            accid=str(accid)[0:self.top_accid_len]
+            accid=str(accid)[0:self.xlmap.top_accid_len]
             pass
         accid_item=self.__trans_accid_regex(accid,accurate=True)
         acct_mgl=self.blank_copy()
