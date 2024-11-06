@@ -97,6 +97,7 @@ class CalSheet(XlSheet):
             self.xlmap.accid_col,
             self.xlmap.accna_col,
         ]) and isinstance(self.data,DataFrame):
+            self.change_dtype(self.xlmap.accid_col,int)
             self.change_dtype(self.xlmap.accid_col,str)
             self.change_dtype(self.xlmap.accna_col,str)
             map_df=self.data[[self.xlmap.accid_col,self.xlmap.accna_col]]
