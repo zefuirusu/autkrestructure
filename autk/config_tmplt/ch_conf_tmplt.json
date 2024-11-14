@@ -1,6 +1,7 @@
 {
     "map_conf":{
         "cols":{
+            "year":null,
             "entity":null,
             "top_accid":null,
             "top_accna":null
