@@ -3,7 +3,6 @@
 '''
 Excel Sheet
 '''
-import pysnooper
 
 import re
 import os
@@ -49,15 +48,29 @@ class XlSheet:
         self,
         other
     ):
-        resu=self.blank_copy()
-        resu.load_df_by_map(
-            concat(
-                [deepcopy(self.data),deepcopy(other.data)],
-                axis=0,
-                join='outer'
-            ),
-            xlmap=deepcopy(other.xlmap)
+        if isinstance(self.xlmap,XlMap
+        ) and isinstance(other.xlmap,XlMap):
+            join_map=self.xlmap+other.xlmap
+        else:
+            join_map=None
+        if isinstance(self.shmeta,JsonMeta
+        ) and isinstance(other.shmeta,JsonMeta):
+            join_meta=self.shmeta+other.shmeta
+        else:
+            join_meta=None
+        resu=self.__class__(
+            xlmap=join_map,
+            shmeta=join_meta
         )
+        if resu.data is None:
+            resu.load_df_by_map(
+                concat(
+                    [deepcopy(self.data),deepcopy(other.data)],
+                    axis=0,
+                    join='outer'
+                ),
+                # parameter `xlmap` is set to default.
+            )
         return resu
     @property
     def name(self):
@@ -877,6 +890,7 @@ class XlSheet:
         return table
     ### the following can be derived by both `CalSheet` and `CalChart`;
     def trans_accid_regex(self,accid,accurate=False):
+
         '''
         r'^'+accid+r'.*$' if not accurate, as default,
         or r'^\s*'+accid+r'\s*$' if accurate is True;
@@ -885,7 +899,6 @@ class XlSheet:
         If not accurate, any str will be allowed;
         
         '''
-        import re
         if accurate==False:
             accid_item=str(accid).join([r'^.*',r'.*$'])
         else:
@@ -893,7 +906,6 @@ class XlSheet:
         # accid_item=re.sub(r'\.',r'\.',accid_item)
         return accid_item
     def trans_accna_regex(self,accna,accurate=False):
-        import re
         if accurate==False:
             accna_item=accna.join([r'^.*',r'.*$'])
         else:

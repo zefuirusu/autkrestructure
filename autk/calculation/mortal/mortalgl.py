@@ -34,6 +34,7 @@ class MGL(ImmortalTable):
         xlmeta:JsonMeta=None,#JsonMeta({
             #  'BLANK_PATH':[['sheet',0]]
         #  }),
+        unit_type=CalSheet
         ):
         print('---Initializing MGL---')
         t_start=datetime.datetime.now()
@@ -43,7 +44,9 @@ class MGL(ImmortalTable):
         super().__init__(
             xlmap,
             xlmeta,
+            unit_type
         )
+        self.__parse_acctmap()
         t_end=datetime.datetime.now()
         t_interval=t_end-t_start
         print(
@@ -54,57 +57,17 @@ class MGL(ImmortalTable):
         )
         print('---MGL Initialized---')
         pass
-    def collect_xl(self):
-        '''
-        collect XlSheet from `self.xlmeta` by
-        `self.xlmap`, into `self.xlset`.
-        '''
-        print(
-            '[{}]start collecting xl to self.xlset.'.format(
-                self.__class__.__name__
-            )
-        )
-        self.__clear_data()
-        def __single_append(shmeta):
-            '''
-            same as `self.append_xl_by_meta`
-            '''
-            xl=CalSheet(
-                xlmap=self.xlmap,
-                shmeta=shmeta
-            )
-            if isinstance(self.xlmap,MglMap):
-                pass
-            else:
-                self.xlmap=MglMap()
-                self.xlmap.extend_col_list(
-                    xl.xlmap.columns
-                )
-            self.xlset.append(xl)
-            pass
-        thli=[]
-        for shmeta in self.xlmeta.split_to_shmeta():
-            thli.append(
-                Thread(
-                    target=__single_append,
-                    args=(shmeta,),
-                    name='~'.join([
-                        self.__class__.__name__,
-                        'load',
-                        'calsheet'
-                    ])
-                )
-            )
-            continue
-        start_thread_list(thli)
-        self.__parse_acctmap()
-        pass
+    def __add__(self,other):
+        resu=super().__add__(other)
+        resu.acctmap={**deepcopy(self.acctmap),**deepcopy(other.acctmap)}
+        resu.acctmap_invert={**deepcopy(self.acctmap_invert),**deepcopy(other.acctmap_invert)}
+        return resu
     def append_xl_by_meta(self,shmeta):
         '''
         '''
         #TODO not perfect when self.xlmap=None
         self.xlset.append(
-            CalSheet(
+            self.unit_type(
                 xlmap=self.xlmap,
                 shmeta=shmeta,
             )
@@ -147,7 +110,7 @@ class MGL(ImmortalTable):
         self.acctmap_invert={}
         self.gl_matrix=None
     def blank_sht(self):
-        return CalSheet(
+        return self.unit_type(
             xlmap=self.xlmap,
             shmeta=None
         )
@@ -348,13 +311,6 @@ class MGL(ImmortalTable):
         return resu
     def filterAcct(
         self,
-        #  accid_item,
-        #  side='all',
-        #  pure=False,
-        #  accurate=False,
-        #  over_write=False,
-        #  type_xl=False,
-        #  accid_label=None
         *args,
         **kwargs,
     ):
@@ -362,6 +318,14 @@ class MGL(ImmortalTable):
         If over_write is True, result data will replace
         self.data;
         `side` can be 'all/dr/cr';
+        parameters:
+            accid_item,
+            side='all',
+            pure=False,
+            accurate=False,
+            over_write=False,
+            type_xl=False,
+            accid_label=None
         '''
         return self.apply_xl_collect_df(
             'filterAcct',
@@ -468,15 +432,18 @@ class MGL(ImmortalTable):
         pass
     def getAcct(
         self,
-        #  accid_item,
-        #  side='all',
-        #  pure=False,
-        #  accurate=False,
-        #  type_xl=False,
-        #  accid_label=None
         *args,
         **kwargs,
     ):
+        '''
+        parameters:
+            accid_item,
+            side='all',
+            pure=False,
+            accurate=False,
+            type_xl=False,
+            accid_label=None
+        '''
         return self.apply_xl_collect_df(
             'getAcct',
             *args,
@@ -484,16 +451,17 @@ class MGL(ImmortalTable):
         )
     def getitem(
         self,
-        #  regex_str,
-        #  by='item_name',
-        #  key_name=None,
-        #  over_write=False,
-        #  type_xl=False
         *args,
         **kwargs,
     ):
         '''
         Get full Journal Entries according to 'item_name' matched by regex_str by search-mode;
+        parameters:
+            regex_str,
+            by='item_name',
+            key_name=None,
+            over_write=False,
+            type_xl=False
         '''
         return self.apply_xl_collect_df(
             'getitem',
@@ -671,25 +639,6 @@ class MGL(ImmortalTable):
                 cr[self.xlmap.key_name].drop_duplicates()
             )
         )
-        #  common_key_list=list(
-            #  set(
-                #  self.vlookup(
-                    #  dr_accid,
-                    #  self.xlmap.accid_col,
-                    #  resu_col=self.xlmap.key_name,
-                    #  if_regex=True,
-                    #  match_mode=True
-                #  )
-            #  )&set(
-                #  self.vlookup(
-                    #  cr_accid,
-                    #  self.xlmap.accid_col,
-                    #  resu_col=self.xlmap.key_name,
-                    #  if_regex=True,
-                    #  match_mode=True
-                #  )
-            #  )
-        #  )
         resu=self.filter_list(
             common_key_list,
             self.xlmap.key_name,
@@ -821,27 +770,30 @@ class MGL(ImmortalTable):
         save_df(cr_split,'cr_split',savepath)
         pass
     def side_split(self,accid_item,side='cr',show_col='accna'):
+        '''
+        This method has not been able to return type `CalSheet`;
+        '''
         return self.apply_xl_collect_df(
             'side_split',
             accid_item,
             side,
             show_col
         )
-        thread_list=[]
-        for xl in self.xlset:
-            t=Thread(
-                target=self.append_df_to_temp,
-                args=(xl.side_split(accid_item,side=side,show_col=show_col),),
-                name=''
-            )
-            thread_list.append(t)
-            continue
-        for t in thread_list:
-            t.start()
-        for t in thread_list:
-            t.join()
-        resu_df=self.get_df_temp_data(over_write=False, type_xl=False)
-        return resu_df
+        #  thread_list=[]
+        #  for xl in self.xlset:
+            #  t=Thread(
+                #  target=self.append_df_to_temp,
+                #  args=(xl.side_split(accid_item,side=side,show_col=show_col),),
+                #  name=''
+            #  )
+            #  thread_list.append(t)
+            #  continue
+        #  for t in thread_list:
+            #  t.start()
+        #  for t in thread_list:
+            #  t.join()
+        #  resu_df=self.get_df_temp_data(over_write=False, type_xl=False)
+        #  return resu_df
     def side_analysis(self,accid,side='cr',top_mode=False):
         '''
         accid must NOT be regex!
@@ -1034,57 +986,6 @@ class MGL(ImmortalTable):
         if over_write==True:
             self.gl_matrix=gl_matrix
         return gl_matrix
-    #  def append_df(self,in_df):
-        #  '''
-        #  columns of input DataFrame must correspond to that of self.xlmeta!
-        #  Same as:
-            #  xl=self.calxl()
-            #  xl.accept_data(in_df)
-            #  self.xlset.append(xl)
-            #  table=self.duplicate(use_meta=False)
-            #  if self.data is not None:
-                #  self.data=concat([self.data,in_df])
-            #  else:
-                #  self.data=in_df
-        #  '''
-        #  from pandas import concat
-        #  xl=CalSheet(
-            #  [None,
-            #  '',
-            #  self.common_title],
-            #  xlmap=deepcopy(self.xlmap),
-            #  use_map=self.use_map,
-            #  keep_meta_info=self.keep_meta_info,
-        #  )
-        #  xl.accept_data(in_df)
-        #  table=MGL(
-            #  key_index=self.xlmap.key_index,
-            #  key_name=self.xlmap.key_name,
-            #  xlmap=self.xlmap
-        #  )
-        #  table.xlset.append(xl)
-        #  table.data=in_df
-        #  self.xlset.extend(table.xlset)
-        #  if self.data is not None:
-            #  self.data=concat([self.data,table.data],axis=0,join='outer')
-        #  else:
-            #  self.data=table.data
-        #  pass
-    #  def append_xl(self,file_path,sheet_name,title):
-        #  '''
-        #  class `ImmortalTable` has method named `append_xl_by_map` and
-        #  `append_df_by_map`;
-        #  '''
-        #  from pandas import concat
-        #  table=MGL(key_index=self.xlmap.key_index,key_name=self.xlmap.key_name,xlmap=self.xlmap)
-        #  table.parse_meta([file_path,sheet_name,title], self.common_title, auto_load=True)
-        #  self.xlset.extend(table.xlset)
-        #  if self.data is not None:
-            #  self.data=concat([self.data,table.data],axis=0,join='outer')
-        #  else:
-            #  self.data=table.data
-        #  pass
-
     ##### method get_gl_matrix is not perfect;#####
     # def get_gl_matrix(self,if_top_accid=False,over_write=False):
     #     '''

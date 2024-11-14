@@ -28,6 +28,11 @@ class CalSheet(XlSheet):
             shmeta=shmeta,
         )
         pass
+    def __add__(self,other):
+        resu=super().__add__(other)
+        resu.acctmap=self.acctmap+other.acctmap
+        resu.acctmap_invert=other.acctmap_invert
+        return resu
     def load_raw_data(self):
         super().load_raw_data()
         if (
@@ -921,30 +926,21 @@ class CalSheet(XlSheet):
             key=None
         )
         # resu_df has 3 columns;
-        #  resu_unit.set_top_acct(top_accid_len=4,accna_split_by=r'/')
-        # pvt_df=resu_unit.data.pivot_table(
-        #     values=['drcr'],
-        #     index=['accna']
-        # )
-        # print('resu:',resu_df.shape,resu_df['drcr'].sum(),'\n',resu_df)
-        # print('pvt_resu:',pvt_df.shape,pvt_df['drcr'].sum(),'\n',pvt_df)
-        # print(resu_unit.data)
-        #  resu_unit=self.duplicate(use_meta=False)
         resu_unit=self.blank_copy()
         resu_unit.xlmap.change_cols(resu_cols)
         resu_unit.load_df_by_map(resu_df)
-        #  resu_unit=self.df_copy(resu_df)
-        # resu_unit has columns:
-        # ['accid',accid_col,accna_col],
-        # of which data is:
-        # [oppo_amt_sum,oppo_accid,oppo_accna]
-        # resu_df(last)/resu_array, data of resu_unit, has columns:
-        # ['top_accid','top_accna',accid_col,accna_col,this_accid],
-        # of which data is:
-        # [oppo_amt_sum,oppo_accid,oppo_accna]
-        # column data is named from target_accid;
+        '''
+        resu_unit has columns:
+        ['accid',accid_col,accna_col],
+        of which data is:
+        [oppo_amt_sum,oppo_accid,oppo_accna]
+        resu_df(last)/resu_array, data of resu_unit, has columns:
+        ['top_accid','top_accna',accid_col,accna_col,this_accid],
+        of which data is:
+        [oppo_amt_sum,oppo_accid,oppo_accna]
+        column data is named from target_accid;
+        '''
         #  print('check resu cols:',resu_unit.xlmap.has_cols(resu_cols),resu_unit.xlmap.columns)
-        #  print(resu_cols)
         resu_df=deepcopy(resu_unit.data[resu_cols])
         return resu_df
     def side_split(self,accid_item,side='cr',show_col='accna'):
@@ -952,20 +948,24 @@ class CalSheet(XlSheet):
         show_col must be one of :['top_accna','top_accid',self.xlmap.accid_col,self.xlmap.accna_col];
         '''
         tar_accid_list=list(self.whatid(accid_item).keys())
-        resu_dfli=[]
-        for tar_accid in tar_accid_list:
-            split_df=self.acct_side_split(tar_accid,side=side)
-            split_df.fillna(0.0,inplace=True)
-            resu_dfli.append(split_df)
-            continue
-        resu_df=concat(resu_dfli,axis=0,join='outer')
-        resu_df.fillna(0.0,inplace=True)
-        # print('temp:\n',resu_df)
-        resu_cols=[show_col]
-        resu_cols.extend(tar_accid_list)
-        resu_df=resu_df[resu_cols]
-        # resu_df has columns:
-        # [show_col+tar_accid_list],
+        if len(tar_accid_list)==0:
+            resu_df=DataFrame([],)
+        else:
+            resu_dfli=[]
+            for tar_accid in tar_accid_list:
+                split_df=self.acct_side_split(tar_accid,side=side)
+                split_df.fillna(0.0,inplace=True)
+                resu_dfli.append(split_df)
+                continue
+            resu_df=concat(resu_dfli,axis=0,join='outer')
+            resu_df.fillna(0.0,inplace=True)
+            resu_cols=[show_col]
+            resu_cols.extend(tar_accid_list)
+            resu_df=resu_df[resu_cols]
+            '''
+            resu_df has columns:
+            [show_col+tar_accid_list],
+            '''
         return resu_df
     def rand_sample(
         self,

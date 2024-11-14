@@ -99,9 +99,9 @@ class InvChartMap(XlMap):
     '''
     汇总进销存;
     '''
-    def __init__(self,ages_count):
-        self.name=0
-        self.invid=1
+    def __init__(self,ages_count=0):
+        self.invid=0
+        self.name=1
         self.measure=2
         self.extend_col_list(self.num_cols)
         self.extend_col_list(self.amt_cols)

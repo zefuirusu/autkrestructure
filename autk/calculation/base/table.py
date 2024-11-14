@@ -35,11 +35,13 @@ class ImmortalTable:
         self,
         xlmap:XlMap=None,#XlMap(),
         xlmeta:JsonMeta=None,#JsonMeta({'BLANK_PATH':[['sheet',0]]}),
+        unit_type=XlSheet,
     ):
         ### basic attributes:
         self.xlmap=xlmap
         self.xlmeta=xlmeta
         ### calculation attributes:
+        self.unit_type=unit_type
         self.__df_temp=[]
         self.xlset=[]
         self.data=None
@@ -145,7 +147,7 @@ class ImmortalTable:
             xlmeta=None
         )
     def blank_sht(self):
-        return XlSheet(
+        return self.unit_type(
             xlmap=self.xlmap,
             shmeta=None
         )
@@ -162,20 +164,24 @@ class ImmortalTable:
         collect XlSheet from `self.xlmeta` by
         `self.xlmap`, into `self.xlset`.
         '''
-        print('start collecting xl to self.xlset.')
+        print(
+            '[{}]start collecting xl to self.xlset.'.format(
+                self.__class__.__name__
+            )
+        )
         self.__clear_data()
         def __single_append(shmeta):
             '''
             same as `self.append_xl_by_meta`
             '''
-            xl=XlSheet(
+            xl=self.unit_type(
                 xlmap=self.xlmap,
                 shmeta=shmeta
             )
             if isinstance(self.xlmap,XlMap):
                 pass
             else:
-                self.xlmap=XlMap()
+                self.xlmap=self.xlmap.__class__()
                 self.xlmap.extend_col_list(
                     xl.xlmap.columns
                 )
@@ -211,7 +217,7 @@ class ImmortalTable:
                 xl.xlmap.columns
             )
         if len(self.xlset)==0:
-            xl=XlSheet(
+            xl=self.unit_type(
                 xlmap=self.xlmap,
                 shmeta=shmeta
             )
@@ -267,7 +273,7 @@ class ImmortalTable:
     def append_df_by_map(self,df):
         #XlSheet.load_df_by_map()
         if len(self.xlset)==0:
-            xl=XlSheet(
+            xl=self.unit_type(
                 xlmap=self.xlmap,
                 shmeta=None
             )
@@ -397,7 +403,7 @@ class ImmortalTable:
         if over_write==True:
             self.data=resu
         if type_xl==True:
-            xl=XlSheet(xlmap=self.xlmap)
+            xl=self.unit_type(xlmap=self.xlmap)
             # with xlmap,without shmeta,
             # XlSheet.data is blank DataFrame,
             # whose columns fit with
@@ -806,24 +812,6 @@ class ImmortalTable:
             resuli.update({
                 xl.name:xl_resu
             })
-        # the following can be replaced by
-        # `self.apply_func`
-        #  thli=[]
-        #  for xl in self.xlset:
-            #  thli.append(
-                #  Thread(
-                    #  target=__collect_apply,
-                    #  args=(xl,xl_func_name,),
-                    #  name='~'.join([
-                        #  self.__class__.__name__,
-                        #  'apply',
-                        #  xl.name,
-                        #  xl_func_name
-                    #  ])
-                #  )
-            #  )
-            #  continue
-        #  start_thread_list(thli)
         self.apply_func(
             __collect_apply,
             xl_func_name

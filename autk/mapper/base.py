@@ -12,6 +12,11 @@ class XlMap:
     columns of GL is right in the same order of attributes of map object.
     Remember:index starts from 0.
     '''
+    def __add__(self,other):
+        resu=self.__class__.from_dict(
+            {**self.show,**other.show}
+        )
+        return resu
     def clear_cols(self):
         self.__dict__={}
     def get_index(self,col_name):
