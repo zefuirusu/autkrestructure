@@ -123,23 +123,13 @@ class MGL(ImmortalTable):
         return:
             class autk.parser.entry.JournalRecord;
         '''
-        if self.use_map==True:
-            jr_data=self.filter(
-                [glid,self.xlmap.key_name,True,True],
-                filter_type='str',
-                over_write=False,
-                type_xl=type_xl
-            )
-            return jr_data
-        else:
-            jr_data=self.filter(
-                [[glid,self.xlmap.key_name,True,True]],
-                filter_type='str',
-                over_write=False,
-                type_xl=False
-            )
-            return jr_data
-        pass
+        jr_data=self.filter(
+            [[glid,self.xlmap.key_name,True,True]],
+            'str',
+            False,
+            type_xl
+        )
+        return jr_data
     def __trans_accid_regex(self,accid,accurate=False):
         #  '''
         #  r'^'+accid+r'.*$' if not accurate, as default,
@@ -926,6 +916,7 @@ class MGL(ImmortalTable):
             lambda row_series:str(row_series[self.xlmap.accna_col].split(self.xlmap.accna_split_by)[0]),
             self.xlmap.top_accna_col
         )
+        resu_mgl.load_raw_data()
         return resu_mgl
     def rand_sample(
         self,

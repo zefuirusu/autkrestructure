@@ -528,10 +528,6 @@ class ImmortalTable:
         return resu
     def filter_list(
         self,
-        #  target_list,
-        #  search_col,
-        #  over_write=False,
-        #  type_xl=False
         *args,
         **kwargs,
     ):
@@ -544,6 +540,11 @@ class ImmortalTable:
                 d=self.vlookup(str_item,search_col,search_col,if_regex=False,match_mode=False) 
                 resu.extend(d)
             return resu
+        parameters:
+            target_list,
+            search_col,
+            over_write=False,
+            type_xl=False
         '''
         self.__clear_temp()
         resu=self.apply_xl_collect_df(
@@ -740,12 +741,6 @@ class ImmortalTable:
                 )
             )
             continue
-        #  print(
-            #  '[{}] function `{}` is to be applied.'.format(
-                #  self.__class__.__name__,
-                #  xl_func.__name__,
-            #  )
-        #  )
         start_thread_list(thread_list)
         return 0
     def apply_xl(
@@ -754,6 +749,10 @@ class ImmortalTable:
         *args,
         **kwargs
     ):
+        '''
+        Every member in `self.xlset` must have a method named
+        `xl_func_name`;
+        '''
         print(
             '[{}|apply_xl] every member in `self.xlset` calls `{}`.'.format(
                 self.__class__.__name__,
