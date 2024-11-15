@@ -59,9 +59,8 @@ class ImmortalTable:
         other
     ):
         resu=self.blank_copy()
-        resu.xlmap.extend_col_list(
-            other.xlmap.columns
-        )
+        resu.xlmap=self.xlmap+other.xlmap
+        resu.xlmeta=self.xlmeta+other.xlmeta
         resu.xlset.extend(self.xlset)
         resu.xlset.extend(other.xlset)
         return resu

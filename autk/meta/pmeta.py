@@ -45,10 +45,10 @@ class JsonMeta:
         elif isfile(json_str):
             self.data=f2dict(json_str)
         else:
-            pass
+            self.data={}
         pass
     def __add__(self,other):
-        join_meta=JsonMeta(None)
+        join_meta=JsonMeta('')
         join_meta.data={**self.data,**other.data}
         return join_meta
     def split_to_shmeta(self):
