@@ -605,6 +605,13 @@ class ImmortalTable:
         )
         self.__clear_temp()
         return resu
+    def search(self,item,search_col,type_xl=False):
+        return self.filter(
+            [[item,search_col,True,False]],
+            filter_type='str',
+            over_write=False,
+            type_xl=type_xl
+        )
     def vlookup(
         self,
         str_item,
