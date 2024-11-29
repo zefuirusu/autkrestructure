@@ -117,9 +117,9 @@ class XlBook:
         seems useless.
         '''
         if self.suffix=='xlsx':
-            bk=load_workbook(self.file_path)
+            bk=load_workbook(self.file_path,data_only=True,keep_links=True,rich_text=False)
         elif self.suffix=='xlsm':
-            bk=load_workbook(self.file_path,keep_vba=True)
+            bk=load_workbook(self.file_path,keep_vba=True,data_only=True,keep_links=True,rich_text=False)
         elif self.suffix=='xls':
             bk=open_workbook(self.file_path)
         else:
