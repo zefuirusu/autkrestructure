@@ -112,14 +112,17 @@ class XlBook:
         else:
             bk.save(self.file_path)
         pass
-    def get_bk(self):
-        '''
-        seems useless.
-        '''
+    def get_bk(self,write=False):
         if self.suffix=='xlsx':
-            bk=load_workbook(self.file_path,data_only=True,keep_links=True,rich_text=False)
+            if write==True:
+                bk=load_workbook(self.file_path,keep_links=True,rich_text=False)
+            else:
+                bk=load_workbook(self.file_path,data_only=True,keep_links=True,rich_text=False)
         elif self.suffix=='xlsm':
-            bk=load_workbook(self.file_path,keep_vba=True,data_only=True,keep_links=True,rich_text=False)
+            if write==True:
+                bk=load_workbook(self.file_path,keep_vba=True,keep_links=True,rich_text=False)
+            else:
+                bk=load_workbook(self.file_path,keep_vba=True,data_only=True,keep_links=True,rich_text=False)
         elif self.suffix=='xls':
             bk=open_workbook(self.file_path)
         else:
@@ -236,8 +239,9 @@ class XlBook:
             xls:str(float)
             xlsx/xlsm:str(int)
         '''
+        sht=self.get_sht(sheet_name)
         if self.suffix=='xls':
-            sht=open_workbook(self.file_path).sheet_by_name(sheet_name)
+            #  sht=open_workbook(self.file_path).sheet_by_name(sheet_name)
             matrix=array(
                 [
                     sht.row_values(
@@ -252,7 +256,6 @@ class XlBook:
             )
         elif self.suffix=='xlsx':
             #  sht=load_workbook(self.file_path).get_sheet_by_name(sheet_name) # same as:
-            sht=load_workbook(self.file_path)[sheet_name]
             matrix=array(
                 list(
                     sht.iter_rows(
@@ -266,7 +269,6 @@ class XlBook:
             )
         elif self.suffix=='xlsm':
             #  sht=load_workbook(self.file_path).get_sheet_by_name(sheet_name) # same as:
-            sht=load_workbook(self.file_path,keep_vba=True)[sheet_name]
             matrix=array(
                 list(
                     sht.iter_rows(
@@ -344,7 +346,8 @@ class XlBook:
         )
     def __xls_fill(self,sheet_name,cell_index,value,save=False):
         import xlutils
-        b=open_workbook(self.file_path)
+        #  b=open_workbook(self.file_path)
+        b=self.get_bk(write=True)
         b=xlutils.copy(b)
         #  b.sheet_by_name(sheet_name).cell(cell_index[0],cell_index[1]).value=value
         b.write(cell_index[0],cell_index[1],value,save=False)
@@ -353,14 +356,16 @@ class XlBook:
             #  b.save(self.file_path)
         pass
     def __xlsx_fill(self,sheet_name,cell_index,value,save=False):
-        b=load_workbook(self.file_path)
+        #  b=load_workbook(self.file_path)
+        b=self.get_bk(write=True)
         b[sheet_name].cell(row=cell_index[0],column=cell_index[1]).value=value
         if save==True:
             self.save_bk(b)
             #  b.save(self.file_path)
         pass
     def __xlsm_fill(self,sheet_name,cell_index,value,save=False):
-        b=load_workbook(self.file_path,keep_vba=True)
+        #  b=load_workbook(self.file_path,keep_vba=True)
+        b=self.get_bk(write=True)
         b[sheet_name].cell(row=cell_index[0],column=cell_index[1]).value=value
         if save==True:
             self.save_bk(b)
@@ -569,6 +574,9 @@ class XlBook:
         )
         pass
     def clear_sheet(self,sheet_name):
+        '''
+        Carefull! This method will clear all data of the target sheet!
+        '''
         from numpy import full
         z=full(self.shape[0],'')
         self.paste_matrix(z,(1,1),sheet_name)
