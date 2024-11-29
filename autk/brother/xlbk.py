@@ -140,6 +140,35 @@ class XlBook:
         else:
             sht=None
         return sht
+    def search_in_sheet(self,cell_content,sheet_name):
+        def __sheet_search_xlsx(cell_content,shtna):
+            cell_content=re.compile(cell_content)
+            sht=self.get_sht(shtna)
+            sht_resu=[]
+            for r in range(sht.max_row):
+                for c in range(sht.max_column):
+                    mt=re.search(cell_content,str(sht.cell(r+1,c+1).value))
+                    if mt is not None:
+                        sht_resu.append((r+1,c+1))
+                    else:
+                        pass
+            return sht_resu
+        def __sheet_search_xls(cell_content,shtna):
+            cell_content=re.compile(cell_content)
+            sht=self.get_sht(shtna)
+            sht_resu=[]
+            for r in range(sht.nrows):
+                for c in range(sht.ncols):
+                    mt=re.search(cell_content,str(sht.cell(r,c).value))
+                    if mt is not None:
+                        sht_resu.append((r,c))
+                    else:
+                        pass
+            return sht_resu
+        if self.suffix=='xls':
+            return __sheet_search_xls(cell_content,sheet_name)
+        else:
+            return __sheet_search_xlsx(cell_content,sheet_name)
     def search(self,cell_content):
         '''
         Search cells by its content and return index of the result.
@@ -154,32 +183,8 @@ class XlBook:
             }
         '''
         resu={}
-        def __sheet_search_xlsx(cell_content,shtna):
-            cell_content=re.compile(cell_content)
-            sht=self.get_sht(shtna)
-            sht_resu=[]
-            for r in range(sht.max_row):
-                for c in range(sht.max_column):
-                    mt=re.search(cell_content,str(sht.cell(r+1,c+1).value))
-                    if mt is not None:
-                        sht_resu.append((r+1,c+1))
-                    else:
-                        pass
-            if len(sht_resu)>0:
-                resu.update({shtna:sht_resu})
-            else:
-                pass
-        def __sheet_search_xls(cell_content,shtna):
-            cell_content=re.compile(cell_content)
-            sht=self.get_sht(shtna)
-            sht_resu=[]
-            for r in range(sht.nrows):
-                for c in range(sht.ncols):
-                    mt=re.search(cell_content,str(sht.cell(r,c).value))
-                    if mt is not None:
-                        sht_resu.append((r,c))
-                    else:
-                        pass
+        def __sheet_search(cell_content,shtna):
+            sht_resu=self.search_in_sheet(cell_content,shtna)
             if len(sht_resu)>0:
                 resu.update({shtna:sht_resu})
             else:
@@ -188,7 +193,7 @@ class XlBook:
         for shtna in self.shtli:
             thli.append(
                 Thread(
-                    target=__sheet_search_xls if self.suffix=='xls' else __sheet_search_xlsx,
+                    target=__sheet_search,
                     args=(cell_content,shtna)
                 )
             )
