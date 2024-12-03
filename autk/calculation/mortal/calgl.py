@@ -322,7 +322,7 @@ class CalSheet(XlSheet):
         '''
         'glid' can be a regular expression string, in match_mode.
         '''
-        if self.use_map==True:
+        if isinstance(self.xlmap,MglMap):
             jr_data=self.filter(
                 [glid,self.xlmap.key_name,True,True],
                 filter_type='str',
