@@ -144,10 +144,13 @@ class XlBook:
             sht=None
         return sht
     def search_in_sheet(self,cell_content,sheet_name):
-        def __sheet_search_xlsx(cell_content,shtna):
-            cell_content=re.compile(cell_content)
-            sht=self.get_sht(shtna)
-            sht_resu=[]
+        '''
+        return cell location index, which starts from (1,1);
+        '''
+        cell_content=re.compile(cell_content)
+        sht=self.get_sht(sheet_name)
+        sht_resu=[]
+        def __sheet_search_xlsx(cell_content):
             for r in range(sht.max_row):
                 for c in range(sht.max_column):
                     mt=re.search(cell_content,str(sht.cell(r+1,c+1).value))
@@ -156,22 +159,19 @@ class XlBook:
                     else:
                         pass
             return sht_resu
-        def __sheet_search_xls(cell_content,shtna):
-            cell_content=re.compile(cell_content)
-            sht=self.get_sht(shtna)
-            sht_resu=[]
+        def __sheet_search_xls(cell_content):
             for r in range(sht.nrows):
                 for c in range(sht.ncols):
                     mt=re.search(cell_content,str(sht.cell(r,c).value))
                     if mt is not None:
-                        sht_resu.append((r,c))
+                        sht_resu.append((r+1,c+1))
                     else:
                         pass
             return sht_resu
         if self.suffix=='xls':
-            return __sheet_search_xls(cell_content,sheet_name)
+            return __sheet_search_xls(cell_content)
         else:
-            return __sheet_search_xlsx(cell_content,sheet_name)
+            return __sheet_search_xlsx(cell_content)
     def search(self,cell_content):
         '''
         Search cells by its content and return index of the result.
@@ -179,6 +179,7 @@ class XlBook:
             cell_content:regex string;
         returns:
             `xls` starts from 0, while `xlsx` starts from 1;
+            returns (n,m) which starts from (1,1);
             {
                 "sheet_name A":[(row1,column1),(row2,column2),...],
                 "sheet_name B":[(row3,column3),...],
@@ -206,20 +207,16 @@ class XlBook:
     def get_value(self,sheet_name,cell_index):
         '''
         `xls` starts from 0, while `xlsx` starts from 1;
+        Well, `cell_index` starts from (1,1);
         '''
-        if self.suffix=='xlsx' or 'xlsm':
-            value=self.get_sht(sheet_name).cell(
-                cell_index[0],
-                cell_index[1]
-            ).value
-        elif self.suffix=='xls':
-            value=self.get_sht(sheet_name).cell(
-                cell_index[0],
-                cell_index[1]
-            ).value
-            pass
-        else:
-            value=0
+        if self.suffix=='xls':
+            cell_location=(cell_index[0]-1,cell_index[1]-1)
+        else:# self.suffix=='xlsx' or self.suffix=='xlsm':
+            cell_location=(cell_index[0],cell_index[1])
+        value=self.get_sht(sheet_name).cell(
+            cell_location[0],
+            cell_location[1],
+        ).value
         return value
     def get_matrix(
             self,
@@ -235,6 +232,7 @@ class XlBook:
         For xlrd.open_workbook().sheet_by_name(), index starts from 0;
         While for openpyxl.load_workbook().get_sheet_by_name(), index starts from 1;
         That's all right, just start from 1 when passing argument 'start_cell_index' as tuple like (n,m).
+        `n_rows_range` and `n_cols_range` both includes `start_cell_index`;
         For numbers, different file type results in different data type:
             xls:str(float)
             xlsx/xlsm:str(int)
