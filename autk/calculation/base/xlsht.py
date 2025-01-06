@@ -764,6 +764,13 @@ class XlSheet:
                 self.__row_temp.append(row_data)
         resu=self.get_row_temp_data(over_write=over_write,type_xl=type_xl)
         return resu
+    def search(self,item,search_col,type_xl=False):
+        return self.filter(
+            [[item,search_col,True,False]],
+            filter_type='str',
+            over_write=False,
+            type_xl=type_xl
+        )
     def vlookup(
         self,
         find_str,
