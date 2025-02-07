@@ -85,16 +85,16 @@ def file_link(
         f=p.split(os.sep)[-1]
         if isinstance(trans2win,list) and len(trans2win)==2:
             open_link_func_str=''.join([
-                '\'=HYPERLINK(IF(INFO("system")="pcdos",SUBSTITUTE(RC[-1],"',
+                '\'=HYPERLINK(IF(INFO("system")="pcdos",SUBSTITUTE(INDIRECT("RC[-1]",FALSE),"',
                 trans2win[0],
                 '","',
                 trans2win[1],
                 '"),',
-                'RC[-1]),"open")'
+                'INDIRECT("RC[-1]",FALSE)),"open")'
             ])
         else:
             open_link_func_str=''.join([
-                '\'=HYPERLINK(IF(INFO("system")="pcdos",na(),RC[-1]),"open")',
+                '\'=HYPERLINK(IF(INFO("system")="pcdos",NA(),INDIRECT("RC[-1]",FALSE)),"open")',
             ])
         path_matrix.append([p,open_link_func_str,f])
     from pandas import DataFrame
