@@ -110,11 +110,18 @@ class XlBook:
     def sht_link(self):
         link_df=[]
         for shtna in self.shtli:
-            formula_text1=r'INDIRECT("RC[-1]",FALSE)'
-            formula_text2=r"CONCATENATE("+r'"'+r"#"+r"'"+r'"'+r","+formula_text1+","+r'"'+r"'!"+r"R1C1"+r'"'+r")"
-            formula_text3=r"'=HYPERLINK("+formula_text2+r',"open"'+r")"
             link_df.append(
-                [shtna,formula_text3]
+                [shtna,
+                 ' '.join([
+                     '=HYPERLINK(',
+                     'CONCATENATE(',
+                     '"#",',
+                     r'"',
+                     r'INDIRECT(RC[-1],FALSE)',
+                     r',"!R1C1"',
+                     '),'
+                     '"open")'
+                 ])]
             )
             continue
         link_df=DataFrame(
