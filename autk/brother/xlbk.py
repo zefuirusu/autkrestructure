@@ -701,6 +701,7 @@ class XlBook:
         Transform self into ImmortalTable.
         '''
         from autk.calculation.base.table import ImmortalTable
+        from autk.meta.pmeta import JsonMeta
         xlmeta={}
         xlmeta.update(
             {self.file_path:[[sht,common_title] for sht in
@@ -708,7 +709,7 @@ class XlBook:
         )
         return ImmortalTable(
             xlmap=None,
-            xlmeta=xlmeta,
+            xlmeta=JsonMeta(xlmeta),
         )
         pass
     def to_mgl(

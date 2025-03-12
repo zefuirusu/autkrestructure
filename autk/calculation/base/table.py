@@ -391,7 +391,10 @@ class ImmortalTable:
                 determines the result will be a DataFrame or XlSheet;
         '''
         if len(self.__df_temp)==0:
-            resu=DataFrame([],columns=self.xlmap.columns)
+            resu=DataFrame(
+                [],
+                columns=self.xlmap.columns if self.xlmap is not None else []
+            )
         else:
             resu=concat(
                 self.__df_temp,
