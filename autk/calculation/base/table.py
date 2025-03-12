@@ -118,7 +118,7 @@ class ImmortalTable:
             },
             "xlmeta":{
                 self.xlmeta.__class__.__name__:
-                None if self.xlmeta is None else self.xlmeta.data
+                None if self.xlmeta is None else self.xlmeta
             },
         }
         return show
