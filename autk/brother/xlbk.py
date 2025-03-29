@@ -682,6 +682,8 @@ class XlBook:
     ):
         from autk.calculation.base.xlsht import XlSheet
         from autk.meta.pmeta import PathMeta
+        if xlmap is None:
+            xlmap=XlMap.from_list([])
         xl=XlSheet(
             xlmap=xlmap,
             shmeta=PathMeta(
@@ -719,13 +721,15 @@ class XlBook:
         auto_load=False
     ):
         from autk.calculation.mortal.mortalgl import MGL
+        if xlmap is None:
+            xlmap=XlMap.from_list([])
         xlmeta={}
         xlmeta.update(
             {self.file_path:[[sht,common_title] for sht in
                              self.shtli]}
         )
         return MGL(
-            xlmap=None,
+            xlmap=xlmap,
             xlmeta=xlmeta,
         )
     def to_chart(
@@ -735,13 +739,15 @@ class XlBook:
         auto_load=False
     ):
         from autk.calculation.mortal.mortalchart import MCH
+        if xlmap is None:
+            xlmap=XlMap.from_list([])
         xlmeta={}
         xlmeta.update(
             {self.file_path:[[sht,common_title] for sht in 
                              self.shtli]}
         )
         return MCH(
-            xlmap=None,
+            xlmap=xlmap,
             xlmeta=xlmeta,
         )
         pass
