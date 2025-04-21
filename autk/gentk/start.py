@@ -11,14 +11,16 @@ PRJ_JSON={
             "name":"100-push",
             "subdirs":[
                 {"name":"1000-控制测试","subdirs":[]},
-                {"name":"3000-盘点","subdirs":[]},
-                {"name":"4000-询证函","subdirs":[
+                {"name":"4000-tofrom","subdirs":[]},
+                {"name":"5100-盘点","subdirs":[]},
+                {"name":"5200-询证函","subdirs":[
                     {"name":"100-函证抽样","subdirs":[]},
                     {"name":"200-核对与反馈","subdirs":[]},
                     {"name":"300-生成待盖章","subdirs":[]},
-                    {"name":"400-回函及解释","subdirs":[]}
+                    {"name":"400-回函解释","subdirs":[]},
+                    {"name":"500-回函统计","subdirs":[]},
                 ]},
-                {"name":"5000-凭证附件","subdirs":[]},
+                {"name":"5300-凭证附件","subdirs":[]},
                 {"name":"6000-提交质控与底稿汇总","subdirs":[]},
                 {"name":"7000-附注与报告撰稿","subdirs":[
                     {"name":"关联往来及交易","subdirs":[]}
@@ -34,14 +36,14 @@ PRJ_JSON={
                     {"name":"归档索引","subdirs":[]},
                     {"name":"业务流转单","subdirs":[]}
                 ]},
-                {"name":"9000-其他","subdirs":[]},
                 {"name":"script",
                     "subdirs":[
                         {"name":"src","subdirs":[]},
                         {"name":"data","subdirs":[]},
                         {"name":"output","subdirs":[]},
                         {"name":"config","subdirs":[]},
-                        {"name":"logfiles","subdirs":[]}
+                        {"name":"logfiles","subdirs":[]},
+                        {"name":"download","subdirs":[]},
                 ]}
             ]
         },
