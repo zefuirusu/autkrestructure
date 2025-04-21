@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from autk.cli.cmd import CMD_CONFIG
+from autk.cli.env import PRJ_CONFIG
+from autk.cli.cmd import CMD
 from argparse import ArgumentParser
-top_parser=ArgumentParser(description="Auditors' Toolkit",prog="autk")
+top_parser=ArgumentParser(description="Auditors' Toolkit; version 4.0.1",prog="autk")
 subparsers=top_parser.add_subparsers(help="subcommand for autk")
 
 def __set_parser(base_parser,cmd):
@@ -21,9 +22,13 @@ def __set_parser(base_parser,cmd):
             continue
     #  print('ok:',cmd['name'])
     pass
-for cmd in CMD_CONFIG:
-    __set_parser(subparsers,cmd)
-    continue
+def get_cmd(cmd_json):
+    for cmd in cmd_json:
+        __set_parser(subparsers,cmd)
+        continue
+    return
+get_cmd(PRJ_CONFIG)
+get_cmd(CMD)
 
 if __name__=='__main__':
     args=top_parser.parse_args()

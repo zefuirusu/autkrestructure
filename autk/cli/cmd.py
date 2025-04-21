@@ -7,7 +7,7 @@ from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
 
 # if subcmd` is {}, then `args` cannot be []; if `args` is [], `subcmd` cannot be{};
-CMD_CONFIG=[
+CMD=[
     {
         "name":"new",
         "help":"create new project.",
@@ -25,23 +25,33 @@ CMD_CONFIG=[
         "func":None,
         "subcmd":[# lv2_cmd
             {
+                "name":"shape",
+                "help":"get the shape of an Excel Workbook.",
+                "args":[
+                    ("ifp",{"type":str,"help":"Input File Path"}),
+                ],
+                "func":lambda args:print(XlBook(args.ifp).shape_df),
+                "subcmd":[],
+            },
+            {
                 "name":"shtli",
                 "help":"list all sheets of the Excel Workbook.",
                 "args":[
-                    ("--ifp",{"type":str,"help":"Input File Path"}),
+                    ("ifp",{"type":str,"help":"Input File Path"}),
                 ],
                 "func":lambda args:print(XlBook(args.ifp).shtli),
                 "subcmd":[],
             },
             {
-                "name":"value",
-                "help":"get value of a spacific cell.",
+                "name":"sht",
+                "help":"get the table of a sheet.",
                 "args":[
-                    ("--index",{"type":int,"nargs":2,"help":"index of the cell."}),
-                    ("--shtna",{"type":str,"help":"sheet name."}),
-                    ("--ifp",{"type":str,"help":"Input File Path"}),
+                    ("shtna",{"type":str,"help":"sheet name."}),
+                    ("ifp",{"type":str,"help":"Input File Path"}),
+                    ("--ifdf",{"type":bool,"default":True,"help":"if is shown as DataFrame"}),
                 ],
-                "func":lambda args:print(XlBook(args.ifp).get_value(args.shtna,tuple(args.index))),
+                "func":lambda
+                args:print(XlBook(args.ifp).select_all(args.shtna,bool(args.ifdf))),
                 "subcmd":[],
             },
             {
@@ -56,6 +66,17 @@ CMD_CONFIG=[
                     ("--hastitle",{"type":bool,"default":True,"help":"if assign top row as title of DataFrame."}),
                 ],
                 "func":lambda args:print(XlBook(args.ifp).select_matrix(args.shtna,tuple(args.start),tuple(args.end),args.ifdf,args.hastitle)),
+                "subcmd":[],
+            },
+            {
+                "name":"value",
+                "help":"get value of a spacific cell.",
+                "args":[
+                    ("--index",{"type":int,"nargs":2,"help":"index of the cell."}),
+                    ("--shtna",{"type":str,"help":"sheet name."}),
+                    ("--ifp",{"type":str,"help":"Input File Path"}),
+                ],
+                "func":lambda args:print(XlBook(args.ifp).get_value(args.shtna,tuple(args.index))),
                 "subcmd":[],
             },
             { 
