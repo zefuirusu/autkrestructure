@@ -7,6 +7,43 @@ from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
 
 # if subcmd` is {}, then `args` cannot be []; if `args` is [], `subcmd` cannot be{};
+
+def yesno(yn_str):
+    if yn_str=='yes' or yn_str=='y':
+        return True
+    elif yn_str=='no' or yn_str=='n':
+        return False
+    else:
+        print('check argument:yes/no')
+        return True
+def __show_shtli(args):
+    for sht in XlBook(args.ifp).shtli:
+        print(sht)
+        continue
+    pass
+def __mgl_search(args):
+    from autk.gentk.quick import gl_from_json
+    from pandas import DataFrame
+    mgl=gl_from_json(args.config)
+    print('get MGL:',mgl)
+    resu=mgl.search(
+        args.regex,
+        args.col,
+        type_xl=False
+    )
+    if args.ifdf=="yes":#True:
+        for r in resu.iterrows():
+            print(DataFrame(r[1]).T)
+    elif args.ifdf=="no":
+        resu=resu.values
+        for r in resu:
+            print(r)
+    else:
+        print("check argument:--ifdf")
+    pass
+def __table_search(args):
+    pass
+
 CMD=[
     {
         "name":"new",
@@ -39,7 +76,7 @@ CMD=[
                 "args":[
                     ("ifp",{"type":str,"help":"Input File Path"}),
                 ],
-                "func":lambda args:print(XlBook(args.ifp).shtli),
+                "func":__show_shtli,
                 "subcmd":[],
             },
             {
@@ -48,11 +85,33 @@ CMD=[
                 "args":[
                     ("shtna",{"type":str,"help":"sheet name."}),
                     ("ifp",{"type":str,"help":"Input File Path"}),
-                    ("--ifdf",{"type":bool,"default":True,"help":"if is shown as DataFrame"}),
+                    ("--ifdf",{"type":str,"default":"yes","help":"if is shown as DataFrame"}),
                 ],
                 "func":lambda
-                args:print(XlBook(args.ifp).select_all(args.shtna,bool(args.ifdf))),
+                args:print(XlBook(args.ifp).select_all(args.shtna,yesno(args.ifdf))),
                 "subcmd":[],
+            },
+            {
+                "name":"row",
+                "help":"get row data",
+                "args":[
+                    ("n",{"type":int,"help":"row number."}),
+                    ("shtna",{"type":str,"help":"sheet name."}),
+                    ("ifp",{"type":str,"help":"Input File Path"}),
+                ],
+                "func":lambda args:print(XlBook(args.ifp).get_row(args.shtna,args.n)),
+                "subcmd":[]
+            },
+            {
+                "name":"col",
+                "help":"get column data",
+                "args":[
+                    ("n",{"type":int,"help":"column number."}),
+                    ("shtna",{"type":str,"help":"sheet name."}),
+                    ("ifp",{"type":str,"help":"Input File Path"}),
+                ],
+                "func":lambda args:print(XlBook(args.ifp).get_col(args.shtna,args.n)),
+                "subcmd":[]
             },
             {
                 "name":"matrix",
@@ -62,10 +121,10 @@ CMD=[
                     ("--end",{"type":int,"nargs":2,"help":"end index"}),
                     ("--shtna",{"type":str,"help":"sheet name."}),
                     ("--ifp",{"type":str,"help":"Input File Path"}),
-                    ("--ifdf",{"type":bool,"default":True,"help":"if DataFrame format is needed."}),
-                    ("--hastitle",{"type":bool,"default":True,"help":"if assign top row as title of DataFrame."}),
+                    ("--ifdf",{"type":str,"default":"no","help":"if DataFrame format is needed."}),
+                    ("--hastitle",{"type":str,"default":"yes","help":"if assign top row as title of DataFrame."}),
                 ],
-                "func":lambda args:print(XlBook(args.ifp).select_matrix(args.shtna,tuple(args.start),tuple(args.end),args.ifdf,args.hastitle)),
+                "func":lambda args:print(XlBook(args.ifp).select_matrix(args.shtna,tuple(args.start),tuple(args.end),yesno(args.ifdf),yesno(args.hastitle))),
                 "subcmd":[],
             },
             {
@@ -92,18 +151,40 @@ CMD=[
         ],
     },
     {
-        "name":"analysis",
-        "help":"Analysis,TODO.",
+        "name":"table",
+        "help":"Analysis, through Immortal Table.",
+        "args":[],
+        "func":None,
+        "subcmd":[
+            {
+                "name":"search",
+                "help":"search by keywords and get rows",
+                "args":[
+                    ("regex",{"type":str,"help":"Regular Expression."}),
+                    ("col",{"type":str,"help":"column to apply the regex."}),
+                    ("--ifp",{"type":str,"help":"path of the json config file for MGL"}),
+                ],
+                "func":__mgl_search,
+                "subcmd":[]
+            },
+        ]
+    },
+    {
+        "name":"mgl",
+        "help":"Analysis, through Mortal General Ledgers,TODO.",
         "args":[],
         "func":None,
         "subcmd":[# lv2_cmd
             {
-                "name":"side",
-                "help":"side split",
+                "name":"search",
+                "help":"search by keywords and get rows",
                 "args":[
-                    ("--config",{"type":str,"help":""}),
+                    ("regex",{"type":str,"help":"Regular Expression."}),
+                    ("col",{"type":str,"help":"column to apply the regex."}),
+                    ("--config",{"type":str,"help":"path of the json config file for MGL"}),
+                    ("--ifdf",{"type":str,"default":"yes","help":""}),
                 ],
-                "func":None,
+                "func":__mgl_search,
                 "subcmd":[]
             },
         ],
