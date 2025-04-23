@@ -151,6 +151,28 @@ CMD=[
         ],
     },
     {
+        "name":"meta",
+        "help":"Functions related to Meta data",
+        "args":[],
+        "func":None,
+        "subcmd":[
+            {
+                "name":"flink",
+                "help":"generage file link.",
+                "args":[
+                    ("topic",{"type":str,"help":"sheet name in the output file."}),
+                    ("regex",{"type":str,"help":"Regular Expression to match file names."}),
+                    ("ofp",{"type":str,"help":"Output File Path"}),
+                    ("--sdir",{"type":str,"default":".","help":"where to search/match, default to current directory."}),
+                    ("--type",{"type":str,"default":"flatten","help":"file|dir|flatten;default to `flatten`."}),
+                    ("--towin",{"type":str,"default":None,"nargs":2,"help":"transform `linux` path into `windows` path."}),
+                ],
+                "func":lambda args:file_link(args.topic,args.regex,args.sdir,args.ofp,resu_type=args.type,trans2win=args.towin),
+                "subcmd":[]
+            }
+        ]
+    },
+    {
         "name":"table",
         "help":"Analysis, through Immortal Table.",
         "args":[],
