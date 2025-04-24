@@ -31,10 +31,11 @@ def __mgl_search(args):
         args.col,
         type_xl=False
     )
-    if args.ifdf=="yes":#True:
-        for r in resu.iterrows():
-            print(DataFrame(r[1]).T)
-    elif args.ifdf=="no":
+    if yesno(args.ifdf)==True:
+        print(resu)
+        #  for r in resu.iterrows():
+            #  print(DataFrame(r[1]).T)
+    elif yesno(args.ifdf)==False:
         resu=resu.values
         for r in resu:
             print(r)
