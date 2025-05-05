@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from argparse import ArgumentParser
 from autk.cli.env import PRJ_CONFIG
 from autk.cli.cmd import CMD
-from argparse import ArgumentParser
 top_parser=ArgumentParser(description="Auditors' Toolkit; version 4.0.1",prog="autk")
 subparsers=top_parser.add_subparsers(help="subcommand for autk")
 

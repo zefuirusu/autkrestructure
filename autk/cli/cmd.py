@@ -5,6 +5,7 @@
 from autk.gentk.start import startprj
 from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
+from autk.gentk.quick import gl_from_json
 
 # if subcmd` is {}, then `args` cannot be []; if `args` is [], `subcmd` cannot be{};
 
@@ -22,7 +23,6 @@ def __show_shtli(args):
         continue
     pass
 def __mgl_search(args):
-    from autk.gentk.quick import gl_from_json
     from pandas import DataFrame
     mgl=gl_from_json(args.config)
     print('get MGL:',mgl)
@@ -185,9 +185,10 @@ CMD=[
                 "args":[
                     ("regex",{"type":str,"help":"Regular Expression."}),
                     ("col",{"type":str,"help":"column to apply the regex."}),
+                    ("--config",{"type":dict,"default":None,"nargs":1,"help":"meta"}),
                     ("--ifp",{"type":str,"help":"path of the json config file for MGL"}),
                 ],
-                "func":__mgl_search,
+                "func":__table_search,
                 "subcmd":[]
             },
         ]
@@ -195,9 +196,18 @@ CMD=[
     {
         "name":"mgl",
         "help":"Analysis, through Mortal General Ledgers,TODO.",
-        "args":[],
-        "func":None,
+        "args":[
+        ],
         "subcmd":[# lv2_cmd
+            {
+                "name":"showcols",
+                "help":"show all columns of the current mgl.",
+                "args":[
+                    ("--config",{"type":str,"help":"path of the json config file for MGL"}),
+                ],
+                "func":lambda args:print(gl_from_json(args.config).xlmap.columns),
+                "subcmd":[],
+            },
             {
                 "name":"search",
                 "help":"search by keywords and get rows",
@@ -208,6 +218,18 @@ CMD=[
                     ("--ifdf",{"type":str,"default":"yes","help":""}),
                 ],
                 "func":__mgl_search,
+                "subcmd":[]
+            },
+            {
+                "name":"call",
+                "help":"call a function of mgl.",
+                "args":[
+                    ("func_name",{"type":str,"help":"function of mgl."}),
+                    ("func_args",{"nargs":"*","help":"arguments passed to the function."}),
+                    ("--config",{"type":str,"help":"path of the json config file for MGL"}),
+                ],
+                "func":lambda
+                args:print(getattr(gl_from_json(args.config),args.func_name)(*args.func_args)),
                 "subcmd":[]
             },
         ],
