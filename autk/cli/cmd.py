@@ -44,6 +44,8 @@ def __mgl_search(args):
     pass
 def __table_search(args):
     pass
+def __table_call(args):
+    pass
 
 CMD=[
     {
@@ -189,6 +191,17 @@ CMD=[
                     ("--ifp",{"type":str,"help":"path of the json config file for MGL"}),
                 ],
                 "func":__table_search,
+                "subcmd":[]
+            },
+            {
+                "name":"call",
+                "help":"call a function",
+                "args":[
+                    ("func_name",{"type":str,"help":"function of table."}),
+                    ("func_args",{"nargs":"*","help":"arguments passed to the function."}),
+                    ("--ifp",{}),
+                ],
+                "func":__table_call,
                 "subcmd":[]
             },
         ]

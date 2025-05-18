@@ -917,6 +917,7 @@ class MGL(ImmortalTable):
             self.xlmap.top_accna_col
         )
         resu_mgl.load_raw_data()
+        print(resu_mgl.data)
         return resu_mgl
     def rand_sample(
         self,
