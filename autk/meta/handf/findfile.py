@@ -70,9 +70,13 @@ def file_link(
     item, # regular expression
     search_dir, # where to search
     savepath, # save path of search result.
+    depth=1, #
     resu_type=None,#'file', # may be `file`,`dir`,or `flatten`;
-    trans2win=None, #[left,right]
+    trans2win=None, #[left_lnx_path,right_win_path]
 ):
+    from os.path import abspath,sep
+    from pandas import DataFrame
+    from autk.gentk.funcs import save_df
     if resu_type=='file':
         resu=find_regex(item,search_dir,match=False)[0]
     elif resu_type=='dir':
@@ -96,10 +100,20 @@ def file_link(
             open_link_func_str=''.join([
                 '\'=HYPERLINK(IF(INFO("system")="pcdos",NA(),INDIRECT("RC[-1]",FALSE)),"open")',
             ])
-        path_matrix.append([p,open_link_func_str,f])
-    from pandas import DataFrame
-    from autk.gentk.funcs import save_df
-    matrix=DataFrame(path_matrix,columns=['path','open_link','title'])
+        base_split=re.sub(abspath(search_dir)+'/',"",p).split(sep)
+        individual_depth=len(base_split)
+        p_split=[]
+        col_split=[]
+        for n in range(depth):
+            if n >= len(base_split):
+                p_split.append('')
+            else:
+                p_split.append(base_split[n])
+            col_split.append('lv'+str(n+1))
+        resu_cols=['path','open_link','individual_depth']+col_split+['title']
+        path_matrix.append([p,open_link_func_str,individual_depth]+p_split+[f])
+    matrix=DataFrame(path_matrix,columns=resu_cols)
+    print('file_link:\n',matrix)
     save_df(matrix,topic,savepath)
     return matrix
 def locate_and_save(
