@@ -21,6 +21,7 @@ from os.path import isfile,isdir
 from threading import Thread
 
 from autk.gentk.funcs import f2dict,start_thread_list
+from autk.meta.handf.findfile import find_regex
 
 class JsonMeta:
     '''
@@ -178,7 +179,18 @@ class PathMeta(JsonMeta):
             print("[Error:] `xlpath` is neither a path nor a directory!")
         pass
     pass
-class DirMeta(PathMeta):
+class DirMeta(JsonMeta):
+    def __init__(self,basedir,common_title=0):
+        from autk.brother.xlbk import XlBook
+        self.keep_additional=True
+        self.path='json'
+        self.data={}
+        fli=find_regex(r'\.xlsx?$',search_dir=basedir,match=False)[0]
+        for f in fli:
+            self.data.update(
+                {f:[[shtna,common_title] for shtna in XlBook(f).shtli]}
+            )
+        pass
     pass
 if __name__=='__main__':
     pass
