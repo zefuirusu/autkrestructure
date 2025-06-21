@@ -109,13 +109,9 @@ class PathMeta(JsonMeta):
             from autk.brother.xlbk import XlBook
             bk=XlBook(self.path)
             if shtli==[]:
-                for sht in bk.shtli:
-                    self.data.update({bk.file_path:[[sht,common_title]]})
-                    continue
+                self.data.update({bk.file_path:[[sht,common_title] for sht in bk.shtli]})
             else:
-                for sht in shtli:
-                    self.data.update({bk.file_path:[[sht,common_title]]})
-                    continue
+                self.data.update({bk.file_path:[[sht,common_title] for sht in shtli]})
             pass
         elif isdir(xlpath):
             ## `xlpath` is a directory, load all sheets in all files;
