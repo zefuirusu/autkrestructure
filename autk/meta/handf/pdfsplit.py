@@ -7,7 +7,7 @@ from threading import Thread
 
 def pure_fname(path):
     return re.sub(
-        '\.pdf$',
+        r'\.pdf$',
         '',
         path.split(os.sep)[-1]
     )
