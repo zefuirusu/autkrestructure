@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-from autk.gentk.start import startprj
 from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
 from autk.gentk.quick import gl_from_json
@@ -48,16 +47,6 @@ def __table_call(args):
     pass
 
 CMD=[
-    {
-        "name":"new",
-        "help":"create new project.",
-        "args":[
-            ("--name",{"type":str,"help":"create new project in current directory."}),
-            ("--home",{"type":str,"default":".","help":"home directory to place your project, default to current directory."}),
-        ],
-        "func":lambda args:startprj(args.name,args.home),
-        "subcmd":[],
-    },
     { # lv1_cmd
         "name":"show",
         "help":"show some info.",
@@ -90,8 +79,7 @@ CMD=[
                     ("ifp",{"type":str,"help":"Input File Path"}),
                     ("--ifdf",{"type":str,"default":"yes","help":"if is shown as DataFrame"}),
                 ],
-                "func":lambda
-                args:print(XlBook(args.ifp).select_all(args.shtna,yesno(args.ifdf))),
+                "func":lambda args:print(XlBook(args.ifp).select_all(args.shtna,yesno(args.ifdf))),
                 "subcmd":[],
             },
             {
@@ -127,7 +115,16 @@ CMD=[
                     ("--ifdf",{"type":str,"default":"no","help":"if DataFrame format is needed."}),
                     ("--hastitle",{"type":str,"default":"yes","help":"if assign top row as title of DataFrame."}),
                 ],
-                "func":lambda args:print(XlBook(args.ifp).select_matrix(args.shtna,tuple(args.start),tuple(args.end),yesno(args.ifdf),yesno(args.hastitle))),
+                "func":lambda args:
+                    print(
+                          XlBook(args.ifp).select_matrix(
+                             args.shtna,
+                             tuple(args.start),
+                             tuple(args.end),
+                             yesno(args.ifdf),
+                             yesno(args.hastitle)
+                         )
+                    ),
                 "subcmd":[],
             },
             {
@@ -154,8 +151,8 @@ CMD=[
         ],
     },
     {
-        "name":"meta",
-        "help":"Functions related to Meta data",
+        "name":"ftk",
+        "help":"File-handle Toolkit.",
         "args":[],
         "func":None,
         "subcmd":[
@@ -171,9 +168,29 @@ CMD=[
                     ("--type",{"type":str,"default":"flatten","help":"file|dir|flatten;default to `flatten`."}),
                     ("--towin",{"type":str,"default":None,"nargs":2,"help":"transform `linux` path into `windows` path."}),
                 ],
-                "func":lambda args:file_link(args.topic,args.regex,args.sdir,args.ofp,depth=args.depth,resu_type=args.type,trans2win=args.towin),
+                "func":lambda args:
+                    file_link(
+                        args.topic,
+                        args.regex,
+                        args.sdir,
+                        args.ofp,
+                        depth=args.depth,
+                        resu_type=args.type,
+                        trans2win=args.towin
+                    ),
                 "subcmd":[]
-            }
+            },
+            {
+                "name":"joinxl",
+                "help":"join Excel file into ONE.",
+                "args":[
+                    ("meta",{"type":str,"help":"the JSON path for meta data."}),
+                    ("save",{"type":str,"help":"save path."}),
+                    ("--source",{"type":str,"help":"column to indicate the source file."}),
+                ],
+                "func":None,
+                "subcmd":[],
+            },
         ]
     },
     {
@@ -243,7 +260,12 @@ CMD=[
                     ("--config",{"type":str,"help":"path of the json config file for MGL"}),
                 ],
                 "func":lambda
-                args:print(getattr(gl_from_json(args.config),args.func_name)(*args.func_args)),
+                    args:print(
+                        getattr(
+                            gl_from_json(args.config),
+                            args.func_name
+                        )(*args.func_args)
+                    ),
                 "subcmd":[]
             },
         ],

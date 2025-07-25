@@ -86,8 +86,9 @@ def start_by_conf(
     __process_dict(home_path,prj_home_json)
     pass
 def startprj(
-        prj_name,
-        home_path=os.path.abspath(os.curdir)):
+    prj_name,
+    home_path=os.path.abspath(os.curdir)
+):
     from copy import deepcopy
     prj_home_json=deepcopy(PRJ_JSON)
     prj_home_json['name']=prj_name

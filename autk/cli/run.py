@@ -4,11 +4,15 @@
 from argparse import ArgumentParser
 from autk.cli.env import PRJ_CONFIG
 from autk.cli.cmd import CMD
-top_parser=ArgumentParser(description="Auditors' Toolkit; version 4.0.1",prog="autk")
-subparsers=top_parser.add_subparsers(help="subcommand for autk")
+
+'''
+see:https://docs.python.org/3/library/argparse.html#the-namespace-object
+'''
+
+TOP_PARSER=ArgumentParser(description="Auditors' Toolkit; version 4.0.1",prog="autk")
+SUBPARSERS=TOP_PARSER.add_subparsers(help="subcommand for autk")
 
 def __set_parser(base_parser,cmd):
-    #  print('setting:',cmd['name'])
     current_lv_parser=base_parser.add_parser(cmd['name'],help=cmd['help'])
     if len(cmd['args']) >0:
         for arg in cmd['args']:
@@ -16,21 +20,21 @@ def __set_parser(base_parser,cmd):
             continue
         current_lv_parser.set_defaults(func=cmd['func'])
     if len(cmd['subcmd']) >0:
-        lower_parser=current_lv_parser.add_subparsers(help='details for ...')
+        lower_parser=current_lv_parser.add_subparsers(help='')
         for subcmd in cmd['subcmd']:
             __set_parser(lower_parser,subcmd)
             continue
-    #  print('ok:',cmd['name'])
     pass
 def get_cmd(cmd_json):
     for cmd in cmd_json:
-        __set_parser(subparsers,cmd)
+        __set_parser(SUBPARSERS,cmd)
         continue
     return
+
 get_cmd(PRJ_CONFIG)
 get_cmd(CMD)
 
 if __name__=='__main__':
-    args=top_parser.parse_args()
-    args.func(args)
+    USER_INPUT_ARGS=TOP_PARSER.parse_args()
+    USER_INPUT_ARGS.func(USER_INPUT_ARGS)
     pass
