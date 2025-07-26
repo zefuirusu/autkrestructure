@@ -121,6 +121,9 @@ class XlMap:
     def mapname(self):
         return str(self.__class__.__name__)
     @property
+    def data(self):
+        return self.__dict__
+    @property
     def show(self):
         return self.__dict__
     @property

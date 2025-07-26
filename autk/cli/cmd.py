@@ -23,6 +23,38 @@ def __show_shtli(args):
         shtli.append(sht)
         continue
     return shtli
+def __table_df(args):
+    '''
+        This function returns Table, not DataFrame
+    '''
+    from autk.gentk.funcs import f2dict
+    from autk.calculation.base.table import ImmortalTable
+    from autk.mapper.base import XlMap
+    from autk.meta.pmeta import JsonMeta
+    t=ImmortalTable(
+        xlmap=XlMap.from_dict(f2dict(args.map)) if args.map is not None else None,
+        xlmeta=JsonMeta(f2dict(args.meta)) if args.meta is not None else None,
+    )
+    t.load_raw_data()
+    # for xl in t.xlset:
+    #     print(xl)
+    print(t)
+    print(t.data)
+    if args.save is not None:
+        from autk.gentk.funcs import save_df
+        save_df(t.data,'data',args.save)
+    else:
+        pass
+    return t
+def __table_search(args):
+    pass
+def __table_call(args):
+    pass
+def __mgl_df(args):
+    mgl=gl_from_json(args.config)
+    mgl.load_raw_data()
+    print(mgl.data)
+    return mgl
 def __mgl_search(args):
     from pandas import DataFrame
     mgl=gl_from_json(args.config)
@@ -43,31 +75,6 @@ def __mgl_search(args):
     else:
         print("check argument:--ifdf")
     return resu
-def __table_show_df(args):
-    '''
-        This function returns Table, not DataFrame
-    '''
-    from autk.gentk.funcs import f2dict
-    from autk.calculation.base.table import ImmortalTable
-    from autk.mapper.base import XlMap
-    from autk.meta.pmeta import JsonMeta
-    t=ImmortalTable(
-        xlmap=XlMap.from_dict(f2dict(args.map)) if args.map is not None else None,
-        xlmeta=JsonMeta(f2dict(args.meta)) if args.meta is not None else None,
-    )
-    t.load_raw_data()
-    print(t)
-    print(t.data)
-    if args.save is not None:
-        from autk.gentk.funcs import save_df
-        save_df(t.data,'data',args.save)
-    else:
-        pass
-    return t
-def __table_search(args):
-    pass
-def __table_call(args):
-    pass
 
 CMD=[
     {# lv1 cmd
@@ -230,7 +237,7 @@ CMD=[
                     ("--map",{"type":str,"default":None,"help":"Json path of `map` info for ImmortalTable."}),                   
                     ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
                 ],
-                "func":__table_show_df,
+                "func":__table_df,
                 "subcmd":[],
             },
             {
@@ -264,6 +271,16 @@ CMD=[
         "args":[
         ],
         "subcmd":[# lv2_cmd
+            {
+                "name":"df",
+                "help":"TODO: show DataFrame of MGL.",
+                "args":[
+                    ("config",{"type":str,"help":"Json path of the configuration file."}),
+                    ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
+                ],
+                "func":__mgl_df,
+                "subcmd":[],
+            },
             {
                 "name":"showcols",
                 "help":"show all columns of the current mgl.",
