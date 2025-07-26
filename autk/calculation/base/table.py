@@ -178,12 +178,12 @@ class ImmortalTable:
                 shmeta=shmeta
             )
             if isinstance(self.xlmap,XlMap):
-                pass
-            else:
                 self.xlmap=self.xlmap.__class__()
                 self.xlmap.extend_col_list(
                     xl.xlmap.columns
                 )
+            else:
+                pass
             self.xlset.append(xl)
             pass
         thli=[]

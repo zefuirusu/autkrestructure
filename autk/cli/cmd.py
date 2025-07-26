@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
+from autk.gentk.quick import gl_from_json
 from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
-from autk.gentk.quick import gl_from_json
 
 # if subcmd` is {}, then `args` cannot be []; if `args` is [], `subcmd` cannot be{};
 
@@ -17,10 +17,12 @@ def yesno(yn_str):
         print('check argument:yes/no')
         return True
 def __show_shtli(args):
+    shtli=[]
     for sht in XlBook(args.ifp).shtli:
         print(sht)
+        shtli.append(sht)
         continue
-    pass
+    return shtli
 def __mgl_search(args):
     from pandas import DataFrame
     mgl=gl_from_json(args.config)
@@ -40,13 +42,77 @@ def __mgl_search(args):
             print(r)
     else:
         print("check argument:--ifdf")
-    pass
+    return resu
+def __table_show_df(args):
+    '''
+        This function returns Table, not DataFrame
+    '''
+    from autk.gentk.funcs import f2dict
+    from autk.calculation.base.table import ImmortalTable
+    from autk.mapper.base import XlMap
+    from autk.meta.pmeta import JsonMeta
+    t=ImmortalTable(
+        xlmap=XlMap.from_dict(f2dict(args.map)) if args.map is not None else None,
+        xlmeta=JsonMeta(f2dict(args.meta)) if args.meta is not None else None,
+    )
+    t.load_raw_data()
+    print(t)
+    print(t.data)
+    if args.save is not None:
+        from autk.gentk.funcs import save_df
+        save_df(t.data,'data',args.save)
+    else:
+        pass
+    return t
 def __table_search(args):
     pass
 def __table_call(args):
     pass
 
 CMD=[
+    {# lv1 cmd
+        "name":"ftk",
+        "help":"File-handle Toolkit.",
+        "args":[],
+        "func":None,
+        "subcmd":[
+            {
+                "name":"flink",
+                "help":"generage file link.",
+                "args":[
+                    ("topic",{"type":str,"help":"sheet name in the output file."}),
+                    ("regex",{"type":str,"help":"Regular Expression to match file names."}),
+                    ("ofp",{"type":str,"help":"Output File Path"}),
+                    ("--depth",{"type":int,"default":0,"help":"show the structure of results, default to show all(depth=0)."}),
+                    ("--sdir",{"type":str,"default":".","help":"where to search/match, default to current directory."}),
+                    ("--type",{"type":str,"default":"flatten","help":"file|dir|flatten;default to `flatten`."}),
+                    ("--towin",{"type":str,"default":None,"nargs":2,"help":"transform `linux` path into `windows` path."}),
+                ],
+                "func":lambda args:
+                    file_link(
+                        args.topic,
+                        args.regex,
+                        args.sdir,
+                        args.ofp,
+                        depth=args.depth,
+                        resu_type=args.type,
+                        trans2win=args.towin
+                    ),
+                "subcmd":[]
+            },
+            {
+                "name":"joinxl",
+                "help":"join Excel file into ONE.",
+                "args":[
+                    ("meta",{"type":str,"help":"the JSON path for meta data."}),
+                    ("save",{"type":str,"help":"save path."}),
+                    ("--source",{"type":str,"help":"column to indicate the source file."}),
+                ],
+                "func":None,
+                "subcmd":[],
+            },
+        ]
+    },
     { # lv1_cmd
         "name":"show",
         "help":"show some info.",
@@ -151,54 +217,22 @@ CMD=[
         ],
     },
     {
-        "name":"ftk",
-        "help":"File-handle Toolkit.",
-        "args":[],
-        "func":None,
-        "subcmd":[
-            {
-                "name":"flink",
-                "help":"generage file link.",
-                "args":[
-                    ("topic",{"type":str,"help":"sheet name in the output file."}),
-                    ("regex",{"type":str,"help":"Regular Expression to match file names."}),
-                    ("ofp",{"type":str,"help":"Output File Path"}),
-                    ("--depth",{"type":int,"default":0,"help":"show the structure of results, default to show all(depth=0)."}),
-                    ("--sdir",{"type":str,"default":".","help":"where to search/match, default to current directory."}),
-                    ("--type",{"type":str,"default":"flatten","help":"file|dir|flatten;default to `flatten`."}),
-                    ("--towin",{"type":str,"default":None,"nargs":2,"help":"transform `linux` path into `windows` path."}),
-                ],
-                "func":lambda args:
-                    file_link(
-                        args.topic,
-                        args.regex,
-                        args.sdir,
-                        args.ofp,
-                        depth=args.depth,
-                        resu_type=args.type,
-                        trans2win=args.towin
-                    ),
-                "subcmd":[]
-            },
-            {
-                "name":"joinxl",
-                "help":"join Excel file into ONE.",
-                "args":[
-                    ("meta",{"type":str,"help":"the JSON path for meta data."}),
-                    ("save",{"type":str,"help":"save path."}),
-                    ("--source",{"type":str,"help":"column to indicate the source file."}),
-                ],
-                "func":None,
-                "subcmd":[],
-            },
-        ]
-    },
-    {
         "name":"table",
         "help":"Analysis, through Immortal Table.",
         "args":[],
         "func":None,
         "subcmd":[
+            {
+                "name":"df",
+                "help":"show DataFrame of the Table.",
+                "args":[
+                    ("--meta",{"type":str,"default":None,"help":"Json path of `meta` info for ImmortalTable."}),
+                    ("--map",{"type":str,"default":None,"help":"Json path of `map` info for ImmortalTable."}),                   
+                    ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
+                ],
+                "func":__table_show_df,
+                "subcmd":[],
+            },
             {
                 "name":"search",
                 "help":"search by keywords and get rows",
