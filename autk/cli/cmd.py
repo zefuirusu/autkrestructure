@@ -64,16 +64,16 @@ def __mgl_search(args):
         args.col,
         type_xl=False
     )
-    if yesno(args.ifdf)==True:
+    if yesno(args.dftype)==True:
         print(resu)
         #  for r in resu.iterrows():
             #  print(DataFrame(r[1]).T)
-    elif yesno(args.ifdf)==False:
+    elif yesno(args.dftype)==False:
         resu=resu.values
         for r in resu:
             print(r)
     else:
-        print("check argument:--ifdf")
+        print("check argument:--dftype")
     return resu
 
 CMD=[
@@ -150,9 +150,9 @@ CMD=[
                 "args":[
                     ("shtna",{"type":str,"help":"sheet name."}),
                     ("ifp",{"type":str,"help":"Input File Path"}),
-                    ("--ifdf",{"type":str,"default":"yes","help":"if is shown as DataFrame"}),
+                    ("--dftype",{"type":str,"default":"yes","help":"if is shown as DataFrame"}),
                 ],
-                "func":lambda args:print(XlBook(args.ifp).select_all(args.shtna,yesno(args.ifdf))),
+                "func":lambda args:print(XlBook(args.ifp).select_all(args.shtna,yesno(args.dftype))),
                 "subcmd":[],
             },
             {
@@ -185,7 +185,7 @@ CMD=[
                     ("--end",{"type":int,"nargs":2,"help":"end index"}),
                     ("--shtna",{"type":str,"help":"sheet name."}),
                     ("--ifp",{"type":str,"help":"Input File Path"}),
-                    ("--ifdf",{"type":str,"default":"no","help":"if DataFrame format is needed."}),
+                    ("--dftype",{"type":str,"default":"no","help":"if DataFrame format is needed."}),
                     ("--hastitle",{"type":str,"default":"yes","help":"if assign top row as title of DataFrame."}),
                 ],
                 "func":lambda args:
@@ -194,7 +194,7 @@ CMD=[
                              args.shtna,
                              tuple(args.start),
                              tuple(args.end),
-                             yesno(args.ifdf),
+                             yesno(args.dftype),
                              yesno(args.hastitle)
                          )
                     ),
@@ -273,7 +273,7 @@ CMD=[
         "subcmd":[# lv2_cmd
             {
                 "name":"df",
-                "help":"TODO: show DataFrame of MGL.",
+                "help":"show DataFrame of MGL.",
                 "args":[
                     ("config",{"type":str,"help":"Json path of the configuration file."}),
                     ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
@@ -297,7 +297,7 @@ CMD=[
                     ("regex",{"type":str,"help":"Regular Expression."}),
                     ("col",{"type":str,"help":"column to apply the regex."}),
                     ("--config",{"type":str,"help":"path of the json config file for MGL"}),
-                    ("--ifdf",{"type":str,"default":"yes","help":""}),
+                    ("--dftype",{"type":str,"default":"yes","help":""}),
                 ],
                 "func":__mgl_search,
                 "subcmd":[]
