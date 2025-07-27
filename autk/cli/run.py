@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from argparse import ArgumentParser
-from autk.cli.env import PRJ_CONFIG
 from autk.cli.cmd import CMD
 
 '''
@@ -31,7 +30,6 @@ def get_cmd(cmd_json):
         continue
     return
 
-get_cmd(PRJ_CONFIG)
 get_cmd(CMD)
 
 if __name__=='__main__':

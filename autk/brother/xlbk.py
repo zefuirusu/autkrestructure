@@ -247,7 +247,8 @@ class XlBook:
         start_cell_index is a tuple like 'R1C1' ref-style in Excel: (row,column);
         For xlrd.open_workbook().sheet_by_name(), index starts from 0;
         While for openpyxl.load_workbook().get_sheet_by_name(), index starts from 1;
-        That's all right, just start from 1 when passing argument 'start_cell_index' as tuple like (n,m).
+        That's all right, row_index/col_index in this function is 1-based index;
+        just start from 1 when passing argument 'start_cell_index' as tuple like (n,m).
         `n_rows_range` and `n_cols_range` both includes `start_cell_index`;
         For numbers, different file type results in different data type:
             xls:str(float)
@@ -260,10 +261,10 @@ class XlBook:
                 [
                     sht.row_values(
                         row,
-                        start_cell_index[1]-1,
+                        start_cell_index[1]-1, ## transform 0-based index into 1-based index;
                         start_cell_index[1]-1+n_cols_range
                     ) for row in range(
-                        start_cell_index[0]-1,
+                        start_cell_index[0]-1, ## transform 0-based index into 1-based index;
                         start_cell_index[0]-1+n_rows_range
                     )
                 ]
@@ -273,9 +274,9 @@ class XlBook:
             matrix=array(
                 list(
                     sht.iter_rows(
-                        min_row=start_cell_index[0],
+                        min_row=start_cell_index[0],## 1-based index here, no need to transform;
                         max_row=start_cell_index[0]+n_rows_range-1,
-                        min_col=start_cell_index[1],
+                        min_col=start_cell_index[1],## 1-based index here, no need to transform;
                         max_col=start_cell_index[1]+n_cols_range-1,
                         values_only=True
                     )
@@ -596,6 +597,7 @@ class XlBook:
         self.paste_matrix(z,(1,1),sheet_name)
         pass
     def get_df(self,sheet_name,title=0):
+        # TODO title row is now 0-based index; it'll be upgraded user-friendly, into 1-based index soon;
         if self.suffix==r'xls':
             return read_excel(
                 self.file_path,

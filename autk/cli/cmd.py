@@ -1,82 +1,56 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# NOTE: If subcmd` is {}, then `args` cannot be []; and if `args` is [], `subcmd` cannot be{};
 
+from userfunc import *
+
+from autk.gentk.start import startprj
 from autk.gentk.quick import gl_from_json
 from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
 
-# if subcmd` is {}, then `args` cannot be []; if `args` is [], `subcmd` cannot be{};
-
-def yesno(yn_str):
-    if yn_str=='yes' or yn_str=='y':
-        return True
-    elif yn_str=='no' or yn_str=='n':
-        return False
-    else:
-        print('check argument:yes/no')
-        return True
-def __show_shtli(args):
-    shtli=[]
-    for sht in XlBook(args.ifp).shtli:
-        print(sht)
-        shtli.append(sht)
-        continue
-    return shtli
-def __table_df(args):
-    '''
-        This function returns Table, not DataFrame
-    '''
-    from autk.gentk.funcs import f2dict
-    from autk.calculation.base.table import ImmortalTable
-    from autk.mapper.base import XlMap
-    from autk.meta.pmeta import JsonMeta
-    t=ImmortalTable(
-        xlmap=XlMap.from_dict(f2dict(args.map)) if args.map is not None else None,
-        xlmeta=JsonMeta(f2dict(args.meta)) if args.meta is not None else None,
-    )
-    t.load_raw_data()
-    # for xl in t.xlset:
-    #     print(xl)
-    print(t)
-    print(t.data)
-    if args.save is not None:
-        from autk.gentk.funcs import save_df
-        save_df(t.data,'data',args.save)
-    else:
-        pass
-    return t
-def __table_search(args):
-    pass
-def __table_call(args):
-    pass
-def __mgl_df(args):
-    mgl=gl_from_json(args.config)
-    mgl.load_raw_data()
-    print(mgl.data)
-    return mgl
-def __mgl_search(args):
-    from pandas import DataFrame
-    mgl=gl_from_json(args.config)
-    print('get MGL:',mgl)
-    resu=mgl.search(
-        args.regex,
-        args.col,
-        type_xl=False
-    )
-    if yesno(args.dftype)==True:
-        print(resu)
-        #  for r in resu.iterrows():
-            #  print(DataFrame(r[1]).T)
-    elif yesno(args.dftype)==False:
-        resu=resu.values
-        for r in resu:
-            print(r)
-    else:
-        print("check argument:--dftype")
-    return resu
-
 CMD=[
+    { # lv1 cmd
+        "name":"config",
+        "help":"project configuration.",
+        "args":[],
+        "func":None,
+        "subcmd":[
+            {
+                "name":"new",
+                "help":"create new project at target directory.",
+                "args":[
+                    ("--name",{"type":str,"help":"create new project in current directory."}),
+                    ("--home",{"type":str,"default":".","help":"home directory to place your project, default to current directory."}),
+                ],
+                "func":lambda args:startprj(args.name,args.home),
+                "subcmd":[],
+            },
+            {
+                "name":"meta",
+                "help":"save shape info of Excel file into JSON.",
+                "args":[
+                    ("base",{"type":str,"help":"directory to search Excel file."}),
+                    ("save",{"type":str,"help":"save path for the JSON output."}),
+                    ("--title",{"type":int,"help":"common title for those Excel files"}),
+                ],
+                "func":config_xlmeta,
+                "subcmd":[],
+            },
+            {
+                "name":"map",
+                "help":"save map info of Excel file into JSON.",
+                "args":[
+                    ("--type",{"type":str,"help":"possible values:{list|dict}"}),
+                    ("--col",{"type":list,"help":"columns to generate map."}),
+                    ("--save",{"type":str,"help":"save path for the JSON output."}),
+                ],
+                "func":config_xlmap,
+                "subcmd":[],
+            },
+        ],
+    },
     {# lv1 cmd
         "name":"ftk",
         "help":"File-handle Toolkit.",
@@ -141,7 +115,7 @@ CMD=[
                 "args":[
                     ("ifp",{"type":str,"help":"Input File Path"}),
                 ],
-                "func":__show_shtli,
+                "func":show_shtli,
                 "subcmd":[],
             },
             {
@@ -237,7 +211,7 @@ CMD=[
                     ("--map",{"type":str,"default":None,"help":"Json path of `map` info for ImmortalTable."}),                   
                     ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
                 ],
-                "func":__table_df,
+                "func":table_df,
                 "subcmd":[],
             },
             {
@@ -249,7 +223,7 @@ CMD=[
                     ("--config",{"type":dict,"default":None,"nargs":1,"help":"meta"}),
                     ("--ifp",{"type":str,"help":"path of the json config file for MGL"}),
                 ],
-                "func":__table_search,
+                "func":table_search,
                 "subcmd":[]
             },
             {
@@ -260,7 +234,7 @@ CMD=[
                     ("func_args",{"nargs":"*","help":"arguments passed to the function."}),
                     ("--ifp",{}),
                 ],
-                "func":__table_call,
+                "func":table_call,
                 "subcmd":[]
             },
         ]
@@ -278,7 +252,7 @@ CMD=[
                     ("config",{"type":str,"help":"Json path of the configuration file."}),
                     ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
                 ],
-                "func":__mgl_df,
+                "func":mgl_df,
                 "subcmd":[],
             },
             {
@@ -299,7 +273,7 @@ CMD=[
                     ("--config",{"type":str,"help":"path of the json config file for MGL"}),
                     ("--dftype",{"type":str,"default":"yes","help":""}),
                 ],
-                "func":__mgl_search,
+                "func":mgl_search,
                 "subcmd":[]
             },
             {
