@@ -52,7 +52,6 @@ class ImmortalTable:
             self.collect_xl()
         else:
             if isinstance(xlmap,XlMap):
-                # TODO load blank DataFrame
                 print(
                     '[{}]Load blank DataFrame by {}.'.format(
                         self.__class__.__name__,
@@ -222,7 +221,7 @@ class ImmortalTable:
                 pass
             if self.xlmeta.keep_additional==True:
                 workbook_path=list(shmeta.data.keys())[0]
-                book_name=workbook_path.split(sep)[-1]
+                book_name=workbook_path
                 sheet_name=shmeta.data[workbook_path][0][0]
                 xl.append_col_name('from_book')
                 xl.data['from_book']=book_name
@@ -262,7 +261,7 @@ class ImmortalTable:
         Append the xl object into self.xlset,
         using self.xlmap, by `shmeta`;
         '''
-        #TODO never test when self.xlmap=None
+        # TODO This function has never been tested in the case that `self.xlmap=None`;
         if isinstance(self.xlmap,XlMap):
             pass
         else:
@@ -301,7 +300,7 @@ class ImmortalTable:
         has `JsonMeta` as `shmeta` or not.
         Yet xl.xlmap is important.
         '''
-        #TODO never tested.
+        # TODO never tested.
         if (
             #  isinstance(self.xlmap,XlMap)
             #  and
@@ -555,8 +554,9 @@ class ImmortalTable:
         return:
             pandas.core.frame.DataFrame.
         '''
-        #TODO can be simplified.
-        # same as self.apply_xl_collect_df('filter',*args,**kwargs);
+        # TODO can be simplified.
+        # same as `self.apply_xl_collect_df('filter',*args,**kwargs)`;
+        # but, it will be less user-friendly in that case;
         self.__clear_temp()
         if filter_type=='str':
             self.__start_filter(
@@ -1091,7 +1091,7 @@ class ImmortalTable:
         return:
             class ImmortalTable;
         '''
-        #TODO
+        # TODO
         # not perfect when same columns appear in different XlSheet;
         # the result may duplicate.
         table=self.blank_copy()

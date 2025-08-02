@@ -86,7 +86,7 @@ class XlBook:
             columns=['rows','cols'],
             index=self.shtli
         )
-    def test_map(self,xlmap,common_title=0):
+    def test_map(self,xlmap,common_title=1):
         '''
         To test each sheet to check if they are fit to the input `xlmap`;
         If error appears, there may be some hidden sheets, within that Excel,
@@ -98,7 +98,7 @@ class XlBook:
         map_dict=xlmap.show
         for sht in resu_df.index:
             max_cols=self.shape_df.at[sht,'cols']
-            sht_cols=self.get_row(sht,common_title+1)
+            sht_cols=self.get_row(sht,common_title)
             for col in resu_df.columns:
                 col_index=map_dict[col]
                 if col_index is not None:
@@ -596,27 +596,31 @@ class XlBook:
         z=full(self.shape[0],'')
         self.paste_matrix(z,(1,1),sheet_name)
         pass
-    def get_df(self,sheet_name,title=0):
-        # TODO title row is now 0-based index; it'll be upgraded user-friendly, into 1-based index soon;
+    def get_df(self,sheet_name,title=1):
+        '''
+            parameters:
+                sheet_name:sheet name;
+                title:1-based index for the title of the table;
+        '''
         if self.suffix==r'xls':
             return read_excel(
                 self.file_path,
                 sheet_name=sheet_name,
-                header=title,
+                header=title-1,
                 engine='xlrd'
             )
         elif self.suffix==r'xlsx':
             return read_excel(
                 self.file_path,
                 sheet_name=sheet_name,
-                header=title,
+                header=title-1,
                 engine='openpyxl'
             )
         elif self.suffix==r'xlsm':
             return read_excel(
                 self.file_path,
                 sheet_name=sheet_name,
-                header=titile,
+                header=titile-1,
                 engine='openpyxl'
             )
         else:
@@ -629,8 +633,14 @@ class XlBook:
         self,
         sheet_name:str,
         xlmap:XlMap,
-        title=0
+        title=1
     ):
+        '''
+        parameters:
+            sheet_name:sheet name;
+            xlmap:instance of `class autk.mapper.base.XlMap`;
+            title:1-based index for the title row of the target table;
+        '''
         from copy import deepcopy
         source_data=self.get_df(sheet_name,title=title)
         data=DataFrame(
@@ -680,7 +690,7 @@ class XlBook:
         self,
         sheet_name:str,
         xlmap:XlMap=None,
-        common_title=0,
+        common_title=1,
     ):
         from autk.calculation.base.xlsht import XlSheet
         from autk.meta.pmeta import PathMeta
@@ -698,7 +708,7 @@ class XlBook:
         return xl
     def to_mtb(
         self,
-        common_title=0,
+        common_title=1,
         auto_load=False
     ):
         '''
@@ -718,7 +728,7 @@ class XlBook:
         pass
     def to_mgl(
         self,
-        common_title=0,
+        common_title=1,
         xlmap=None,
         auto_load=False
     ):
@@ -736,7 +746,7 @@ class XlBook:
         )
     def to_chart(
         self,
-        common_title=0,
+        common_title=1,
         xlmap=None,
         auto_load=False
     ):

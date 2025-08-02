@@ -21,6 +21,17 @@ def f2dict(file_path):
     with open(file_path,encoding='utf-8') as f:
         fjson=json.load(f)
     return fjson
+def dict2json(data,save_path):
+    from json import dumps
+    with open(save_path,'w',encoding='utf-8') as f:
+        f.write(
+            dumps(
+                data,
+                ensure_ascii=False,
+                indent=4,
+            )
+        )
+    return save_path
 def dir2json(base_dir,shtna='表页-1',title=3):
     import os
     file_li=os.listdir(base_dir)

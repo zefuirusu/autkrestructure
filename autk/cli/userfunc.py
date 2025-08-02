@@ -86,8 +86,8 @@ def config_xlmeta(args):
     from autk.brother.xlbk import XlBook
     from autk.meta.pmeta import DirMeta
     ## user-input title is 1-based index,
-    ## while the `title` to create XlSheet is 0-based index;
-    DirMeta(args.base,common_title=args.title-1).save(args.save)
+    ## the `title` to create XlSheet is 1-based index currently;
+    DirMeta(args.base,common_title=args.title).save(args.save)
     pass
 def config_xlmap(args):
     '''
@@ -103,4 +103,10 @@ def config_xlmap(args):
     else:
         print("check arg:{}".format(args.type))
     pass
+def config_gl(args):
+    '''
+        This function has not been finished yet.
+    '''
+    # TODO
+    return
 

@@ -20,7 +20,7 @@ json config file is in the format of:
 from os.path import isfile,isdir
 from threading import Thread
 
-from autk.gentk.funcs import f2dict,start_thread_list
+from autk.gentk.funcs import f2dict,dict2json,start_thread_list
 from autk.meta.handf.findfile import find_regex
 
 class JsonMeta:
@@ -75,15 +75,16 @@ class JsonMeta:
             continue
         return len(metali)==sheet_count
     def save(self,savepath):
-        from json import dumps
-        with open(savepath,'w',encoding='utf-8') as f:
-            f.write(
-                dumps(
-                    self.data,
-                    ensure_ascii=False,
-                    indent=4
-                )
-            )
+        dict2json(self.data,savepath)
+        # from json import dumps
+        # with open(savepath,'w',encoding='utf-8') as f:
+        #     f.write(
+        #         dumps(
+        #             self.data,
+        #             ensure_ascii=False,
+        #             indent=4
+        #         )
+        #     )
         print(
             '[Note]{} data saved to: {}'.format(
                 self.__class__.__name__,
