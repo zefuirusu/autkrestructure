@@ -83,10 +83,10 @@ def get_script_dir(home_dir):
         else:
             get_script_dir(sub)
 def config_xlmeta(args):
-    from autk.brother.xlbk import XlBook
-    from autk.meta.pmeta import DirMeta
     ## user-input title is 1-based index,
     ## the `title` to create XlSheet is 1-based index currently;
+    from autk.brother.xlbk import XlBook
+    from autk.meta.pmeta import DirMeta
     DirMeta(args.base,common_title=args.title).save(args.save)
     pass
 def config_xlmap(args):
@@ -109,6 +109,86 @@ def config_gl(args):
     '''
     # TODO
     return
+def joinxl(args):
+    from pandas import concat
+    from threading import Thread,Lock
+    from autk.gentk.funcs import start_thread_list
+    from autk.brother.xlbk import XlBook
+    print('user input:',args.meta)
+    # TODO this function needs to be upgraded.
+    '''
+    An example of `join_meta`:
+        {
+            path1:{
+                sheet1:{
+                    title_row:1,
+                    bottom_row:100,
+                    start_col:2,
+                    end_col:12,
+                },
+                sheet2:{...},
+                ...
+            },
+            path2:{
+                sheet_x:{...},
+                sheet_y:{...}
+            },
+            ...
+        }
+    '''
+    join_meta={}
+    for arg_row in args.meta:
+        for item in arg_row:
+            parts=item.split(',')
+            if len(parts) !=3:
+              continue ## ignore invalid input argument;
+            path=parts[0]
+            shtna=parts[1]
+            title=int(parts[2])
+            if path in list(join_meta.keys()):
+                if [shtna,title] in join_meta[path]:
+                    pass
+                else:
+                    join_meta[path].append([shtna,title])
+            else:
+                join_meta.update({path:[[shtna,title]]})
+            continue
+    print('Join Excel data from:',join_meta)
+    def __df_collect(path,dfli):
+        collect_lock=Lock()
+        collect_lock.acquire()
+        xl=XlBook(path)
+        for shmeta in join_meta[path]:
+            shtna=shmeta[0]
+            title=shmeta[1]
+            df=xl.get_df(shtna,title=title)
+            df['from_path']=path
+            df['from_sheet']=shtna
+            df['title']=title
+            dfli.append(
+                df
+            )
+        collect_lock.release()
+        return
+    dfli=[]
+    thli=[]
+    for path in list(join_meta.keys()):
+        thli.append(
+            Thread(
+                target=__df_collect,
+                args=(path,dfli,)
+            )
+        )
+        continue
+    start_thread_list(thli)
+    resu=concat(dfli,axis=0,join='outer')
+    print(resu)
+    if args.save is not None:
+        save_path=args.save[0]
+        save_shtna=args.save[1]
+        from autk.gentk.funcs import save_df
+        save_df(resu,save_shtna,save_path)
+    return resu
 def pca_analysis(args):
     from autk.gentk.pca import ClusterPca
     from autk.brother.xlbk import XlBook

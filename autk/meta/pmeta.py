@@ -5,8 +5,8 @@
 json config file is in the format of:
 {
     "Excel path 1":[
-        ["sheet 1",0],
-        ["sheet 2",1],
+        ["sheet 1",1],
+        ["sheet 2",2],
         ...
     ],
     "Excel path 2":[
@@ -76,15 +76,6 @@ class JsonMeta:
         return len(metali)==sheet_count
     def save(self,savepath):
         dict2json(self.data,savepath)
-        # from json import dumps
-        # with open(savepath,'w',encoding='utf-8') as f:
-        #     f.write(
-        #         dumps(
-        #             self.data,
-        #             ensure_ascii=False,
-        #             indent=4
-        #         )
-        #     )
         print(
             '[Note]{} data saved to: {}'.format(
                 self.__class__.__name__,

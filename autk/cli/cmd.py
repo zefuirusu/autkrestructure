@@ -104,11 +104,10 @@ CMD=[
                 "name":"joinxl",
                 "help":"join Excel file into ONE.",
                 "args":[
-                    ("meta",{"type":str,"help":"the JSON path for meta data."}),
-                    ("save",{"type":str,"help":"save path."}),
-                    ("--source",{"type":str,"help":"column to indicate the source file."}),
+                    ("--meta",{"nargs":"+","action":"append","help":"input <path,sheet,title_row,bottom_row,start_col,end_col>, which indicates the structure of files to join."}),
+                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the joined data."}),
                 ],
-                "func":None,
+                "func":joinxl,
                 "subcmd":[],
             },
         ]
