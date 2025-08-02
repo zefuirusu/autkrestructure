@@ -149,8 +149,7 @@ def pca_analysis(args):
     for k in list(pca.__dict__.keys()):
         d=getattr(pca,k)
         if d is not None:
-            print(k)
-            print(d)
+            print('[Note] {}:'.format(k))
             if args.save is not None:
                 if isinstance(d,DataFrame):
                     save_df(d,k,args.save)
@@ -161,6 +160,7 @@ def pca_analysis(args):
                         args.save
                     )
                 else:
-                    print('[Warning]unsaved data:\n\t',k,'\n\t',d)
+                    print('[Warning] unsaved data: {}'.format(k))
+            print(d)
         continue
     return pca
