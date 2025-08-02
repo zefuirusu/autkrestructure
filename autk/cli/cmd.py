@@ -256,6 +256,24 @@ CMD=[
                 "func":table_call,
                 "subcmd":[]
             },
+            {
+                "name":"pca",
+                "help":"perform Principal Component Analysis.",
+                "args":[
+                    ("--save",{"type":str,"help":"save path for result."}),
+                    ("--ifp",{"type":str,"help":"Input File Path."}),
+                    ("--shtna",{"type":str,"help":"Sheet Name."}),
+                    ("--start",{"type":int,"nargs":2,"help":"start cell index"}),
+                    ("--end",{"type":int,"nargs":2,"help":"end cell index"}),
+                    ("--title",{"type":bool,"default":True,"help":"whether the input data has a title row; default True"}),
+                    ("--ifstd",{"type":bool,"default":True,"help":"whether perform standardizing process; default True"}),
+                    ("--method",{"type":str,"default":"average","help":"method for clustering, default to `average`;"}),
+                    ("--metric",{"type":str,"default":"minkowski","help":"metric when calculating distance, default to `minkowski`;"}),
+                ],
+                "func":pca_analysis,
+                "subcmd":[],
+                "description":"To perform Principal Compoent Analysis.\nmethod for clustering:\n\taverage(default)：平均距离法（UPGMA算法）\n\tsingle：最短距离法（近邻点算法）\n\tcomplete：最长距离法（远邻点算法）\n\tcentroid：质心距离法（UPGMC算法）\n\tward：离差平方和法（Ward方差最小化算法）;\nmetric for distance:\n\tminkowski(defualt):明可夫斯基距离\n\teuclidean:欧氏距离\n\tmanhattan:曼哈顿距离\n\tcosine:余弦距离\n\tmahalanobis:马哈拉诺比斯距离;"
+            },
         ]
     },
     {

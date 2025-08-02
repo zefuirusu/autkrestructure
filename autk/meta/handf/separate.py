@@ -33,7 +33,4 @@ def separate_tb(tb_df,key_col,savedir='./separate_tb.xlsx'):
     wter.close()
     pass
 if __name__=='__main__':
-    # tbdir='./2019tb.xlsx'
-    # tb=read_excel(tbdir,sheet_name='新的工作表',header=7,engine='openpyxl')
-    # separate_tb(tb,'核算账簿名称')
     pass

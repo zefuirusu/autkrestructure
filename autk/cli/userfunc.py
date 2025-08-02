@@ -109,4 +109,58 @@ def config_gl(args):
     '''
     # TODO
     return
-
+def pca_analysis(args):
+    from autk.gentk.pca import ClusterPca
+    from autk.brother.xlbk import XlBook
+    if args.save is not None:
+        from autk.gentk.funcs import save_df
+        from numpy import ndarray
+        from pandas import DataFrame,Series
+    df=XlBook(args.ifp).select_matrix(
+        args.shtna,
+        args.start,
+        args.end,
+        type_df=True,
+        has_title=True
+    )
+    pca=ClusterPca()
+    print(
+        "Load matrix from file:{},sheet:{},range start:{},range end:{},get:\n\t {}".format(
+            args.ifp,
+            args.shtna,
+            args.start,
+            args.end,
+            df,
+        )
+    )
+    pca.load_matrix(df)
+    if args.ifstd == True:
+        print("Standardize input data...")
+        pca.standardize()
+    print("Perform `Hierarchical Cluster Analysis` process...")
+    pca.hie_cluster(
+        method=args.method,
+        metric=args.metric,
+        no_plot=False
+    )
+    pca.cov_pca()
+    pca.check()
+    print('=='*6,'PCA Result','=='*6)
+    for k in list(pca.__dict__.keys()):
+        d=getattr(pca,k)
+        if d is not None:
+            print(k)
+            print(d)
+            if args.save is not None:
+                if isinstance(d,DataFrame):
+                    save_df(d,k,args.save)
+                elif isinstance(d,ndarray) or isinstance(d,Series):
+                    save_df(
+                        DataFrame(d),
+                        k,
+                        args.save
+                    )
+                else:
+                    print('[Warning]unsaved data:\n\t',k,'\n\t',d)
+        continue
+    return pca

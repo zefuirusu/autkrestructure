@@ -86,7 +86,7 @@ class Inventory(ImmortalTable):
             self,
             xlmeta,
             auto_load=False,
-            common_title=0,
+            common_title=1,
             key_index=[],
             key_name='key_id',
             invmap=InvGlMap()

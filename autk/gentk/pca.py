@@ -72,9 +72,9 @@ class ClusterPca:
         z=linkage(self.mat,method=method,metric=metric)
         den=Series(dendrogram(z,orientation='right',show_leaf_counts=True,no_plot=no_plot))
         leaf=den['leaves']
+        print("Get `dendrogram`(聚类树图):")
         print(den)
         return [z,leaf,den]
-        pass
     def cov_pca(self):
         from numpy.linalg import eigh,inv
         from numpy import cov,dot

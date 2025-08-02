@@ -32,20 +32,6 @@ def dict2json(data,save_path):
             )
         )
     return save_path
-def dir2json(base_dir,shtna='表页-1',title=3):
-    import os
-    file_li=os.listdir(base_dir)
-    dict_meta={}
-    for file_name in file_li:
-        file_path=os.path.abspath(
-            os.path.join(base_dir,file_name)
-        )
-        dict_meta.update(
-            {file_path:[[shtna,title]]}
-        )
-        continue
-    return dict_meta
-    pass
 def relative_path(target,reference):
     '''
     What is the relative path of 'target' file in sight of 'reference' file ?
@@ -157,46 +143,6 @@ def wtlog(logline,logdir='./log_default.txt'):
         f.write(logline)
         f.write('\n')
     return
-def trans_to_xlsx(in_file_path,save_path):
-    '''
-    Transfer Excel '*.xls' to '*.xlsx'.
-    module 'win32com' is required.
-    Parameters
-    ----------
-    in_file_path : TYPE
-        DESCRIPTION.
-    save_path : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    None.
-
-    '''
-    # import os
-    # import win32.client as winclient
-    # e = winclient.Dispatch('Excel.application')
-    # pro = e.Workbooks.Open(in_file_path)
-    # # file_name=in_file_path.split(os.sep)[-1]
-    # # new_file_name=re.sub(r'\.xls$',r'.xlsx',file_name)
-    # pro.SaveAs(save_path, FileFormat=56)  # '56' representss 'xlsx'; '51' represents 'xls'.
-    # pro.Close()
-    # e.Application.Quit()
-    pass
-def trans_dir_xlsx(in_file_dir):
-    from os import listdir
-    from os.path import join as ojoin
-    file_pathli=[]
-    for f in listdir(in_file_dir):
-        file_pathli.append(ojoin(in_file_dir,f))
-    from threading import Thread
-    thread_list=[]
-    for f in file_pathli:
-        t=Thread(target=trans_to_xlsx,args=(f,f))
-    for t in thread_list:
-        t.start()
-    for t in thread_list:
-        t.join()
     pass
 def save_df(df,sheet_name=None,save_path='./',file_nickname='data'):
     if sheet_name is None:

@@ -12,7 +12,12 @@ TOP_PARSER=ArgumentParser(description="Auditors' Toolkit; version 4.0.1",prog="a
 SUBPARSERS=TOP_PARSER.add_subparsers(help="subcommand for autk")
 
 def __set_parser(base_parser,cmd):
-    current_lv_parser=base_parser.add_parser(cmd['name'],help=cmd['help'])
+    current_lv_parser=base_parser.add_parser(
+        cmd['name'],
+        help=cmd['help'],
+    )
+    if "description" in list(cmd.keys()):
+        current_lv_parser.description=cmd['description']
     if len(cmd['args']) >0:
         for arg in cmd['args']:
             current_lv_parser.add_argument(arg[0],**arg[1])
