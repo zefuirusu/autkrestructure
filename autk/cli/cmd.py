@@ -43,10 +43,10 @@ CMD=[
                 "help":"save map info of Excel file into JSON.",
                 "args":[
                     ("--type",{"type":str,"help":"possible values:{list|dict}"}),
-                    ("--col",{"type":list,"help":"columns to generate map."}),
+                    ("--col",{"nargs":"+","action":"append","help":"input <str> or <str,int> pairs to generate map."}),
                     ("--save",{"type":str,"help":"save path for the JSON output."}),
                 ],
-                "func":config_xlmap,
+                "func":config_xlmap, # TODO
                 "subcmd":[],
             },
             {
@@ -105,7 +105,7 @@ CMD=[
                 "help":"join Excel file into ONE.",
                 "args":[
                     ("--meta",{"nargs":"+","action":"append","help":"input <path,sheet,title_row,bottom_row,start_col,end_col>, which indicates the structure of files to join."}),
-                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the joined data."}),
+                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the output DataFrame."}),
                 ],
                 "func":joinxl,
                 "subcmd":[],
@@ -171,25 +171,12 @@ CMD=[
             },
             {
                 "name":"matrix",
-                "help":"get matrix of a selection.",
+                "help":"get matrix of selection(s) from Excel.",
                 "args":[
-                    ("--start",{"type":int,"nargs":2,"help":"start index"}),
-                    ("--end",{"type":int,"nargs":2,"help":"end index"}),
-                    ("--shtna",{"type":str,"help":"sheet name."}),
-                    ("--ifp",{"type":str,"help":"Input File Path"}),
-                    ("--dftype",{"type":str,"default":"no","help":"if DataFrame format is needed."}),
-                    ("--hastitle",{"type":str,"default":"yes","help":"if assign top row as title of DataFrame."}),
+                    ("--meta",{"action":"append","nargs":"+","help":"<ifp,shtna,start_rdx,start_cdx,end_rdx,end_cdx>"}),
+                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the output DataFrame."}),
                 ],
-                "func":lambda args:
-                    print(
-                          XlBook(args.ifp).select_matrix(
-                             args.shtna,
-                             tuple(args.start),
-                             tuple(args.end),
-                             yesno(args.dftype),
-                             yesno(args.hastitle)
-                         )
-                    ),
+                "func":show_matrix,
                 "subcmd":[],
             },
             {
@@ -227,7 +214,7 @@ CMD=[
                 "args":[
                     ("--meta",{"type":str,"default":None,"help":"Json path of `meta` info for ImmortalTable."}),
                     ("--map",{"type":str,"default":None,"help":"Json path of `map` info for ImmortalTable."}),                   
-                    ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
+                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the output DataFrame."}),
                 ],
                 "func":table_df,
                 "subcmd":[],
@@ -286,7 +273,7 @@ CMD=[
                 "help":"show DataFrame of MGL.",
                 "args":[
                     ("config",{"type":str,"help":"Json path of the configuration file."}),
-                    ("--save",{"type":str,"default":None,"help":"save path for the output DataFrame."}),
+                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the output DataFrame."}),
                 ],
                 "func":mgl_df,
                 "subcmd":[],

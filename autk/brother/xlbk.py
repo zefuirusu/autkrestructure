@@ -656,6 +656,7 @@ class XlBook:
         for col in xlmap.columns:
             col_index=xlmap.show[col]
             if isinstance(col_index,int):
+                ## `col_index` is 1-based index;
                 print(
                     '[{}] draw column `{}` at location `{}` from source data.'.format(
                         self.__class__.__name__,
@@ -663,7 +664,7 @@ class XlBook:
                         col_index
                     )
                 )
-                col_from_source=source_data.columns.to_numpy()[col_index]
+                col_from_source=source_data.columns.to_numpy()[col_index-1] # 1-based index transformed into 0-based index here;
                 data[col]=deepcopy(
                     source_data[col_from_source]
                 )

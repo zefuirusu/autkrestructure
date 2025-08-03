@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from autk.gentk.quick import gl_from_json
+import pysnooper
 
 def yesno(yn_str):
     if yn_str=='yes' or yn_str=='y':
@@ -11,6 +12,14 @@ def yesno(yn_str):
     else:
         print('check argument:yes/no')
         return True
+def save_by_shmeta(df,shmeta:str):
+    from autk.gentk.funcs import save_df
+    save_df(
+        df,
+        shmeta.split(',')[1], # sheet name
+        shmeta.split(',')[0], # path
+    )
+    pass
 def show_shtli(args):
     shtli=[]
     for sht in XlBook(args.ifp).shtli:
@@ -18,6 +27,122 @@ def show_shtli(args):
         shtli.append(sht)
         continue
     return shtli
+def __parse_range_meta_row(range_meta_str:str):
+    '''
+    input meta structure:
+        <ifp,shtna,start_rdx,start_cdx,end_rdx,end_cdx>
+    parse ouput:
+        {
+            ifp:{
+                shtna:[
+                    ((start_rdx,start_cdx),(end_rdx,end_cdx)),
+                ]
+            }
+        }
+    '''
+    range_meta=range_meta_str.split(',')
+    ifp=range_meta[0]
+    shtna=range_meta[1]
+    start_rdx=int(range_meta[2]) # start-row index
+    start_cdx=int(range_meta[3]) # start-column index
+    end_rdx=int(range_meta[4]) # end-row index
+    end_cdx=int(range_meta[5]) # end-column index
+    single={
+        ifp:{
+            shtna:[
+                ((start_rdx,start_cdx),(end_rdx,end_cdx)),# matrix range
+            ]
+        }
+    }
+    return single
+def __parse_range_meta_set(range_meta_list:list,range_meta_json:dict):
+    for range_meta_row in range_meta_list:
+        range_meta=__parse_range_meta_row(range_meta_row)
+        ifp=list(range_meta.keys())[0]
+        if ifp in range_meta_json.keys():
+            if range_meta.get(ifp)==range_meta_json.get(ifp):
+                pass
+            else:
+                for shtna in range_meta[ifp].keys():
+                    if shtna in range_meta_json.get(ifp).keys():
+                        if range_meta.get(ifp).get(shtna)==range_meta_json.get(ifp).get(shtna):
+                            pass
+                        else:
+                            range_meta_json[ifp][shtna].extend(
+                                range_meta_row.get(ifp).get(shtna)
+                            )
+                    range_meta_json[ifp].update(
+                        range_meta_row.get(ifp).get(shtna)
+                    )
+                    continue
+            pass
+        else:
+            range_meta_json.update(range_meta)
+    return range_meta_json
+def show_matrix(args):
+    from threading import Thread,Lock
+    from pandas import concat
+    from autk.gentk.funcs import start_thread_list
+    from autk.brother.xlbk import XlBook
+    print('get input:',args.meta)
+    thli=[]
+    xlmeta={}
+    for arg_set in args.meta:
+        thli.append(
+            Thread(
+                target=__parse_range_meta_set,
+                args=(arg_set,xlmeta)
+            )
+        )
+        continue
+    start_thread_list(thli)
+    print('xlmeta:',xlmeta)
+    def __append_df(
+        dfli:list,
+        path:str,
+        range_meta:(str,(int,int),(int,int))
+    ):
+        bklock=Lock()
+        xl=XlBook(path)
+        bklock.acquire()
+        df=xl.select_matrix(
+            range_meta[0],
+            range_meta[1],
+            range_meta[2],
+            type_df=True,
+            has_title=True
+        )
+        df['from_path']=path
+        df['from_sheet']=range_meta[0]
+        df['from_range_start']=str(range_meta[1])
+        df['from_range_end']=str(range_meta[2])
+        dfli.append(df)
+        bklock.release()
+        pass
+    thli=[]
+    dfli=[]
+    for path in xlmeta.keys():
+        for shtna in xlmeta[path].keys():
+            for range in xlmeta.get(path).get(shtna):
+                thli.append(
+                        Thread(
+                            target=__append_df,
+                            args=(
+                                dfli,
+                                path,
+                                (shtna,range[0],range[1])
+                            ),
+                        )
+                    )
+                continue
+            continue
+        continue
+    start_thread_list(thli)
+    resu=concat(dfli,axis=0,join='outer')
+    print(resu)
+    if args.save is not None:
+        save_by_shmeta(resu,args.save)
+    return resu
 def table_df(args):
     '''
         This function returns Table, not DataFrame
@@ -36,8 +161,7 @@ def table_df(args):
     print(t)
     print(t.data)
     if args.save is not None:
-        from autk.gentk.funcs import save_df
-        save_df(t.data,'data',args.save)
+        save_by_shmeta(resu,args.save)
     else:
         pass
     return t
@@ -93,13 +217,38 @@ def config_xlmap(args):
     '''
         This function has not been finished yet.
     '''
+    from autk.mapper.base import XlMap
     if args.type=='list':
-        # TODO
-        from autk.mapper.base import XlMap
-        XlMap.from_list(args.col).save(args.save)
-        pass
+        map_cols=[]
+        for item in args.col:
+            if isinstance(item,str):
+                map_cols.append(item)
+            elif isinstance(item,list):
+                map_cols.extend(item)
+            else:
+                pass
+            continue
+        xlmap=XlMap.from_list(map_cols)
+        print("map cols to save:",xlmap.show)
+        xlmap.save(args.save)
     elif args.type=='dict':
-        pass
+        map_cols={}
+        for item in args.col:
+            if isinstance(item,str):
+                map_cols.update(
+                    {item.split(',')[0]:item.split(',')[1]}
+                )
+            elif isinstance(item,list):
+                for __item in item:
+                    map_cols.update(
+                        {__item.split(',')[0]:int(__item.split(',')[1])}
+                    )
+            else:
+                print("check arg:{}".format(args.type))
+            continue
+        xlmap=XlMap.from_dict(map_cols)
+        print("map cols to save:",xlmap.show)
+        xlmap.save(args.save)
     else:
         print("check arg:{}".format(args.type))
     pass
@@ -110,12 +259,17 @@ def config_gl(args):
     # TODO
     return
 def joinxl(args):
+    '''
+        This function aims to join sheets from Excel workbooks.
+        If you need to join ranges(matrice) from sheets of Excel workbooks,
+        `autk show matrix --save <path,sheet> --meta <ifp,shtna,srdx,scdx,eidx,ecdx>`
+        maybe a better choice;
+    '''
     from pandas import concat
     from threading import Thread,Lock
     from autk.gentk.funcs import start_thread_list
     from autk.brother.xlbk import XlBook
     print('user input:',args.meta)
-    # TODO this function needs to be upgraded.
     '''
     An example of `join_meta`:
         {
@@ -184,10 +338,7 @@ def joinxl(args):
     resu=concat(dfli,axis=0,join='outer')
     print(resu)
     if args.save is not None:
-        save_path=args.save[0]
-        save_shtna=args.save[1]
-        from autk.gentk.funcs import save_df
-        save_df(resu,save_shtna,save_path)
+        save_by_shmeta(resu,args.save)
     return resu
 def pca_analysis(args):
     from autk.gentk.pca import ClusterPca

@@ -10,7 +10,7 @@ class XlMap:
     If you need a new column which does not exist, set its value to None.
     col_name_in_xlmap(col_name=name of attribute) ---> col_index_in_xlmap(col_index=value of attribute) ---> col_name_in_actual_file (col_name=column_of_file[col_index])
     columns of GL is right in the same order of attributes of map object.
-    Remember:index starts from 0.
+    Remember:index starts from 1.
     '''
     def __add__(self,other):
         resu=self.__class__.from_dict(
@@ -74,12 +74,12 @@ class XlMap:
             pass
         else:
             col_index=len(self.columns) # may cause bug when col_index not in original columns from XLSX book;
-            setattr(self,col_name,None) # so `col_index` was replaced by `None`;
+            setattr(self,col_name,col_index+1) # so `col_index` was replaced by `None`;
             print(
                 '[{}] append new column `{}` at index `{}`.'.format(
                     self.__class__.__name__,
                     col_name,
-                    col_index
+                    col_index+1 ## 0-based index transformed into 1-based index here;
                 )
             )
     def extend_col_list(self,col_list):
