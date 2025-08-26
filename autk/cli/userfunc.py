@@ -256,8 +256,48 @@ def config_gl(args):
     '''
         This function has not been finished yet.
     '''
-    # TODO
-    return
+    import os.path.isfile as isfile
+    from autk.gentk.funcs import dict2json
+    to_update={
+        "key_name":args.keyna,
+        "key_index":args.keyidx,
+        "drcrdesc":args.drcr,
+        "accid_col":args.accid,
+        "accna_col":args.accna,
+        "top_accid_col":args.topidc,
+        "top_accna_col":args.topnac,
+        "date_col":args.date,
+        "top_accid_len":args.topidlen,
+        "accna_split_by":args.namesplit,
+        "date_split_by":args.datesplit
+    }
+    print("update config info:\n",to_update)
+    GL_CONFIG_DEFAULT={
+        "key_name":"glid",
+        "key_index":[],
+        "drcrdesc":["dr","cr"],
+        "accid_col":"accid",
+        "accna_col":"accna",
+        "top_accid_col":"top_accid",
+        "top_accna_col":"top_accna",
+        "date_col":"date",
+        "top_accid_len":4,
+        "accna_split_by":"/",
+        "date_split_by":"-"
+    }
+    def __update(p,k):
+        if to_update[k] is None:
+            v=GL_CONFIG_DEFAULT[k]
+        else:
+            v=to_update[k]
+        if isfile(p):
+            dict2json(f2dict(p).update({k:v}),p)
+        else:
+            dict2json({k:v},p)
+        pass
+    for k in to_update.keys():
+        __update(args.save,k)
+    return to_update
 def joinxl(args):
     '''
         This function aims to join sheets from Excel workbooks.
