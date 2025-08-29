@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from autk.gentk.quick import gl_from_json
-import pysnooper
 
 def yesno(yn_str):
     if yn_str=='yes' or yn_str=='y':

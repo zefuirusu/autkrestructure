@@ -65,12 +65,7 @@ class WordSum:
             )
         pass
     pass
-def docxSum(item:str,sdir:str,save_path:str):
-    if os.path.isfile(save_path):
-        pass
-    else:
-        blank_docx=Document()
-        blank_docx.save(save_path)
+def docxSum(item:str,sdir:str,save_path=None):
     file_list=find_regex(
         r'^[^\~\$].*\.docx$',
         sdir,
@@ -79,7 +74,6 @@ def docxSum(item:str,sdir:str,save_path:str):
     result_wd_collection=[]
     def __single_search(docx_path):
         sch_lock=Lock()
-        sch_lock.acquire()
         ws=WordSum(docx_path)
         ws.single_search(item)
         if len(ws.matched_paragraphs)>0:
@@ -89,7 +83,7 @@ def docxSum(item:str,sdir:str,save_path:str):
                     ws.matched_paragraphs
                 )
             )
-        ws.save(save_path)
+        sch_lock.acquire()
         result_wd_collection.append(ws)
         sch_lock.release()
         pass
@@ -104,8 +98,9 @@ def docxSum(item:str,sdir:str,save_path:str):
         )
         continue
     start_thread_list(thli)
-    for wd in result_wd_collection:
-        wd.save(save_path)
+    if save_path is not None and os.path.isfile(save_path):
+        for wd in result_wd_collection:
+            wd.save(save_path)
     pass
 if __name__=='__main__':
     pass

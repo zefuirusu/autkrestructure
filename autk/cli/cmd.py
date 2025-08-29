@@ -9,6 +9,7 @@ from autk.gentk.start import startprj
 from autk.gentk.quick import gl_from_json
 from autk.brother.xlbk import XlBook
 from autk.meta.handf.findfile import file_link
+from autk.meta.handf.wdsum import docxSum
 
 CMD=[
     { # lv1 cmd
@@ -77,6 +78,21 @@ CMD=[
         "args":[],
         "func":None,
         "subcmd":[
+            {
+                "name":"wdsum",
+                "help":"search by regex, through all Word files in the directory.",
+                "args":[
+                    ("regex",{"type":str,"help":"Regular Expression."}),
+                    ("sdir",{"type":str,"default":".","help":"location to search all Word files, default to current directory."}),
+                    ("--ofp",{"type":str,"help":"Output File Path"}),
+                ],
+                "func":lambda args:docxSum(
+                    args.regex,
+                    args.sdir,
+                    save_path=args.ofp,
+                ),
+                "subcmd":[]
+            },
             {
                 "name":"flink",
                 "help":"generage file link.",
