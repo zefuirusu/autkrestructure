@@ -2,6 +2,7 @@
 # encoding = 'utf-8'
 
 from autk.meta.handf.findfile import find_regex
+from autk.meta.handf.wdsum import docxSum
 from autk.gentk.start import startprj,start_by_conf
 from autk.meta.handf.pdfsplit import multi_split
 
