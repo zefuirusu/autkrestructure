@@ -69,7 +69,7 @@ def docxSum(item:str,sdir:str,save_path:str):
             Thread(
                 target=__single_search,
                 args=(docx_path),
-                name=self.__class__.__name__+'-'+__single_search.__name__+p
+                name=__single_search.__name__+p
             )
         )
         continue
