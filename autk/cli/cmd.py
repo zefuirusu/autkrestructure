@@ -54,8 +54,8 @@ CMD=[
                 "help":"save MGL config info into JSON.",
                 "args":[
                     ("--keyna",{"type":str,"help":"name of the unique key."}),
-                    ("--keyidx",{"type":list,"nargs":"+","action":"append","help":""}),
-                    ("--drcr",{"type":list,"nargs":2,"help":""}),
+                    ("--keyidx",{"type":str,"nargs":"+","action":"append","help":""}),
+                    ("--drcr",{"type":str,"nargs":2,"help":""}),
                     ("--accid",{"type":str,"help":""}),
                     ("--accna",{"type":str,"help":""}),
                     ("--topidc",{"type":str,"help":""}),

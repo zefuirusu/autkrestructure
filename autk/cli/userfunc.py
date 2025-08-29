@@ -256,22 +256,8 @@ def config_gl(args):
     '''
         This function has not been finished yet.
     '''
-    import os.path.isfile as isfile
-    from autk.gentk.funcs import dict2json
-    to_update={
-        "key_name":args.keyna,
-        "key_index":args.keyidx,
-        "drcrdesc":args.drcr,
-        "accid_col":args.accid,
-        "accna_col":args.accna,
-        "top_accid_col":args.topidc,
-        "top_accna_col":args.topnac,
-        "date_col":args.date,
-        "top_accid_len":args.topidlen,
-        "accna_split_by":args.namesplit,
-        "date_split_by":args.datesplit
-    }
-    print("update config info:\n",to_update)
+    from os.path import isfile
+    from autk.gentk.funcs import f2dict,dict2json
     GL_CONFIG_DEFAULT={
         "key_name":"glid",
         "key_index":[],
@@ -285,13 +271,33 @@ def config_gl(args):
         "accna_split_by":"/",
         "date_split_by":"-"
     }
+    to_update={
+        "key_name":args.keyna,
+        "key_index":args.keyidx,
+        "drcrdesc":args.drcr,
+        "accid_col":args.accid,
+        "accna_col":args.accna,
+        "top_accid_col":args.topidc,
+        "top_accna_col":args.topnac,
+        "date_col":args.date,
+        "top_accid_len":args.topidlen,
+        "accna_split_by":args.namesplit,
+        "date_split_by":args.datesplit
+    }
+    current_json=f2dict(args.save)
     def __update(p,k):
         if to_update[k] is None:
-            v=GL_CONFIG_DEFAULT[k]
+            v=current_json[k]
+            if v !=GL_CONFIG_DEFAULT[k]:
+                pass
+            else:
+                v=GL_CONFIG_DEFAULT[k]
         else:
             v=to_update[k]
         if isfile(p):
-            dict2json(f2dict(p).update({k:v}),p)
+            temp=f2dict(p)
+            temp.update({k:v})
+            dict2json(temp,p)
         else:
             dict2json({k:v},p)
         pass
