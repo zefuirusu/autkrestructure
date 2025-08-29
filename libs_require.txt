@@ -4,6 +4,4 @@ xlutils
 openpyxl
 numpy
 pandas
-scipy
-scikit-learn
-matplotlib
+python-docx
