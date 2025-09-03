@@ -160,7 +160,7 @@ def table_df(args):
     print(t)
     print(t.data)
     if args.save is not None:
-        save_by_shmeta(resu,args.save)
+        save_by_shmeta(t.data,args.save)
     else:
         pass
     return t

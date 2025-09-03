@@ -231,7 +231,7 @@ CMD=[
                 "args":[
                     ("--meta",{"type":str,"default":None,"help":"Json path of `meta` info for ImmortalTable."}),
                     ("--map",{"type":str,"default":None,"help":"Json path of `map` info for ImmortalTable."}),                   
-                    ("--save",{"nargs":2,"help":"input<path,sheet>, save the output DataFrame."}),
+                    ("--save",{"type":str,"default":None,"help":"input<path,sheet>, save the output DataFrame."}),
                 ],
                 "func":table_df,
                 "subcmd":[],
