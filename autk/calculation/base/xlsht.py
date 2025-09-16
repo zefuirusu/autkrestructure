@@ -839,8 +839,8 @@ class XlSheet:
             type_xl=False
         )[sum_col]
         return sum(values_to_sum)
-    def split(self,by:str)->list:
-        resu=[]
+    def split(self,by:str)->dict:
+        resu={}
         if self.xlmap.has_cols([by]):
             from threading import Thread
             from autk.gentk.funcs import start_thread_list
@@ -862,8 +862,8 @@ class XlSheet:
                     over_write=True,
                     type_xl=False
                 )
-                resu.append(
-                    sub_xl
+                resu.update(
+                    {sub_v:sub_xl}
                 )
                 pass
             thli=[]
