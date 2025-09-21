@@ -422,6 +422,10 @@ class XlSheet:
             return False
     def append_col_name(self,col_name):
         self.xlmap.append_col_name(col_name)
+        setattr(self.xlmap,col_name,None)
+        ## if not set to `None` here,`XlSheet` cannot
+        ## find an existed column according to
+        ## `self.xlmap`;
         if self.xlmap.has_cols([col_name]):
             pass
         else:

@@ -648,9 +648,10 @@ class XlBook:
             columns=xlmap.columns
         )
         print(
-            '[{}] xlmap show:{}'.format(
+            '[{}] xlmap show:{},source data shape:{}'.format(
                 self.__class__.__name__,
-                xlmap.show
+                xlmap.show,
+                source_data.shape
             )
         )
         for col in xlmap.columns:

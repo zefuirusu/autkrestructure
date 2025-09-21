@@ -205,8 +205,8 @@ class ImmortalTable:
                 print(
                     '[{}]Load normally from meta `{}` by map `{}`.'.format(
                         self.__class__.__name__,
-                        self.xlmeta,
-                        self.xlmap,
+                        self.xlmeta.data,
+                        self.xlmap.show,
                     )
                 )
             else:
@@ -235,9 +235,10 @@ class ImmortalTable:
                     )
                 )
                 pass
-            self.xlmap.extend_col_list(
-                xl.xlmap.columns
-            )
+            for col in xl.xlmap.columns:
+                if col not in self.xlmap.columns:
+                    self.xlmap.append_col_name(col)
+                    setattr(self.xlmap,col,None)
             self.xlset.append(xl)
             return
         thli=[]
