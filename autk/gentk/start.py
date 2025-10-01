@@ -58,7 +58,11 @@ PRJ_JSON={
             ]
         },
         {"name":"300-historical","subdirs":[]},
-        {"name":"700-notes","subdirs":[]},
+        {"name":"700-notes","subdirs":[
+            {"name":"vnote":"subdirs":[]},
+            {"name":"obsidian":"subdirs":[]},
+            {"name":"org-mode":"subdirs":[]},
+        ]},
         {"name":"800-expense","subdirs":[]},
         {"name":"900-others","subdirs":[]}
     ]
